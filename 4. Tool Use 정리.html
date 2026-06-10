@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10장. LLM의 도구 사용</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="5. LLM Agents 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #10</div>
+  <h1>10. LLM의 도구 사용 <span style="font-weight:400;font-size:20px;">(Tool Use with LLMs)</span></h1>
+  <div class="subtitle">Prompting 기반 tool use(function calling)부터, 학습 기반 방법인 Toolformer(self-supervised, loss 기반 filtering)와 ToolLLM(16,464 real-world APIs, DFS 기반 데이터 수집)까지</div>
+  <div class="meta">
+    <span>📅 강의일: 2026-05-18(도입) / 2026-05-20(본강의)</span><span>📊 예상 비중: 중상 (Agents의 기반 챕터)</span><span>⏱ 분량: 본문 7섹션 + 예상문제</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">왜 Tool Use인가 — LLM의 한계와 동기</a></li>
+    <li><a href="#s2">Prompting 기반 접근 (Function Calling & skill.md)</a></li>
+    <li><a href="#s3">Toolformer — 핵심 아이디어와 표기법</a></li>
+    <li><a href="#s4">Toolformer — 데이터 생성 5단계 (filtering 수식)</a></li>
+    <li><a href="#s5">Toolformer — 결과와 한계</a></li>
+    <li><a href="#s6">ToolLLM — RapidAPI · Instruction 생성 · DFSDT</a></li>
+    <li><a href="#s7">ToolLLM — Retriever · ToolLLaMA · 평가 + 비교표</a></li>
+    <li><a href="#quiz">예상문제 (T/F + Pick-all)</a></li>
+  </ol>
+</div>
+
+<!-- ===== Section 1 ===== -->
+<section id="s1">
+  <h2><span class="num">1</span> 왜 Tool Use인가 — LLM의 한계와 동기 <span class="en">(Motivation)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Tool use</strong>: LLM이 외부 도구(external tools) — 계산기(calculator), 검색 엔진, 날씨 API 등 — 를 호출하여,
+    파라미터 내부 지식(intrinsic/parametric knowledge)만으로는 할 수 없는 일을 수행하는 능력.
+    <strong>Tool use is often considered as a core functionality of AI agents.</strong>
+  </div>
+
+  <p>LLM 단독으로는 잘 못 하는 것들이 있다:</p>
+  <ul>
+    <li><strong>정확한 계산</strong> — 언어모델은 산술 연산을 토큰 패턴으로 흉내낼 뿐, 신뢰할 수 있는 계산기가 아님.</li>
+    <li><strong>최신/실시간 정보</strong> <span class="en">(real-time information)</span> — 예: "What is the weather like in Paris today?"는 실시간 API 접근 없이는 정확히 답할 수 없고, 그냥 답하면 <strong>hallucination</strong>이 됨.</li>
+    <li><strong>외부 세계에 대한 행동</strong> — 이메일 전송, 파일 조작 등 텍스트 생성 밖의 action.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "솔직히 검색(retrieval)도 그런 도구 중 하나죠? 그래서 RAG 시스템은 이제 tool use를 하는 LLM에 포섭됩니다. …
+    <strong>'LLM agent'라고 부르려면 ① tool use, ② memory, ③ planning &amp; action</strong>(+ 어느 정도의 reflection)을 갖춰야 합니다.
+    Tool use는 특히 LLM의 실세계 배치(real-world deployment)에 매우 중요합니다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <ul style="margin-bottom:0">
+      <li>RAG의 retrieval은 tool use의 한 특수 사례로 볼 수 있다 (retrieval ⊂ tool use).</li>
+      <li>Agent의 3대 구성요소: <strong>tool use / memory / planning &amp; action</strong> — #11 LLM Agents 챕터로 이어지는 연결고리.</li>
+      <li>Tool use를 가능하게 하는 두 갈래: <strong>prompting-based</strong>(in-context learning) vs <strong>training-based</strong>(Toolformer, ToolLLM).</li>
+    </ul>
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Tool use is unrelated to RAG; they are completely separate paradigms." → <strong>False</strong>. The professor explicitly noted that retrieval is one kind of tool, so RAG is subsumed under tool-using LLMs. Also, ToolLLM's inference pipeline is explicitly analogous to RAG (retrieve APIs → generate with them).</li>
+      <li>"An LLM that can use tools is automatically an agent." → <strong>False</strong>. Tool use is only one of the core functionalities of agents (alongside memory, planning &amp; action).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 2 ===== -->
+<section id="s2">
+  <h2><span class="num">2</span> Prompting 기반 접근 <span class="en">(Prompting-based Approach / Function Calling)</span></h2>
+
+  <p>가장 직관적인 방법: 도구에 대한 정보를 <strong>in-context learning</strong>으로 모델에게 알려준다.
+  도구의 명세(specification)를 프롬프트에 넣어주면, LLM이 사용자 질의에 따라 <strong>적응적으로(adaptively)</strong> 어떤 도구를 언제 호출할지 결정한다. (OpenAI function calling 가이드의 <code>get_weather</code> 예시)</p>
+
+  <h3>Function Calling 동작 5단계 (OpenAI 예시)</h3>
+  <ol class="steps">
+    <li><strong>Call model with functions defined</strong> — <code>tools</code> 인자(argument)로 함수 목록을 정의하여 모델에 전달. 각 함수는 name(<code>get_weather</code>), description("Get current temperature for a given location"), parameters(<code>location</code>)로 구성.</li>
+    <li><strong>Model decides to call function(s)</strong> — 모델이 호출할 <strong>함수 이름과 입력 인자를 반환</strong>. (사용자 질의 "weather in Paris"를 파싱해 <code>location</code> 인자를 추출)</li>
+    <li><strong>Execute function code</strong> — 모델 응답을 파싱하여 <strong>개발자 측에서</strong> 실제 함수 코드를 실행. (LLM이 직접 실행하는 것이 아님!)</li>
+    <li><strong>Supply model with results</strong> — API 결과(예: 13°C)를 다시 모델 입력 컨텍스트로 삽입.</li>
+    <li><strong>Model responds</strong> — 결과를 통합(incorporate)한 최종 응답 생성.</li>
+  </ol>
+
+  <h3>내부 동작: System Message + Detailed Description</h3>
+  <p><code>tools</code> 리스트를 넣으면 내부적으로는 <strong>시스템 메시지(system message)</strong>로 변환된다:
+  "You have access to the following tools" + 각 도구의 <strong>이름(tool name)과 자연어 설명(tool description)</strong>이 시스템 프롬프트에 덧붙는다.
+  LLM은 오직 이 자연어 단서만 보고 어떤 API를 언제·어떻게 호출할지 판단한다.</p>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 — Claude skill.md 비유</div>
+    "이것은 최근 <strong>Claude 모델이 skill.md 파일을 사용하는 방식과 매우 유사</strong>합니다.
+    skill.md에는 스킬 이름, 설명, 그리고 경우에 따라 사용 예시가 포함되는데, 이는 도구 정의와 정확히 동일하고
+    <strong>주된 차이는 API의 존재 여부뿐</strong>입니다. …
+    또, <code>multiply</code> 함수의 이름을 'addition'이라고 잘못 지으면 이름과 설명이 일관되지 않아 LLM이 혼란스러워합니다.
+    그래서 <strong>일관된 이름(consistent naming)과 상세한 설명(detailed description)</strong>이 매우 중요합니다."
+  </div>
+
+  <h3>한계 → 학습 기반 접근의 필요성</h3>
+  <table>
+    <tr><th>구분</th><th>Prompting-based (in-context)</th><th>Training-based (fine-tuning)</th></tr>
+    <tr><td>장점</td><td><strong>Flexibility</strong> — 새로운/맞춤형 API를 즉시 추가 가능 (학습 불가능한 새 API에는 이 방법뿐)</td><td>자주 쓰이는 <strong>고정된 API 집합</strong>(Excel, calculator 등)에 대해 더 나은 <strong>precision &amp; recall</strong></td></tr>
+    <tr><td>단점</td><td>전적으로 LLM의 in-context learning 능력에 의존 → <strong>only reliable for large LLM</strong>, 작은 오픈소스 모델에선 suboptimal</td><td>주석(annotation) 비용, 새 도구가 추가될 때마다 재학습 필요</td></tr>
+    <tr><td>적합 시나리오</td><td>커스텀/신규 도구, 강력한 모델</td><td>자주 호출되는 고정 도구(frequently called tools), 작은 모델</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    Prompting 기반 tool use = <strong>implicit in-context learning</strong>. 슬라이드 원문:
+    "this approach might be suboptimal, as only relying on implicit in-context learning by LLM (<strong>may be only reliable for large LLM</strong>),
+    when there are tools frequently called and hence should be handled well."
+    → 자주 쓰이는 도구는 <strong>training level</strong>에서 배우는 게 낫다는 것이 Toolformer/ToolLLM의 출발점.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In function calling, the LLM directly executes the external API code." → <strong>False</strong>. The model only returns the function <strong>name and input arguments</strong>; the developer-side code parses the response and executes the function, then feeds the result back.</li>
+      <li>"The tool name has little effect as long as the description is detailed." → <strong>False</strong>. The LLM recognizes tools purely from natural-language cues, so an inconsistent name (e.g., naming a multiply function "addition") confuses the model. Both consistent naming and detailed description matter.</li>
+      <li>"Prompting-based tool use is always inferior to training-based tool use." → <strong>False</strong>. For new or customized APIs, prompting is the only feasible option (flexibility); training is preferable mainly for a fixed set of frequently used tools.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 3 ===== -->
+<section id="s3">
+  <h2><span class="num">3</span> Toolformer — 핵심 아이디어와 표기법 <span class="en">(Schick et al., NeurIPS 2023 Oral)</span></h2>
+
+  <h3>동기: SFT의 비용 문제</h3>
+  <p>도구 사용을 학습시키는 가장 자연스러운 방법은 <strong>supervised fine-tuning (SFT)</strong> — Self-RAG(Asai et al., ICLR 2024 Oral)처럼
+  human annotator나 large LLM으로 (instruction → tool) 매핑 데이터를 주석하는 것. 그러나:</p>
+  <ul>
+    <li>주석에 <strong>large cost</strong>가 필요하고, 도구는 계속 진화/추가되므로 일반 생성 과제보다 더 까다로움.</li>
+    <li>large LLM을 annotator로 쓰면 그 LLM의 <strong>intrinsic knowledge에 전적으로 의존</strong>하게 됨.</li>
+  </ul>
+
+  <div class="definition"><div class="label">📖 정의 — Toolformer의 기여</div>
+    <strong>Self-supervised learning for tool use</strong>: 사람 주석 없이(without human annotation) 데이터로부터 과제를 설계.
+    핵심 아이디어 = <strong>"Useful tool → Helpful to predict next token"</strong>.
+    도구 호출이 <strong>next-token prediction loss를 낮춰주면</strong> 유용한 호출, 높이면 무효한 호출.
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 — Steel City 예시</div>
+    "Pittsburgh is also known as <em>the Steel City</em>"라는 코퍼스 문장에서 "the Steel City"를 예측한다고 하자.
+    <ul style="margin:6px 0 0">
+      <li>① API 질의 "What other name is Pittsburgh known by?" → 결과 "Steel City"를 컨텍스트에 덧붙이면 → <strong>이미 답을 조건으로 줬으니 loss가 크게 감소</strong> (성공적 도구 호출).</li>
+      <li>② 질의 "Which country is Pittsburgh in?" → 결과 "United States"를 덧붙이면 → 무관한/방해되는(distracting) 정보라 <strong>loss가 오히려 증가할 위험</strong> (무효한 도구 호출).</li>
+      <li>③ 호출했지만 결과가 안 돌아오면(failed call) 빈 반환값 — query만 컨텍스트에 남음.</li>
+    </ul>
+  </div>
+
+  <h3>표기법 (Notation)</h3>
+  <div class="formula"><div class="fname">API 호출의 표현</div>
+    $$ c = (a_c,\; i_c) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( a_c \): API의 이름 <span class="en">(name of API)</span>, \( i_c \): 해당 입력 <span class="en">(corresponding input)</span>.
+    API 호출은 특수 토큰 <code>&lt;API&gt;</code>, <code>&lt;/API&gt;</code>, <code>→</code> 를 사용해 일반 텍스트 토큰으로 직렬화(linearize)된다:</p>
+    <p style="font-size:14px;margin:6px 0 0;">
+      • 결과 없는 표현: \( e(c) = \texttt{&lt;API&gt;}\, a_c(i_c) \,\texttt{&lt;/API&gt;} \)<br>
+      • 결과 포함 표현: \( e(c, r) = \texttt{&lt;API&gt;}\, a_c(i_c) \to r \,\texttt{&lt;/API&gt;} \) — 화살표 <code>→</code> 오른쪽이 <strong>result of API call</strong> \( r \).
+    </p>
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <ul style="margin-bottom:0">
+      <li>Toolformer = <strong>self-supervised</strong> (no human annotation). Self-RAG처럼 LLM을 annotator로 활용하되, <strong>채택 여부는 loss 감소라는 자동 기준</strong>으로 판단한다는 점이 차별점.</li>
+      <li>API 호출이 텍스트 토큰 시퀀스로 표현되므로 <strong>일반 LM 목적함수(next-token prediction)로 그대로 학습 가능</strong>.</li>
+      <li>특수 토큰 3종: <code>&lt;API&gt;</code> / <code>&lt;/API&gt;</code> / <code>→</code>.</li>
+    </ul>
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Toolformer requires human-annotated examples of correct tool calls for fine-tuning." → <strong>False</strong>. It is self-supervised: candidate API calls are sampled by the LM itself via in-context learning and kept only if they reduce next-token prediction loss.</li>
+      <li>"In Toolformer, a tool call is judged useful if the API returns a factually correct answer." → <strong>False</strong>. Usefulness is judged purely by whether conditioning on the call (and its result) <strong>reduces the next-token prediction loss</strong> — no factuality check is performed.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 4 ===== -->
+<section id="s4">
+  <h2><span class="num">4</span> Toolformer — 데이터 생성 파이프라인 5단계 <span class="en">(Converting the Pre-training Corpus)</span></h2>
+
+  <p>목표: 주어진 <strong>사전학습 코퍼스</strong>(예: Wikipedia/web corpus)를 API 호출로 <strong>증강(augment)</strong>하여 학습 데이터로 변환.</p>
+
+  <ol class="steps">
+    <li><strong>Sampling API Calls</strong> <span class="en">(through in-context learning)</span> — LLM에게 few-shot 프롬프트(예: "Joe Biden was born in Scranton" → <code>[QA(Where was Joe Biden born?) → Scranton]</code> 식의 예시)를 주고, 코퍼스 각 위치에 후보 API 호출 \( c_i \)를 샘플링하게 함. <em>LLM을 annotator로 활용 (Self-RAG와 유사)</em>. 이 단계 산출물은 노이즈가 많음.</li>
+    <li><strong>Executing API Calls</strong> — 각 후보 호출 \( c \)를 실제로 실행하여 출력 \( r \)을 얻음.</li>
+    <li><strong>Filtering API Calls</strong> — loss 비교 기준으로 유용한 호출만 남김 (아래 수식).</li>
+    <li><strong>Model fine-tuning</strong> — 필터링을 통과한 API 호출이 삽입된 증강 코퍼스로, <strong>표준 next-token prediction(언어모델링) 목적함수</strong>로 미세조정.</li>
+    <li><strong>Inference</strong> — 생성 중 모델이 스스로 <code>&lt;API&gt;</code>와 질의, 그리고 <code>→</code>를 생성하면 <strong>디코딩을 중단</strong>하고, 질의를 외부 API에 전달 → 결과를 받아 <code>→</code> 오른쪽에 삽입 → 생성 재개. (Search-R1이 special token에 retrieval 결과를 삽입하는 방식과 매우 유사)</li>
+  </ol>
+
+  <h3>Step 3 Filtering 수식 — 가장 중요한 출제 포인트</h3>
+  <div class="formula"><div class="fname">가중 next-token prediction loss (position \(i\) = API 호출 위치)</div>
+    $$ L_i(\mathbf{z}) \;=\; -\sum_{j=i}^{n} w_{j-i}\,\log p_M\!\left(x_j \mid \mathbf{z},\, x_{1:j-1}\right) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \mathbf{z} \): 위치 \(i\) 앞에 prefix로 삽입되는 시퀀스, \( w_{j-i} \): 호출 위치에서 멀어질수록 감쇠하는 가중치
+    (교수: "가중치는 추가 성능 향상을 위한 하이퍼파라미터일 뿐, 무시해도 된다"), \( p_M \): 모델 \(M\)의 토큰 확률.</p>
+  </div>
+
+  <div class="formula"><div class="fname">두 가지 손실의 정의 (\( \varepsilon \): empty sequence)</div>
+    $$ L_i^{+} \;=\; L_i\!\left(e(c_i, r_i)\right) $$
+    $$ L_i^{-} \;=\; \min\Big( L_i(\varepsilon),\;\; L_i\!\left(e(c_i, \varepsilon)\right) \Big) $$
+    <p style="font-size:14px;margin:6px 0 0;">
+      \( L_i^{+} \): <strong>with function call and response</strong> — 호출+결과를 모두 조건으로 한 loss.<br>
+      \( L_i^{-} \): 두 경우의 <strong>최솟값(min)</strong> — ① \( L_i(\varepsilon) \): <strong>no function call</strong> (아무 호출도 안 함), ② \( L_i(e(c_i,\varepsilon)) \): <strong>no response</strong> (호출은 했지만 결과가 비어 있음, 즉 query만 컨텍스트에 추가).
+    </p>
+  </div>
+
+  <div class="formula"><div class="fname">Filtering 기준 (threshold \( \tau \))</div>
+    $$ L_i^{-} - L_i^{+} \;\geq\; \tau \quad\Longrightarrow\quad \text{keep the API call} $$
+    <p style="font-size:14px;margin:6px 0 0;">"API 호출+결과 추가가, <strong>호출을 전혀 안 하거나 결과를 못 받은 경우에 비해</strong> loss를 <strong>적어도 \( \tau \) 만큼</strong> 줄일 때만" 데이터로 유지.
+    \( \tau = 0 \)이면 조금이라도 도움 되는 호출은 전부 채택, \( \tau \)가 클수록 확실히 도움 되는 호출만 채택(더 적고 더 깨끗한 데이터). \( \tau \)는 개발자 측 하이퍼파라미터.</p>
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 — 왜 \( L_i(e(c_i,\varepsilon)) \) (query-only) 항이 필요한가?</div>
+    "LLM에게는 <strong>질의 텍스트 자체도 예측에 영향</strong>을 줍니다. 질의가 관련 있으면 결과 없이 질의만 있어도 next-token 예측에 도움이 될 수 있죠.
+    그래서 '결과 덕분에 좋아졌다'는 <strong>더 명확한 보장</strong>을 위해, 결과 없는 query-only 경우보다도 \( \tau \) 이상 좋아야만 채택하도록 min에 포함시킨 것입니다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <ul style="margin-bottom:0">
+      <li>비교 방향 주의: <strong>\( L_i^- - L_i^+ \geq \tau \)</strong> (loss는 작을수록 좋으므로 \( L_i^+ \)가 충분히 작아야 채택). \( L_i^+ - L_i^- \geq \tau \)로 뒤집어 내면 함정!</li>
+      <li>\( L_i^- \)는 단순히 "no call" loss가 아니라 <strong>min(no call, call-but-no-response)</strong>이다.</li>
+      <li>fine-tuning은 특별한 목적함수가 아니라 <strong>증강 코퍼스에 대한 표준 LM(next-token prediction) loss</strong>.</li>
+      <li>Inference에서 모델이 <code>→</code>를 생성하는 순간 디코딩 중단 → API 실행 → 결과 삽입 → 재개. 결과 텍스트는 <strong>모델이 생성하는 것이 아니라 API에서 온다</strong>.</li>
+    </ul>
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Toolformer keeps an API call when \( L_i^{+} - L_i^{-} \geq \tau \)." → <strong>False</strong>. The criterion is \( L_i^{-} - L_i^{+} \geq \tau \): the call is kept when it <strong>reduces</strong> the loss by at least \( \tau \) compared to no call / no response.</li>
+      <li>"\( L_i^{-} \) is the loss when no API call is made at all." → <strong>False (incomplete)</strong>. \( L_i^{-} = \min(L_i(\varepsilon), L_i(e(c_i,\varepsilon))) \) — it also covers the case where the call is made but returns no result (query-only context).</li>
+      <li>"Setting a larger \( \tau \) keeps more API calls in the augmented dataset." → <strong>False</strong>. A larger \( \tau \) is a stricter margin, so <strong>fewer</strong> calls survive filtering.</li>
+      <li>"During inference, Toolformer generates the API result tokens itself." → <strong>False</strong>. Decoding pauses at "→"; the result is obtained from the external API and inserted, then generation resumes.</li>
+      <li>"Filtering compares the loss only on the single next token." → <strong>False</strong>. The loss is a <strong>weighted sum over the subsequent tokens</strong> \( j = i, \dots, n \) (with decaying weights \( w_{j-i} \)).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 5 ===== -->
+<section id="s5">
+  <h2><span class="num">5</span> Toolformer — 결과와 한계 <span class="en">(Results &amp; Limitations)</span></h2>
+
+  <h3>실험에 사용된 5가지 도구</h3>
+  <table>
+    <tr><th>도구</th><th>역할</th></tr>
+    <tr><td><strong>Question Answering (QA)</strong></td><td>사실 질의에 대한 답 반환 (예: "Where was Joe Biden born?" → Scranton)</td></tr>
+    <tr><td><strong>Wikipedia Search</strong></td><td>위키피디아 검색 결과 반환</td></tr>
+    <tr><td><strong>Calculator</strong></td><td>산술 계산</td></tr>
+    <tr><td><strong>Calendar</strong></td><td>현재 날짜 반환</td></tr>
+    <tr><td><strong>Machine Translation (MT)</strong></td><td>다른 언어 텍스트를 영어로 번역</td></tr>
+  </table>
+  <p>교수: "다섯 가지 도구에 한정되는 방법론은 아니지만, 실험에서는 이 다섯 가지만 사용됩니다." (이유는 아래 '한계' 참조)</p>
+
+  <h3>결과 (GPT-J 6B)</h3>
+  <ul>
+    <li>베이스 모델: <strong>GPT-J — 당시 6B(60억) 규모의 오픈소스 LLM</strong>.</li>
+    <li>Tool use 덕분에 <strong>훨씬 작은 모델임에도 여러 QA 과제에서 GPT-3를 능가</strong> — "Tool use makes significant improvement for various tasks".</li>
+    <li><strong>공정한 비교(ablation)</strong>: 증강 코퍼스로 fine-tuning만 한 효과를 분리하기 위해, <strong>tool use를 비활성화(disabled)한 Toolformer</strong>도 비교.
+      → fine-tuning 자체는 성능을 약간만 올리고, <strong>주된 향상은 도구 호출 자체에서 나옴</strong>.</li>
+  </ul>
+
+  <h3>한계 (Limitations) → ToolLLM의 동기</h3>
+  <ul>
+    <li>핵심 단계(코퍼스에 API 호출 증강)가 <strong>전적으로 LLM의 in-context learning에 의존</strong> → 그 자체의 문제(노이즈·신뢰성)를 그대로 가짐.</li>
+    <li>데이터 증강 비용이 큼: 후보 샘플링 + 실제 API 실행 + loss 2회 계산을 코퍼스 전 위치에 대해 수행.</li>
+    <li><strong>증강 비용이 도구 개수에 비례해 증가</strong> → 도구를 5개만 쓴 이유. 그러나 현실 세계에는 도구가 엄청나게 많다 (ToolLLM: ~3,000 tools / ~16,000 APIs 규모). → <strong>real-world scale로 확장 불가</strong>.</li>
+    <li>(구조적 한계) 각 호출을 독립적으로 필터링하므로 여러 도구를 연쇄(chain)하는 multi-tool 시나리오를 다루지 못함.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    "smaller GPT-J (6B) + tools &gt; much larger GPT-3 (without tools)" 구도 + "main gain comes from tool calls, not from fine-tuning itself" (disabled-tool ablation) — 두 문장 모두 T/F 단골 소재.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Toolformer's improvement mainly comes from fine-tuning on additional data, and tool calls at inference give only a marginal gain." → <strong>False</strong>. The ablation with tool use disabled shows fine-tuning helps only slightly; the main improvement comes from the tool calls themselves.</li>
+      <li>"Toolformer scales easily to thousands of tools." → <strong>False</strong>. Augmentation cost grows with the number of tools, which is why only 5 tools were used — this is precisely the motivation for ToolLLM.</li>
+      <li>"Toolformer was trained on GPT-3." → <strong>False</strong>. It fine-tunes GPT-J (6B, open-source); GPT-3 is the larger baseline it outperforms on several QA tasks.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 6 ===== -->
+<section id="s6">
+  <h2><span class="num">6</span> ToolLLM — RapidAPI · Instruction 생성 · DFSDT <span class="en">(Qin et al., ICLR 2024)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의 — ToolLLM의 목표</div>
+    <strong>Scalable instruction tuning for tool use capability of open-sourced LLMs</strong>:
+    오픈소스 LLM에 실세계 규모의 tool use 능력을 부여하기 위한 <strong>데이터 수집 파이프라인</strong>을 설계하고,
+    <strong>강력한 closed LLM(ChatGPT)을 annotator로 활용</strong>해 주석 절차를 자동화한다. (방향은 SFT/instruction tuning으로 회귀하되, 수집을 자동화)
+  </div>
+
+  <h3>① API Collection — RapidAPI</h3>
+  <ul>
+    <li><strong>RapidAPI</strong>: 개발자와 수천 개의 실세계 API를 연결하는 <strong>API marketplace</strong>.</li>
+    <li>여기서 필터링을 거쳐 <strong>3,451 tools / 16,464 APIs</strong> 수집 — 즉 <strong>하나의 tool이 여러 API를 가질 수 있는 계층 구조(hierarchy)</strong> (tool ⊃ API).</li>
+  </ul>
+
+  <h3>② Instruction Generation — ChatGPT로 지시 생성</h3>
+  <p>도구 사용을 <strong>요구하는</strong> instruction을 ChatGPT로 생성. 두 측면에 집중: <strong>(1) diversity</strong>(다양한 실세계 도구), <strong>(2) multi-tool usage</strong>(한 지시가 여러 API를 호출).</p>
+  <ol class="steps">
+    <li><strong>샘플링</strong> — 전체 API 집합 \( S_{API} \) (16,464개)는 한 번에 프롬프트에 다 못 넣으므로, 매번 \( N \)개의 API를 무작위 샘플링: \( S_N^{sub} = \{API_1, \dots, API_N\} \).</li>
+    <li><strong>프롬프트 구성</strong> — (1) task description + (2) 각 API의 <strong>documentation</strong> + (3) <strong>3개의 few-shot 예시</strong>. few-shot은 <strong>single-tool용 12개 / multi-tool용 36개</strong>의 다양한 예시 풀에서 매번 무작위 샘플링.</li>
+    <li><strong>생성</strong> — ChatGPT가 \( S_N^{sub} \)의 부분집합 \( S_*^{sub} \subset S_N^{sub} \)를 사용하는 instruction \( Inst_* \)들을 생성. (예: 부분집합이 calculator뿐이면 계산 질의, calculator+calendar면 둘 다 요구하는 질의)</li>
+    <li><strong>필터링 후</strong> — 약 <strong>200k qualified (instruction, relevant API) pairs</strong> 확보 → 이 쌍이 <strong>API retriever 학습</strong>에 활용됨.</li>
+  </ol>
+
+  <h3>③ Solution Path Annotation — 유효성 검증 + DFSDT</h3>
+  <p>생성된 instruction이 실제로 할당된 API로 풀리는지(매핑의 validity)를 확인하기 위해, ChatGPT에게 실제로 풀게 한다:</p>
+  <ul>
+    <li>매 라운드 \( t \)에서 ChatGPT가 이전 상호작용(action들과 API response \( r \))에 기반해 action \( a_t \) 생성 → 행동 시퀀스 \( \{a_1, \dots, a_N\} \).</li>
+    <li>ChatGPT의 <strong>function call 기능</strong>을 사용: 샘플링된 \( S_N^{sub} \)를 <strong>system message 수준에서 available functions로</strong> 제공.</li>
+    <li>시퀀스를 끝내기 위한 <strong>추가 함수 2개</strong>: <strong>(1) "Finish with final answer"</strong> & <strong>(2) "Finish by giving up"</strong>.</li>
+    <li>최종 답에 도달하면 → (instruction, API set, action sequence)를 <strong>golden data</strong>로 채택. 포기(give up)로 끝나면 → instruction과 API가 mismatch이거나 invalid한 질의 → <strong>데이터에서 제거</strong>.</li>
+    <li>탐색 효율을 위해 <strong>DFSDT (depth-first search-based decision tree)</strong> 사용: 한 행동 경로를 깊이 우선으로 끝까지 시도하고, 막히면 되돌아가(backtrack) 다른 분기를 시도. 단일 경로만 좇는 CoT/ReAct식 순차 생성과 달리 <strong>여러 분기를 탐색해 유효한 solution path를 더 잘 찾음</strong>.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "외부 API 서버가 실패할 수도 있으므로 시도가 거듭될 수 있습니다. 답을 만들면 golden data로 수집하고, 실패하면 통째로 버립니다.
+    이 시뮬레이션을 촉진하기 위해 효율적인 탐색용 <strong>depth-first search</strong>가 고려됩니다.
+    여기 나오는 action이나 <strong>ReAct</strong> 같은 개념은 <strong>에이전트 강의(#11)에서 큰 부분</strong>이 될 겁니다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <ul style="margin-bottom:0">
+      <li>숫자 암기: <strong>3,451 tools · 16,464 APIs (RapidAPI) · ~200k instruction-API pairs · few-shot 12(single)/36(multi) 중 3개 사용</strong>.</li>
+      <li>품질 관리 방식 대비: Toolformer는 <strong>loss 감소</strong>로 필터링, ToolLLM은 <strong>ChatGPT가 실제로 풀어 답에 도달하는지(solution path)</strong>로 필터링.</li>
+      <li>종료 함수 2개(Finish with final answer / Finish by giving up)와 DFSDT의 역할(분기 탐색·backtracking).</li>
+    </ul>
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"ToolLLM filters its training data using the next-token prediction loss reduction criterion, like Toolformer." → <strong>False</strong>. ToolLLM validates data by having ChatGPT actually solve the instruction; only paths that reach "Finish with final answer" are kept as golden data.</li>
+      <li>"ToolLLM shows all 16,464 APIs to ChatGPT at once when generating instructions." → <strong>False</strong>. That is infeasible (each API needs name/description/documentation in context); ToolLLM subsamples \( N \) APIs at a time.</li>
+      <li>"In ToolLLM, one tool corresponds to exactly one API." → <strong>False</strong>. RapidAPI has a hierarchy: one tool can contain multiple APIs (3,451 tools vs 16,464 APIs).</li>
+      <li>"DFSDT generates a single chain of actions and stops when the model fails." → <strong>False</strong>. DFSDT explores multiple branches depth-first and can backtrack, unlike single-path CoT/ReAct-style generation; failure is handled by the explicit "give up" function and that data is discarded.</li>
+      <li>"ToolLLM is a self-supervised method requiring no stronger LLM." → <strong>False</strong>. It relies heavily on a strong closed LLM (ChatGPT) for both instruction generation and solution path annotation.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== Section 7 ===== -->
+<section id="s7">
+  <h2><span class="num">7</span> ToolLLM — Retriever · ToolLLaMA · 평가 <span class="en">(Inference Pipeline &amp; Experiments)</span></h2>
+
+  <h3>추론 시 전체 구조 — RAG와의 유사성</h3>
+  <p>테스트 instruction이 주어지면:</p>
+  <ol class="steps">
+    <li><strong>Retrieving relevant tools &amp; APIs</strong> — API retriever로 top-K 관련 API 검색 (= RAG의 document retrieval에 대응).</li>
+    <li><strong>Generation with given APIs</strong> — 검색된 API들을 컨텍스트로 받아 reasoning &amp; API call의 action들을 생성 (= RAG의 generation에 대응).</li>
+  </ol>
+
+  <h3>API Retriever (Dense Retriever)</h3>
+  <ul>
+    <li><strong>BERT 기반 dense retriever</strong>를 학습 (DPR과 유사). <strong>Query = instruction, Passage = API document</strong>.</li>
+    <li><strong>Positive pair</strong>: instruction과 그에 할당된 relevant API. <strong>Negative</strong>: 다른 instruction이 사용하는 API.</li>
+    <li>결과: 토큰 기반 <strong>BM25</strong>는 물론, OpenAI의 임베딩 모델 <strong>Ada</strong>까지 능가 <span class="en">(It even outperforms the embedding model (Ada) provided by OpenAI)</span>.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "흥미롭죠? BM25는 도구 호출에 특화돼 있지 않고 Ada도 일반(general) 임베딩 모델입니다.
+    그런데 <strong>도구 호출은 매우 특수한 성질</strong>을 가져서, 이 도메인에 대한 <strong>fine-tuning이 매우 도움이 됩니다</strong>."
+  </div>
+
+  <h3>ToolLLaMA & ToolEval</h3>
+  <ul>
+    <li><strong>ToolLLaMA</strong>: 수집한 instruction–solution path 쌍으로 <strong>LLaMA(-2) 7B를 fine-tuning</strong>한 모델. 일부 시나리오에서 당시 <strong>ChatGPT에 필적하는(comparable) 성능</strong>.</li>
+    <li>평가(ToolEval) 두 지표:
+      <ul>
+        <li><strong>Pass (rate)</strong>: 주어진 지시를 LLM이 답할 수 있었는가 <span class="en">(answerability by LLM)</span> — 제한된 횟수 안에 instruction을 성공적으로 완수한 비율.</li>
+        <li><strong>Win (rate)</strong>: <strong>ChatGPT(의 solution)와 비교한 품질</strong> — 평가자가 둘 중 어느 답이 나은지 비교.</li>
+      </ul>
+    </li>
+    <li><strong>핵심 발견</strong>: 학습된 retriever로 검색한 <strong>top-5 API가, 데이터 생성에 쓰였던 ground-truth API 집합 \( S_N^{sub} \)보다 오히려 더 좋은 성능</strong> — 원래 집합은 N개 중에서 고른 것에 불과해, retriever가 <strong>더 다양한(diverse) 관련 API</strong>를 찾아주기 때문.</li>
+  </ul>
+
+  <h3>📊 필수 비교표 — Toolformer vs ToolLLM</h3>
+  <table>
+    <tr><th>구분</th><th>Toolformer (Schick et al., NeurIPS 2023 Oral)</th><th>ToolLLM (Qin et al., ICLR 2024)</th></tr>
+    <tr><td><strong>학습 패러다임</strong></td><td>Self-supervised learning (no human annotation)</td><td>Instruction tuning (SFT), ChatGPT를 annotator로 활용한 자동 파이프라인</td></tr>
+    <tr><td><strong>데이터 생성</strong></td><td>사전학습 코퍼스에 LM 자신의 in-context learning으로 API call 후보를 삽입(augment)</td><td>ChatGPT가 instruction 생성 + solution path annotation (function calling 사용)</td></tr>
+    <tr><td><strong>품질 필터링 기준</strong></td><td>Loss 기반: \( L_i^- - L_i^+ \geq \tau \) (next-token loss를 τ 이상 줄이는 호출만 유지)</td><td>실행 기반: "Finish with final answer"에 도달한 solution path만 golden data로 유지 (give up → 폐기)</td></tr>
+    <tr><td><strong>도구 수</strong></td><td><strong>5개</strong> (QA, Wikipedia search, calculator, calendar, MT) — 증강 비용이 도구 수에 비례</td><td><strong>3,451 tools / 16,464 APIs</strong> (RapidAPI, real-world scale)</td></tr>
+    <tr><td><strong>탐색 방식</strong></td><td>탐색 없음 — 각 위치의 단일 API call 후보를 독립적으로 평가</td><td><strong>DFSDT</strong> (depth-first search decision tree, backtracking 가능)</td></tr>
+    <tr><td><strong>Multi-tool</strong></td><td>단일 호출 단위 (multi-tool 연쇄 미지원)</td><td>Multi-tool instruction을 명시적으로 생성 (few-shot 36개 풀)</td></tr>
+    <tr><td><strong>Retrieval 단계</strong></td><td>없음 (5개 도구 전부 학습에 포함)</td><td>BERT 기반 API retriever (DPR식; BM25·Ada 능가), 추론은 RAG와 유사한 2단계</td></tr>
+    <tr><td><strong>베이스 모델</strong></td><td>GPT-J (6B) → 여러 QA 과제에서 GPT-3 능가</td><td>LLaMA(-2) 7B → ToolLLaMA, ChatGPT에 필적</td></tr>
+    <tr><td><strong>평가</strong></td><td>downstream task 성능 (+ tool-disabled ablation)</td><td>ToolEval: <strong>Pass rate / Win rate</strong> (vs ChatGPT)</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <ul style="margin-bottom:0">
+      <li>ToolLLM 추론 = RAG 구조의 유추: <strong>API retrieval ↔ document retrieval, action generation ↔ answer generation</strong>.</li>
+      <li>Retriever 학습 셋업(query=instruction, passage=API document, negative=다른 instruction의 API)과 <strong>BM25·Ada보다 우수</strong>.</li>
+      <li>"<strong>Retrieved top-5 APIs &gt; ground-truth \( S_N^{sub} \)</strong>" — 이유는 <strong>diversity</strong>. 직관에 반하는 결과라 출제 1순위.</li>
+      <li>Pass = answerability(완수율), Win = ChatGPT 대비 품질 비교 — 두 지표의 정의 구분.</li>
+    </ul>
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Using the ground-truth API set used for data generation always upper-bounds the performance of retrieved APIs." → <strong>False</strong>. Retrieved top-5 APIs performed even <strong>better</strong> than the ground-truth \( S_N^{sub} \), because retrieval allows more diversity (the original set was just a choice among N sampled APIs).</li>
+      <li>"ToolLLM uses OpenAI's Ada embeddings as its API retriever." → <strong>False</strong>. It trains its own BERT-based dense retriever (DPR-style), which <strong>outperforms</strong> Ada (and BM25). Ada is a baseline, not the retriever.</li>
+      <li>"Win rate measures whether the model can finish the instruction within a limited budget." → <strong>False</strong>. That is the <strong>Pass</strong> metric (answerability); <strong>Win</strong> compares solution quality against ChatGPT.</li>
+      <li>"ToolLLaMA is a fine-tuned version of ChatGPT." → <strong>False</strong>. It is LLaMA(-2) 7B fine-tuned on the collected instruction–solution pairs; ChatGPT was only the data annotator / comparison target.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 문제 섹션 ===== -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 중간고사 이후 범위)</span></h2>
+  <p style="font-size:14px;color:var(--muted)">시험 형식: T/F는 정답 3점 / 오답 0점 / 무응답 1점. Pick-all은 "any wrong answer will lead to 0 points".</p>
+
+  <h3>True / False</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In prompting-based tool use (function calling), the tool definitions inserted via the <code>tools</code> argument are internally converted into a natural-language description appended to the system message, and the LLM decides when to call an API via implicit in-context learning.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The tools list becomes a system-level instruction ("You have access to the following tools") with each tool's name and description in natural language; the model relies on implicit in-context learning to decide whether/when to call, which is why this approach may be reliable only for large LLMs.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Toolformer keeps an API call at position \( i \) if and only if \( L_i^{+} - L_i^{-} \geq \tau \), i.e., when conditioning on the call increases the next-token prediction loss by at least \( \tau \).</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> The direction is reversed. The criterion is \( L_i^{-} - L_i^{+} \geq \tau \): the call (with its result) must <strong>reduce</strong> the loss by at least \( \tau \) compared to making no API call or receiving no result. Since lower loss is better, \( L_i^{+} \) must be sufficiently small.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In Toolformer's filtering step, \( L_i^{-} \) is defined as the minimum of two losses: the loss with no API call at all (\( L_i(\varepsilon) \)) and the loss when the API call is made but returns an empty result (\( L_i(e(c_i, \varepsilon)) \)).</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The query-only case is included because the call text itself can already help next-token prediction; taking the min gives a stronger guarantee that the improvement comes from the call <em>and its result</em>, not from the query text alone.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Toolformer requires a separate reward model and human preference annotations to decide which API calls to include in its training corpus.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Toolformer is <strong>self-supervised</strong>: candidate calls are sampled by the LM via in-context learning, executed, and filtered automatically by the loss-reduction criterion \( L_i^- - L_i^+ \geq \tau \). No reward model and no human annotation are involved.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>At inference time, a Toolformer-trained model pauses decoding when it generates the "→" token, sends the generated query to the external API, inserts the returned result, and then resumes generation.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The model itself generates <code>&lt;API&gt;</code>, the API name, the query, and "→" via next-token prediction (it was fine-tuned to do so), but the text on the right side of the arrow comes from the external API, not from the model — very similar to how Search-R1 inserts retrieval results at special tokens.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>ToolLLM validates each generated instruction by checking whether the resulting tool-call sequence reduces the next-token prediction loss on a pre-training corpus.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> That is Toolformer's criterion. ToolLLM validates data via <strong>solution path annotation</strong>: ChatGPT actually tries to solve the instruction with the assigned APIs (using its function-call feature and DFS-based search), and only sequences ending with "Finish with final answer" are kept as golden data; "Finish by giving up" cases are discarded.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In ToolLLM's experiments, providing the model with the ground-truth API set \( S_N^{sub} \) (used to generate the test instruction) yields better performance than providing the top-5 APIs returned by the trained API retriever.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Counter-intuitively, the <strong>retrieved top-5 APIs perform even better</strong> than the ground-truth set, because retrieval allows more diversity — the original set was merely a subset chosen from \( N \) randomly sampled APIs.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Setting the Toolformer threshold \( \tau \) to a larger value results in a smaller but higher-quality augmented dataset, since only API calls that reduce the loss by a larger margin are kept.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> With \( \tau = 0 \), any call that helps even slightly is added; a larger \( \tau \) is a stricter margin, so fewer calls survive but each is more clearly useful. \( \tau \) is a developer-side hyperparameter.</div>
+    </details>
+  </div>
+
+  <h3>Pick all that are correct <span class="en">(any wrong answer → 0 points)</span></h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about <strong>prompting-based tool use</strong>?</p>
+      <ol type="a">
+        <li>The LLM understands an API tool based on its tool name and natural-language description provided in the system prompt.</li>
+        <li>After the model decides to call a function, it returns the function name and input arguments, and the developer-side code executes the function.</li>
+        <li>It is preferable to training-based approaches when the target is a new or customized API, since training on such APIs is difficult.</li>
+        <li>Because tool information is given in context, this approach works equally reliably for small open-source LLMs and large proprietary LLMs.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. The tools list is converted into a system message ("You have access to the following tools") with names and descriptions; these natural-language cues are all the LLM sees.</li>
+          <li>(b) Correct. The model only outputs the call (name + arguments); execution happens outside the model, and the result is supplied back.</li>
+          <li>(c) Correct. Flexibility for new/custom APIs is the main advantage of the prompting-based approach.</li>
+          <li class="wrong">(d) Incorrect. It relies on implicit in-context learning, which may be reliable only for large LLMs; small models with limited in-context learning ability make this approach suboptimal.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about <strong>Toolformer</strong> (Schick et al., NeurIPS 2023)?</p>
+      <ol type="a">
+        <li>Candidate API calls are sampled by prompting a language model with few-shot examples (in-context learning), then actually executed to obtain results.</li>
+        <li>An API call is kept only when \( L_i^{-} - L_i^{+} \geq \tau \), where \( L_i^{+} \) conditions on both the call and its response.</li>
+        <li>After filtering, the model is fine-tuned with a specially designed tool-use objective that differs from standard language modeling.</li>
+        <li>The fine-tuned GPT-J (6B) outperforms the much larger GPT-3 on several QA tasks thanks to tool use.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. Step 1 (sampling via in-context learning) and Step 2 (executing API calls) of the pipeline.</li>
+          <li>(b) Correct. This is exactly the filtering criterion; \( L_i^- \) is the min over the no-call and call-without-response cases.</li>
+          <li class="wrong">(c) Incorrect. Fine-tuning uses the <strong>standard next-token prediction (language modeling) objective</strong> on the augmented corpus; API calls are just text tokens with special markers.</li>
+          <li>(d) Correct. Despite being far smaller than GPT-3, GPT-J with tool use surpasses it on several QA tasks, and the ablation with tool use disabled shows the gain comes mainly from tool calls, not fine-tuning alone.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about <strong>ToolLLM's data construction pipeline</strong> (Qin et al., ICLR 2024)?</p>
+      <ol type="a">
+        <li>It collects 3,451 tools with 16,464 APIs by filtering RapidAPI, where one tool may contain multiple APIs.</li>
+        <li>For instruction generation, all collected APIs are provided to ChatGPT simultaneously so that it can freely choose any combination.</li>
+        <li>During solution path annotation, the sampled APIs are fed to ChatGPT as available functions, and two extra functions — "Finish with final answer" and "Finish by giving up" — are defined to terminate an action sequence.</li>
+        <li>Depth-first search is used to explore action sequences efficiently, and only paths reaching a final answer are kept as golden data.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. RapidAPI is an API marketplace with a tool ⊃ API hierarchy; the numbers 3,451 / 16,464 are after filtering.</li>
+          <li class="wrong">(b) Incorrect. Showing 16K+ APIs at once is infeasible (each needs name, description, documentation in context); ToolLLM samples \( N \) APIs (\( S_N^{sub} \)) at a time, and instructions involve subsets \( S_*^{sub} \subset S_N^{sub} \).</li>
+          <li>(c) Correct. ChatGPT's function-call feature is used with APIs given at system-message level, plus the two termination functions.</li>
+          <li>(d) Correct. DFSDT enables backtracking over branches; "give up" sequences are removed, leaving only validated (instruction, API, solution path) golden data.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about <strong>ToolLLM's retriever and evaluation</strong>?</p>
+      <ol type="a">
+        <li>The API retriever is a BERT-based dense retriever (similar to DPR) trained with instructions as queries and API documents as passages.</li>
+        <li>The trained retriever underperforms OpenAI's Ada embedding model because Ada was trained on far more data.</li>
+        <li>The Pass metric measures whether the LLM can successfully complete the instruction, while the Win metric compares solution quality against ChatGPT.</li>
+        <li>ToolLLaMA is obtained by fine-tuning LLaMA on the instruction–solution path pairs and achieves performance comparable to ChatGPT in some scenarios.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Query = instruction, passage = API document; negatives are APIs used by other instructions.</li>
+          <li class="wrong">(b) Incorrect. The fine-tuned retriever <strong>outperforms</strong> both BM25 and Ada — tool calling has special properties for which domain-specific fine-tuning helps a lot.</li>
+          <li>(c) Correct. Pass = answerability (completing the instruction); Win = preference comparison against ChatGPT's solution.</li>
+          <li>(d) Correct. ToolLLaMA (fine-tuned LLaMA-7B) matches ChatGPT-level performance in some scenarios.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following correctly contrast <strong>Toolformer and ToolLLM</strong>?</p>
+      <ol type="a">
+        <li>Toolformer is self-supervised (filtering by loss reduction), whereas ToolLLM relies on a strong closed LLM (ChatGPT) for instruction generation and solution path annotation.</li>
+        <li>Toolformer uses 5 tools while ToolLLM covers 16,000+ real-world APIs, because Toolformer's augmentation cost grows with the number of tools.</li>
+        <li>Both methods include an API retrieval step at inference time to select relevant tools for a given query.</li>
+        <li>ToolLLM's inference pipeline is analogous to RAG: retrieving relevant APIs corresponds to document retrieval, and generating actions with the APIs corresponds to generation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the core methodological difference.</li>
+          <li>(b) Correct. The per-tool augmentation cost is exactly why Toolformer used only 5 tools and why ToolLLM was motivated to scale to real-world APIs.</li>
+          <li class="wrong">(c) Incorrect. Only <strong>ToolLLM</strong> has a retrieval step (top-K APIs via the trained dense retriever). Toolformer trains all 5 tools into the model and needs no retrieval.</li>
+          <li>(d) Correct. The lecture explicitly drew this RAG analogy for ToolLLM's two-stage inference.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 마무리 요약 카드 ===== -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>Tool use 동기</strong></td><td>계산·실시간 정보·외부 행동은 LLM 단독으론 불가(hallucination 위험); tool use는 agent의 핵심 기능(+ memory, planning &amp; action)이고 retrieval(RAG)도 tool의 일종</td></tr>
+    <tr><td><strong>Prompting 기반 (function calling)</strong></td><td>tools 인자 → system message의 자연어 설명 → implicit in-context learning으로 호출 결정. 모델은 이름+인자만 반환, 실행은 개발자 측. 유연하지만 large LLM에서만 신뢰 가능. Claude skill.md와 동일 구성(차이는 API 유무)</td></tr>
+    <tr><td><strong>Toolformer 핵심</strong></td><td>Self-supervised: "useful tool → helpful to predict next token". \( c=(a_c,i_c) \), 특수 토큰 &lt;API&gt;,&lt;/API&gt;,→ 로 텍스트화</td></tr>
+    <tr><td><strong>Toolformer 5단계</strong></td><td>① in-context로 호출 샘플링 ② 실행 ③ filtering: \( L_i^- - L_i^+ \geq \tau \), \( L_i^- = \min(L_i(\varepsilon), L_i(e(c_i,\varepsilon))) \) ④ 표준 LM loss로 fine-tuning ⑤ 추론 시 → 에서 멈추고 API 결과 삽입</td></tr>
+    <tr><td><strong>Toolformer 결과/한계</strong></td><td>GPT-J 6B + 5 tools가 GPT-3 능가(이득은 tool call에서); 그러나 비용이 도구 수에 비례 → real-world scale 불가</td></tr>
+    <tr><td><strong>ToolLLM 데이터</strong></td><td>RapidAPI에서 3,451 tools/16,464 APIs → ChatGPT로 instruction 생성(N개 subsample, few-shot 12/36, ~200k pairs) → solution path annotation(DFSDT, Finish/give-up)으로 golden data만 유지</td></tr>
+    <tr><td><strong>ToolLLM 추론/평가</strong></td><td>RAG 유사 2단계(API retrieval → generation); BERT dense retriever가 BM25·Ada 능가; ToolLLaMA(LLaMA-7B)는 ChatGPT 필적; Pass=완수율, Win=ChatGPT 대비 품질; retrieved top-5 &gt; ground-truth (diversity)</td></tr>
+    <tr><td><strong>한 줄 대비</strong></td><td>Toolformer = loss로 거르는 self-supervised 5-tool 증강 / ToolLLM = ChatGPT가 풀어서 거르는 real-world 16K-API instruction tuning + DFSDT</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="5. LLM Agents 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

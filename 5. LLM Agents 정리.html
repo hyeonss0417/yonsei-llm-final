@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11장. LLM 에이전트</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="6. RL with LLMs 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #11</div>
+  <h1>11장. LLM 에이전트 <span style="font-weight:400;font-size:20px;">(LLM Agents)</span></h1>
+  <div class="subtitle">LLM을 brain으로 삼아 Perception·Planning &amp; Action·Tools·Memory를 갖춘 에이전트 — ReAct/Reflexion/ToT, MemGPT/A-Mem, Multi-agent까지 3개 강의에 걸친 대형 챕터</div>
+  <div class="meta">
+    <span>📅 강의일: 05/20 · 05/27 · 06/01 (3개 강의)</span><span>📊 예상 비중: 매우 높음 (기말 핵심)</span><span>⏱ 분량: 본문 9개 섹션 + 예상문제 17</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">LLM Agent의 정의와 핵심 구성요소 (Perception · Reasoning · Action)</a></li>
+    <li><a href="#s2">Perception 확장 — ViT 패치 임베딩, LLaVA, VideoPoet, VLA</a></li>
+    <li><a href="#s3">Planning &amp; Action ① — ReAct (reasoning + acting interleave)</a></li>
+    <li><a href="#s4">Planning &amp; Action ② — Reflexion (verbal RL)</a></li>
+    <li><a href="#s5">Planning &amp; Action ③ — Plan-and-Solve &amp; Tree of Thoughts (+4종 비교표)</a></li>
+    <li><a href="#s6">Multi-modal Action — Diffusion 결합 (MetaQueries, BLIP3-o)</a></li>
+    <li><a href="#s7">Memory ① — MemGPT (OS-inspired memory)</a></li>
+    <li><a href="#s8">Memory ② — A-Mem (Agentic Memory) + MemGPT vs A-Mem 비교</a></li>
+    <li><a href="#s9">Multi-agent System — MDAgents · Orchestration · Routing</a></li>
+    <li><a href="#quiz">예상문제 (T/F 10 + Pick-all 7)</a></li>
+  </ol>
+</div>
+
+<!-- ============ S1 ============ -->
+<section id="s1">
+  <h2><span class="num">1</span> LLM Agent의 정의와 핵심 구성요소 <span class="en">(Key Concepts)</span></h2>
+
+  <p>Agentic AI(multi-agent system)는 시장 규모·연구 분야 양면에서 현재 AI의 가장 뜨거운 주제다. MMLU·GPQA 같은 단순 추론 벤치마크는 최신 LLM에게 거의 풀린 문제(solved)로 간주되고, 대기업들의 평가는 <strong>agentic 벤치마크</strong>(예: SWE-bench)로 옮겨가고 있다 (DeepSeek-V3.2, Claude Opus 4.5 발표 등에 반영).</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Multi-agent system</strong>: "multiple intelligent agents"로 구성되어, <strong>개별 에이전트 하나로는 불가능한(impossible for individual agent)</strong> 문제를 풀 수 있는 시스템.<br>
+    <strong>Intelligent agent</strong>: 환경을 <strong>지각(perceive)</strong>하고, <strong>행동(action)</strong>을 취하며, 이를 반복해 <strong>스스로 성능을 개선(improving)</strong>할 수 있는 개체. 지각과 행동 사이에 암묵적으로 <strong>추론(reasoning)</strong>이 존재 → 핵심 3요소는 <strong>Perception, Reasoning, Action</strong>.
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "최근 'agent system'이라고 말할 때의 정의는 사실상 <strong>LLM이 에이전트 시스템을 구동(drive)한다</strong>는 것을 전제합니다. 즉 LLM을 지능형 에이전트의 brain으로 간주합니다."
+  </div>
+
+  <h3>LLM Agent = LLM + (1) Planning &amp; Action + (2) Tools + (3) Memory</h3>
+  <p>LLM의 기본 역량(언어 이해, instruction following, reasoning)에 더해, 에이전트가 되려면 세 가지 추가 역량이 필요하다 (Lilian Weng 블로그 기준):</p>
+  <ol class="steps">
+    <li><strong>Planning &amp; Action</strong> — 문제를 계획하고 환경에 행동을 취하는 능력 (ReAct, Reflexion, Plan-and-Solve, ToT)</li>
+    <li><strong>Tools</strong> — 외부 도구 호출 (#10 Tool Use 챕터에서 다룸)</li>
+    <li><strong>Memory</strong> — 컨텍스트 윈도우를 넘는 경험의 외부 저장·선택적 검색 (MemGPT, A-Mem)</li>
+  </ol>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    슬라이드에 반복 강조된 문장: <strong>"Not simply improved by just scaling-up model &amp; data size"</strong> — 이런 추가 역량은 모델·데이터를 키운다고 저절로 개선되지 않으며, 새 학습 방법·새 데이터 유형·LLM 주위의 새로운 harness 설계가 필요하다. 메모리는 LLM 내부에 통합하기 가장 어려운 부분(외부 시스템으로 처리), tool use는 학습으로 통합 가능.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Agentic capabilities (planning, tool use, memory) naturally emerge by simply scaling up model and data size." → <strong>False</strong>. The slide explicitly states they are <em>not</em> simply improved by scaling-up; new training methods/data/harnesses are needed.</li>
+      <li>"A multi-agent system is any system that uses an LLM more than once." → <strong>False</strong>. The definition requires multiple intelligent agents solving problems that are impossible for an individual agent.</li>
+      <li>"An intelligent agent only needs perception and action." → <strong>False</strong>. Reasoning (implicit between perception and action) and the ability to improve its performance through repetition are also part of the definition.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S2 ============ -->
+<section id="s2">
+  <h2><span class="num">2</span> Perception 확장 — Multi-modality <span class="en">(ViT, LLaVA, VideoPoet, VLA)</span></h2>
+
+  <h3>예시로 보는 Perception·Reasoning·Action: VLA 모델</h3>
+  <p><strong>Vision-Language-Action (VLA) 모델</strong> (예: <strong>OpenVLA</strong>, Kim et al., arXiv 24.06)은 에이전트의 가장 단순·자연스러운 형태다. 로봇 팔이 "가지를 목표 지점에 놓기" 과제를 푼다면:</p>
+  <ul>
+    <li><strong>Perception</strong>: 카메라 뷰 이미지 + 텍스트 지시를 모델 입력으로 처리</li>
+    <li><strong>Reasoning</strong>: backbone LLM이 텍스트 수준(또는 latent 수준) 추론으로 무엇을 할지 결정</li>
+    <li><strong>Action</strong>: 관절 각도(joint angles) 등을 <strong>special tokens</strong>로 생성 → 실제 세계에서 실행</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "파이프라인은 결국 LLM과 매우 비슷합니다. 입력 정보를 LLM이 이해할 수 있는 벡터로 변환하고, 전통적인 <strong>next-token prediction</strong>으로 output special tokens를 만드는 것 — tool calling과 ReAct에서 이미 본 패턴이고, 토크나이저가 정의하는 것일 뿐입니다."
+  </div>
+
+  <h3>Vision Transformer와 패치 임베딩 (patch embedding)</h3>
+  <p>이미지를 LLM에 넣는 가장 직접적인 방법의 토대 (Dosovitskiy et al., ICLR 2021 Oral). raw image \( \mathbf{X}_v \in \mathbb{R}^{3\times H\times W} \) (3 = RGB 채널, H = 높이, W = 너비)를 직접 쓰는 대신:</p>
+  <ol class="steps">
+    <li>이미지를 여러 개의 <strong>패치(patch)</strong>로 분할 (예: 3×3 = 9개) — 패치 수를 \( L \)로 표기</li>
+    <li>사전학습된 <strong>vision encoder</strong>(CNN, ViT 등)로 각 패치를 고정 차원 벡터로 변환 → grid features \( \mathbf{Z}_v \in \mathbb{R}^{L\times D'} \)</li>
+    <li>결과: 텍스트의 word embedding 시퀀스와 똑같은 형태의 <strong>벡터 시퀀스</strong></li>
+  </ol>
+
+  <h3>LLaVA (Large Language and Vision Assistant)</h3>
+  <p>(Liu et al., Visual Instruction Tuning, NeurIPS 2023 Oral; Improved Baselines, CVPR 2024) — <strong>projection-based method</strong>의 대표이자 현재까지 지배적·표준 방식.</p>
+  <div class="formula"><div class="fname">LLaVA의 projector</div>
+    $$ \mathbf{Z}_v \in \mathbb{R}^{L\times D'} \xrightarrow{\;\mathbf{W}: \mathbb{R}^{D'}\to\mathbb{R}^{D}\;} \mathbf{H}_v \in \mathbb{R}^{L\times D} $$
+    <p style="font-size:14px;margin:6px 0 0;">vision encoder의 고유 차원 \( D' \)는 LLM 차원 \( D \)와 불일치(mismatch)할 수 있음 → <strong>learnable projector</strong> \( \mathbf{W} \) (가장 단순하게는 \( D'\times D \) 행렬 하나)를 곱해 LLM embedding space로 매핑. \( \mathbf{H}_v \)는 word embedding \( \mathbf{H}_q \)와 같은 subspace에 놓여야 하며, 이것이 학습이 필요한 이유.</p>
+  </div>
+
+  <h4>2단계 학습 (two sequential steps)</h4>
+  <table>
+    <tr><th>단계</th><th>이름</th><th>학습 대상</th><th>동결(frozen)</th><th>목적</th></tr>
+    <tr><td><strong>Stage 1</strong></td><td>Feature alignment</td><td><strong>projector W만</strong></td><td>vision encoder + LLM</td><td>무작위 초기화된 projector의 warm-up — 소량의 image-text pairs로 vision feature를 LLM word embedding space에 정렬</td></tr>
+    <tr><td><strong>Stage 2</strong></td><td>Instruction tuning</td><td><strong>projector + LLM (jointly)</strong></td><td><strong>vision encoder는 계속 frozen</strong></td><td>추가 성능 향상을 위한 동시(simultaneous) 미세조정</td></tr>
+  </table>
+  <p><strong>데이터</strong>: 멀티모달 instruction-following 데이터가 없어서, LLaVA는 (당시 이미지를 못 보던) <strong>GPT-4와 ChatGPT로</strong> conversation / detailed description / complex reasoning 3종의 인공 데이터를 생성해 학습에 사용했다.</p>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "왜 vision encoder까지 3개를 다 학습하지 않냐는 질문에는 <strong>golden answer가 없습니다</strong>. 경험적 증거(empirical evidence)에 달려 있고, 최근 어떤 연구는 반대로 vision encoder+projector만 학습하고 LLM을 동결하기도 합니다."
+  </div>
+
+  <h3>VideoPoet — projector 패러다임의 일반화</h3>
+  <p>(Kondratyuk et al., <strong>ICML 2024</strong>, Google) — 비디오·오디오·이미지 등 더 많은 모달리티를 이해/생성하는 LLM. 핵심 가정: <strong>각 도메인마다 효율적인 tokenization 방법</strong>이 필요하다. 절차는 LLaVA와 동일: ① 목표 모달리티 결정 → ② 사전학습된 인코더(예: audio encoder)를 빌려옴 → ③ projector + instruction tuning으로 LLM embedding space에 연결.</p>
+  <div class="definition"><div class="label">📖 용어 주의</div>
+    projector가 변환한 벡터를 흔히 <strong>token</strong>이라 부른다(vision token, audio token, video token). 단, <strong>text token은 정수(integer)</strong>지만 <strong>vision/video token은 벡터</strong> — 고정된 vocabulary와 고정된 word embedding이 없기 때문. 이 구분은 T/F 출제 포인트.
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 모달리티 결합 공식: <em>pre-trained encoder → patch/grid features \( \mathbf{Z}_v \) → projector \( \mathbf{W} \) → \( \mathbf{H}_v \) (LLM embedding space)</em>. ② LLaVA 2단계에서 <strong>무엇이 학습되고 무엇이 동결되는지</strong> 단계별로 정확히. ③ vision encoder는 <strong>두 단계 모두 동결</strong>. ④ 학습 데이터는 GPT-4/ChatGPT로 생성.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In LLaVA stage 2 (instruction tuning), the vision encoder is fine-tuned together with the LLM." → <strong>False</strong>. The visual encoder is kept <em>frozen</em>; only the projector and LLM are fine-tuned jointly.</li>
+      <li>"In LLaVA stage 1, the LLM and the projector are trained while the vision encoder is frozen." → <strong>False</strong>. Stage 1 (feature alignment) trains <em>only the projector</em>; both vision encoder and LLM are frozen.</li>
+      <li>"Vision tokens, like text tokens, are integers from a fixed vocabulary." → <strong>False</strong>. Vision/video tokens are vectors; they have no fixed vocabulary or fixed word embedding.</li>
+      <li>"LLaVA collected its multimodal instruction data via human annotation." → <strong>False</strong>. The data was generated using GPT-4 and ChatGPT (text-only at the time).</li>
+      <li>"The projector is needed because the vision encoder's output dimension D&prime; may mismatch the LLM's embedding dimension D." → <strong>True</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S3 ============ -->
+<section id="s3">
+  <h2><span class="num">3</span> Planning &amp; Action ① — ReAct <span class="en">(Reasoning + Acting)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>ReAct</strong> (Yao et al., ICLR 2023): <strong>reasoning과 acting을 LLM 안에서 통합(integrating reasoning and acting within LLM)</strong>. action을 <strong>task-specific discrete actions와 language의 결합(combination)</strong>으로 확장하여, Thought → Action → Observation 사이클을 종료 조건까지 반복. <strong>few-shot prompting으로 구현</strong>(학습 없음).
+  </div>
+
+  <p>CoT가 질문과 답 사이에 추론을 끼워 넣듯, ReAct는 <strong>추론 사이에 행동 단계를 끼워(interleave)</strong> 넣는다. CoT는 추론만, action-only는 반성 없는 행동만 하는 데 비해, ReAct는 둘을 동시에 한다. 행동이 환경(웹 등)에서 실행되면 그 결과를 <strong>observation</strong>으로 받아 다음 추론에 반영한다.</p>
+  <ul>
+    <li><strong>Wikipedia QA(HotpotQA 등)에서의 행동 3종</strong>: <code>search</code>, <code>lookup</code>, <code>finish</code> — LLM이 호출할 수 있는 Python 함수처럼 생각하면 됨.</li>
+    <li><strong>행동(action)의 일반 정의</strong>: LLM이 기술하더라도 <strong>LLM 바깥에서 외부 호출로 수행되는 모든 행위</strong> — tool calling도, retriever도 하나의 구체적 action이다.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "IRCoT와 뭐가 다르냐는 질문 — 높은 수준에서는 같습니다. 하지만 <strong>IRCoT는 action이 retriever로 고정</strong>된 것이고, ReAct에서 retriever를 가능한 action 중 하나로 넣으면 IRCoT에 대응합니다. <strong>ReAct가 더 일반적인 개념</strong>입니다."
+  </div>
+
+  <h3>실험 결과와 ReAct ↔ CoT-SC backoff</h3>
+  <p>과제에 따라 효과가 크게 다름 — QA에서는 <strong>CoT-SC(self-consistency: 여러 reasoning paths 생성 후 majority vote)가 ReAct 단독보다 오히려 좋을 수 있다</strong>. 그러나 두 메커니즘을 결합하면 state-of-the-art:</p>
+  <table>
+    <tr><th>결합 방식</th><th>동작</th><th>직관</th></tr>
+    <tr><td><strong>ReAct → CoT-SC</strong></td><td>ReAct가 <strong>주어진 step 수 안에 답을 반환하지 못하면</strong> CoT-SC로 back off</td><td>모델이 과제 처리에 어려움 → 추론에 더 집중해 단일 답 생성</td></tr>
+    <tr><td><strong>CoT-SC → ReAct</strong></td><td>n개 경로 중 <strong>다수결 득표가 n/2 미만이면</strong> ReAct로 back off</td><td>경로들이 한 답에 동의 못 함 = 현재 정보 부족 → 환경에서 정보를 더 수집</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① ReAct = reasoning + acting interleave, few-shot prompting 구현. ② backoff 규칙 2개의 <strong>조건과 방향</strong>(step 초과 → CoT-SC / 득표 &lt; n/2 → ReAct)을 정확히 암기. ③ search/lookup/finish 3종 행동. ④ QA에서 CoT-SC가 ReAct 단독보다 좋을 수 있다는 결과.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"ReAct is implemented by fine-tuning the LLM on reasoning-action trajectories." → <strong>False</strong>. ReAct is implemented by <em>few-shot prompting</em>.</li>
+      <li>"In the 'CoT-SC → ReAct' strategy, the system backs off to ReAct when ReAct fails to return an answer within the given steps." → <strong>False</strong>. That is 'ReAct → CoT-SC'. CoT-SC → ReAct backs off when the majority vote among n paths occurs less than n/2 times.</li>
+      <li>"ReAct always outperforms CoT-SC on question answering." → <strong>False</strong>. CoT-SC alone can be much better than ReAct alone on QA; the combination achieves the best results.</li>
+      <li>"In ReAct, a retriever call cannot be considered an action." → <strong>False</strong>. Any externally executed operation (retriever, tool call) counts as an action; IRCoT is a special case where the action is fixed to a retriever.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S4 ============ -->
+<section id="s4">
+  <h2><span class="num">4</span> Planning &amp; Action ② — Reflexion <span class="en">(Verbal Reinforcement Learning)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Reflexion</strong> (Shinn et al., NeurIPS 2023): <strong>언어적 피드백(linguistic/verbal feedback)으로 LLM 에이전트를 강화(reinforce)</strong>하는 프레임워크 — gradient 업데이트 없이 텍스트 수준의 self-reflection을 메모리에 누적하는 "verbal RL". ReAct 저자의 후속 일반화.
+  </div>
+
+  <h3>구조: Actor / Evaluator / Self-reflection / Memory</h3>
+  <ol class="steps">
+    <li><strong>Actor (LLM)</strong> — policy에 따라 환경(현실 세계, 웹 등)에 행동 → <strong>trajectory</strong>(행동·관찰·추론의 시퀀스, ReAct로 생성) 생성</li>
+    <li><strong>Evaluator (평가 함수)</strong> — trajectory가 충분한지 평가. <strong>heuristic rule 또는 LLM 기반 피드백</strong> 모두 가능 (예: hallucination 탐지)</li>
+    <li><strong>Self-reflection (LLM)</strong> — 평가 결과로부터 trajectory에 대한 <strong>고수준(high-level) 텍스트 피드백</strong> 생성 (예: "drawer 1에서 팬을 집으려 했지만 팬은 거기 없었다 → 다음엔 다른 곳을 보라")</li>
+    <li><strong>Memory (long-term, external)</strong> — reflection을 <strong>경험(experience)</strong>으로 저장, 다음 trajectory 생성 시 LLM 입력에 포함</li>
+  </ol>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "가장 중요한 것은, 모델 파라미터 \( \theta \)가 <strong>LLM 파라미터와 메모리를 함께 포괄(encapsulate)</strong>한다는 점입니다. 메모리는 실제로는 텍스트이지만 <strong>개념적으로는 모델 파라미터로 간주</strong>됩니다. 처음에는 메모리가 비어 있고, 반복을 통해 채워지면서 LLM이 과제를 더 잘 수행하게 됩니다."
+  </div>
+
+  <h3>실험 결과 (반드시 그래프 축 제목 주의!)</h3>
+  <ul>
+    <li><strong>ALFWorld (sequential decision making)</strong>: 좌측 그래프 Y축 = <em>해결된 환경 비율</em>. ReAct도 trial이 늘면 개선되지만, Reflexion(특히 <strong>heuristic 기반 평가 함수</strong>)이 훨씬 높은 success rate. 놀랍게도 <strong>GPT 기반 reflection은 효과적이지만 heuristic보다 나쁨</strong> — 단, 이는 결정적(deterministic)이지 않고 평가 함수 설계·과제에 의존. 핵심: <strong>Reflexion은 평가 함수와 무관하게 ReAct 단독보다 유익</strong>.</li>
+    <li><strong>HotpotQA (reasoning)</strong>: 우측 그래프 Y축 = <em>hallucination 오류 사례 비율(실패 사례)</em>. ReAct는 약 5 trial 이후 오류율이 <strong>포화(saturate)</strong>해 계산을 더 써도 줄지 않지만, Reflexion은 오류율을 지속적으로 크게 감소시킴. ReAct+Reflexion &gt; ReAct 단독·CoT 단독이며, Reflexion은 CoT에도 유익.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① "verbal RL" = <strong>weight update가 아니라 텍스트 reflection을 메모리에 누적</strong>. ② 4 구성요소(Actor/Evaluator/Self-reflection/Memory)와 역할. ③ ALFWorld에서 heuristic &gt; GPT 기반 평가. ④ HotpotQA 그래프는 success가 아니라 <strong>hallucination 실패율</strong> — ReAct는 포화, Reflexion은 계속 감소.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Reflexion reinforces the agent by updating the LLM's weights with gradients computed from feedback." → <strong>False</strong>. Reflexion uses <em>verbal</em> (linguistic) feedback stored in external memory; no weight update is performed.</li>
+      <li>"In Reflexion's ALFWorld experiments, GPT-based self-evaluation outperformed the heuristic-based evaluation function." → <strong>False</strong>. The heuristic evaluation was better, though this is task/design-dependent; both beat ReAct alone.</li>
+      <li>"In the HotpotQA analysis, the hallucination-failure rate of ReAct keeps decreasing as trials increase." → <strong>False</strong>. It saturates after about 5 trials; Reflexion keeps reducing it.</li>
+      <li>"The evaluator in Reflexion must be an LLM." → <strong>False</strong>. It can be a heuristic rule or an LLM-based feedback function.</li>
+      <li>"In Reflexion, the memory starts empty and is filled with self-reflections over iterations." → <strong>True</strong>. Conceptually, &theta; encapsulates LLM parameters together with this memory.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S5 ============ -->
+<section id="s5">
+  <h2><span class="num">5</span> Planning &amp; Action ③ — Plan-and-Solve &amp; Tree of Thoughts</h2>
+
+  <h3>Plan-and-Solve (PS) Prompting</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Plan-and-Solve</strong> (Wang et al., ACL 2023): 문제를 풀기 전에 <strong>명시적 계획(explicit planning)</strong>을 먼저 세우게 하는 zero-shot 프롬프팅. zero-shot CoT(Kojima et al., NeurIPS 2022)의 "Let's think step by step" 삽입과 유사하게, <em>"Let's first understand the problem and <strong>devise a plan</strong> to solve the problem. Then, let's <strong>carry out the plan</strong> and solve the problem step by step."</em>을 삽입.
+  </div>
+  <p>LLM이 먼저 plan을 생성하고 그 plan의 구체적 실행(execution)으로 해답을 만든다. 수학 문제에서 zero-shot CoT보다 전반적으로 더 좋은 성능. 교수 코멘트: 계획의 <strong>필요성 자체는 논쟁의 여지(arguable)</strong>가 있고 최신 LLM에는 암묵적으로 내장되어 있지만, "전체 개요를 잡고 작은 하위 문제로 쪼개는" <strong>분해(decomposition)</strong> 아이디어는 일반적으로 널리 쓰인다 → 그 대표가 ToT.</p>
+
+  <h3>Tree of Thoughts (ToT)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Tree of Thoughts</strong> (Yao et al., NeurIPS 2023 <strong>Oral</strong>): <strong>문제를 분해(decompose)하고 LLM으로 탐색(search)</strong>하는 deliberate problem solving. CoT의 확률성(stochasticity)을 CoT-SC가 다중 경로+투표로 풀었다면, ToT는 추론을 <strong>트리 구조</strong>로 보고 tree search를 도입 — 어려운 부분에 집중하고 쉬운 부분은 건너뛸 수 있음.
+  </div>
+
+  <h4>ToT의 4가지 구성요소</h4>
+  <ol class="steps">
+    <li><strong>Thought decomposition</strong> — 문제 속성을 활용해 중간 thought step들을 설계·분해 (<strong>via prompting</strong>). Game of 24는 두 수의 연산이므로 3단계, creative writing은 1단계로 충분.</li>
+    <li><strong>Thought generation</strong> — 쿼리+이전 히스토리 기반으로 새 thought(자식 노드) 생성. 방식 2가지: <strong>(1) i.i.d. sampling (CoT-SC와 유사한 무작위 샘플링)</strong>, <strong>(2) sequential sampling via prompting</strong>.</li>
+    <li><strong>State evaluation</strong> — 각 state의 goodness를 LLM prompting으로 추정. 방식 2가지: <strong>(1) Value: 각 state에 점수(1–10)</strong>, <strong>(2) Vote: 같은 layer의 모든 state 중 하나 선택</strong>. (예: 남은 숫자 10,13,13으로 24 도달 가능성을 LLM에게 평가시킴 → "불가능" = 낮은 value)</li>
+    <li><strong>Search algorithm</strong> — 다음 state 선택 방법: <strong>(1) BFS(breadth-first search)</strong>, <strong>(2) DFS(depth-first search)</strong>. 효과는 과제 의존적 — 단일 정답 없음.</li>
+  </ol>
+
+  <h4>실험 결과</h4>
+  <ul>
+    <li><strong>Game of 24</strong> (4개 숫자와 사칙연산으로 24 만들기): ToT는 IO/CoT 대비 압도적 (약 70%대 도달, naive 생성은 한 자릿수~낮은 수준). <code>b</code>는 트리의 너비(breadth) — 단계당 유지하는 자식 노드 수. <strong>b=1인 ToT조차 IO·CoT보다 훨씬 좋음</strong>. 단, <strong>답 하나에 약 100배의 계산</strong> 소모.</li>
+    <li><strong>Creative Writing</strong> (무작위 문장으로 일관성 있는 4문단 생성): ToT &gt; CoT이지만, <strong>단순 IO prompting + iterative refinement만으로도 매우 유사한 성능</strong> → 이 경우 refinement가 훨씬 효율적일 수 있음 (ToT는 다중 탐색으로 계산이 큼).</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "CoT-SC와 diverse beam search의 차이: DBS는 <strong>diversity penalty를 명시적으로</strong> 추가하지만, self-consistency는 <strong>전적으로 샘플링의 무작위성에 의존</strong>합니다. 이론상 최악엔 다 같은 출력일 수 있지만 실제로는 충분히 다양합니다." / "이 분야에 관심 있으면 ReAct 1저자 <strong>Shunyu Yao</strong>(Reflexion·ToT의 교신저자, 전 OpenAI)의 논문들을 강력 추천합니다."
+  </div>
+
+  <h3>📊 비교표: ReAct vs Reflexion vs Plan-and-Solve vs ToT</h3>
+  <table>
+    <tr><th>구분</th><th>ReAct (ICLR 2023)</th><th>Reflexion (NeurIPS 2023)</th><th>Plan-and-Solve (ACL 2023)</th><th>ToT (NeurIPS 2023 Oral)</th></tr>
+    <tr><td>핵심 아이디어</td><td>reasoning + acting interleave</td><td>verbal RL: trajectory 평가 → 텍스트 reflection → memory</td><td>풀기 전 명시적 plan 생성</td><td>thought 트리 분해 + 탐색</td></tr>
+    <tr><td>구현 방식</td><td>few-shot prompting</td><td>Actor/Evaluator/Self-reflection + external memory</td><td>zero-shot prompt 1문장 교체</td><td>prompting + BFS/DFS 탐색</td></tr>
+    <tr><td>환경 상호작용</td><td>O (action→observation)</td><td>O (ReAct trajectory 사용)</td><td>X (순수 프롬프팅)</td><td>X (내부 탐색)</td></tr>
+    <tr><td>피드백/평가</td><td>없음 (observation만)</td><td>evaluator(heuristic 또는 LLM) + self-reflection</td><td>없음</td><td>state evaluation (value 1–10 / vote)</td></tr>
+    <tr><td>반복 학습 효과</td><td>trial 증가로 개선되나 포화</td><td>iteration마다 memory 누적으로 자기 개선</td><td>단발성</td><td>탐색 내 backtrack 가능</td></tr>
+    <tr><td>대표 과제</td><td>HotpotQA, 웹 상호작용</td><td>ALFWorld, HotpotQA, 프로그래밍</td><td>수학 추론</td><td>Game of 24 (~70%), Creative Writing</td></tr>
+    <tr><td>비용</td><td>낮음~중간</td><td>중간 (반복 횟수에 비례)</td><td>낮음</td><td>매우 높음 (~100×)</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ToT의 4 구성요소 이름과 각각의 <strong>2가지 옵션</strong>(generation: i.i.d./sequential, evaluation: value/vote, search: BFS/DFS)을 매칭할 수 있어야 한다. Game of 24가 3단계로 분해되는 이유(수치 연산은 항상 두 수를 취함). Creative writing에서는 <strong>IO+refinement로도 충분</strong>하다는 한계.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Plan-and-Solve requires few-shot demonstrations of plans." → <strong>False</strong>. It is a zero-shot prompting method, analogous to inserting "let's think step-by-step" in zero-shot CoT.</li>
+      <li>"In ToT, state evaluation is performed by a separately trained value network." → <strong>False</strong>. It is done via LLM prompting — value scoring (1-10) or voting among states in the same layer.</li>
+      <li>"ToT outperformed all baselines on creative writing by a large margin." → <strong>False</strong>. Simple input-output prompting with iterative refinement achieved very similar performance, and is far more efficient.</li>
+      <li>"ToT with b=1 is equivalent to chain-of-thought." → <strong>False</strong>. Even b=1 ToT (one child per step, with evaluation/search) is much better than IO or CoT on Game of 24.</li>
+      <li>"ToT uses Monte-Carlo Tree Search." → <strong>False</strong>. The paper considers BFS and DFS.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S6 ============ -->
+<section id="s6">
+  <h2><span class="num">6</span> Multi-modal Action — Diffusion 결합 <span class="en">(MetaQueries, BLIP3-o)</span></h2>
+
+  <p>지금까지의 action은 텍스트(함수 호출 등) 기반이었다. 그러나 이미지·비디오·오디오 생성처럼 <strong>연속 도메인(continuous domains)의 출력</strong>이 필요한 과제에서는 텍스트 기반 행동만으로는 제한적이다.</p>
+
+  <div class="definition"><div class="label">📖 핵심 명제</div>
+    <strong>Autoregressive modeling is not the best choice for generation in other domains</strong> — <strong>diffusion model</strong>(Sohl-Dickstein et al., ICML 2015; Ho et al., DDPM, NeurIPS 2020)이 vision &amp; audio 같은 <strong>연속 도메인에서 일반적으로 더 낫다</strong>고 알려져 있다. diffusion = 무작위 노이즈로부터 목표 데이터를 재구성하도록 학습하는 생성 모델.
+  </div>
+
+  <p>따라서 <strong>diffusion을 LLM에 통합(unifying diffusion into LLM)</strong>하는 연구가 활발하다:</p>
+  <ul>
+    <li><strong>Diffusion-VLA</strong> (Wen et al., ICML 2025) — 로봇 파운데이션 모델에 diffusion 결합 (self-generated reasoning)</li>
+    <li><strong>MetaQueries</strong> (Pan et al., arXiv 25.04, <strong>Meta AI</strong>) — vision-language model 위에 <strong>diffusion block</strong>을 올려 이미지를 생성 (modality 간 transfer)</li>
+    <li><strong>BLIP3-o</strong> (Chen et al., arXiv 25.05, <strong>Salesforce</strong>) — fully open unified multimodal model, 이미지 생성을 위해 <strong>diffusion layer</strong> 포함</li>
+  </ul>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Autoregressive next-token prediction is generally the best choice for generation in every modality." → <strong>False</strong>. Diffusion models are generally known to be better at continuous domains (vision &amp; audio).</li>
+      <li>"MetaQueries and BLIP3-o generate images purely autoregressively without any diffusion component." → <strong>False</strong>. Both include a diffusion block/layer on top of the (vision-)language model.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S7 ============ -->
+<section id="s7">
+  <h2><span class="num">7</span> Memory ① — MemGPT <span class="en">(LLMs as Operating Systems)</span></h2>
+
+  <h3>왜 Memory가 필요한가</h3>
+  <p>Agentic workflow(ToT의 다중 탐색, Reflexion의 반복 trajectory 등)는 <strong>입력 컨텍스트 누적을 급격히 증가</strong>시킨다. 모든 컨텍스트를 입력에 넣는 것은 두 가지 이유로 <strong>infeasible</strong>: ① <strong>context window limit</strong>, ② transformer의 이차적(quadratic) 성질로 인한 <strong>inference cost</strong> 증가. → 해법: <strong>external memory &amp; selective retrieval</strong>. (Reflexion의 메모리는 모든 reflection을 항상 append하는 한계 → 더 나은 관리 필요)</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>MemGPT</strong> (Packer et al., arXiv 23.10): <strong>현대 컴퓨터 OS에서 영감을 받은(OS-inspired)</strong> 메모리 설계. <strong>in-context memory = main memory/physical memory/RAM</strong>, <strong>external memory = disk memory/disk storage</strong>에 대응시키고, OS 메모리 시스템의 동작을 모방하는 연산들을 도입. top-tier 학회 미출판이지만 이 분야에서 가장 영향력 있는 연구 중 하나.
+  </div>
+
+  <h3>Main context의 3분할 (contiguous sections)</h3>
+  <table>
+    <tr><th>구역</th><th>성질</th><th>내용</th></tr>
+    <tr><td><strong>System instructions</strong></td><td><strong>read-only (static)</strong></td><td>제어 흐름(control flow)·메모리 사용법(함수들을 API처럼 기술). LLM의 system prompt에 해당</td></tr>
+    <tr><td><strong>Working context</strong></td><td>읽기/쓰기</td><td><strong>key facts, preferences, 기타 사용자 정보</strong> 저장 — 여러 대화 세션에 걸친 요약</td></tr>
+    <tr><td><strong>FIFO queue</strong></td><td>롤링</td><td>agent↔user 메시지 + <strong>system messages(예: memory warnings)</strong> + <strong>function call의 입력·출력</strong></td></tr>
+  </table>
+  <div class="box-warn" style="margin-top:6px;"><div class="label">⚠️ 용어 구분</div>
+    <ul><li>FIFO queue에 들어가는 "system messages"(memory warning 등, 환경에서 옴)는 "system instructions"(read-only 시스템 프롬프트)와 <strong>다른 것</strong>이다 — 혼동 유도 출제 가능.</li></ul>
+  </div>
+
+  <h3>Queue Manager (QM)와 eviction policy</h3>
+  <ol class="steps">
+    <li><strong>새 메시지 처리</strong> — QM이 FIFO queue에 append하고 LLM 응답을 trigger. <strong>들어온 메시지와 LLM 출력 모두 recall storage(message database)에 기록</strong>.</li>
+    <li><strong>70% 초과 (warning threshold)</strong> — prompt tokens가 임계값(70%)을 넘으면 QM이 <strong>경고용 system message를 큐에 삽입</strong> → LLM이 (system instructions의 함수 설명을 보고) 정보를 <strong>working context나 archival storage(외부 메모리)에 저장하는 함수를 호출</strong>할 수 있음.</li>
+    <li><strong>100% 초과 (context window limit)</strong> — <strong>메시지의 특정 부분(50%)을 evict</strong>. 단, 그냥 버리지 않고 기존 요약+축출 메시지로 <strong>recursive summary를 생성</strong>해 FIFO queue 앞에 prepend.</li>
+  </ol>
+
+  <h3>Function executor</h3>
+  <p>컨텍스트와 메모리 간 <strong>데이터 이동(data movement)을 orchestrate</strong>. 모든 함수는 system instructions에 기술되어 있고, <strong>LLM이 in-context learning으로 적응적으로(adaptively) 호출을 결정</strong>한다. 예: 사용자 생일(2월 7일)·남자친구 이름을 working context에 추가, out-of-context 데이터를 archival storage에서 검색.</p>
+
+  <h3>실험 결과</h3>
+  <ul>
+    <li><strong>Deep memory retrieval</strong>: 여러 세션·턴 이후 과거 대화의 사실을 회상해야 하는 질문 — 베이스라인(최근 대화만 trimming해 표시)은 한계 밖 정보를 회상 못 하지만 MemGPT는 검색으로 성공.</li>
+    <li><strong>Open-ended QA</strong>: 베이스라인은 검색 문서 수가 context limit를 넘으면 더 많은 문서가 도움이 안 되지만, <strong>MemGPT는 context window limit에 묶이지 않아 꾸준한(steady) 성능</strong>.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    숫자 3개: <strong>70%(warning) / 100%(eviction trigger) / 50%(evict 비율)</strong> + recursive summary. OS 비유 매핑(in-context↔RAM, external↔disk). 메모리 관리가 <strong>LLM의 function call</strong>로 이루어진다는 점(QM은 레이어, 결정은 LLM의 in-context learning).
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"MemGPT evicts 50% of messages as soon as prompt tokens exceed 70% of the context window." → <strong>False</strong>. At 70% it only inserts a <em>warning</em> system message; eviction (50% of messages) happens when exceeding 100% (the context window limit).</li>
+      <li>"Evicted messages in MemGPT are simply discarded." → <strong>False</strong>. A recursive summary is generated from the existing summaries and the evicted messages.</li>
+      <li>"In MemGPT, working context corresponds to external (disk) memory." → <strong>False</strong>. Working context is part of the <em>main context</em> (in-context memory ↔ RAM); archival/recall storage corresponds to disk.</li>
+      <li>"Memory management in MemGPT is performed by a separately fine-tuned controller network." → <strong>False</strong>. The LLM itself adaptively decides via function calls, guided by instructions in the system instructions (in-context learning).</li>
+      <li>"System instructions in MemGPT are read-only and static." → <strong>True</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S8 ============ -->
+<section id="s8">
+  <h2><span class="num">8</span> Memory ② — A-Mem <span class="en">(Agentic Memory)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>A-Mem</strong> (Xu et al., A-MEM: Agentic Memory for LLM Agents, NeurIPS 2025): MemGPT의 메모리 구조는 <strong>정적(static)</strong>(OS 모방) — 대신 <strong>LLM이 메모리를 동적으로(dynamically) 조직</strong>(구축·연결·수정·진화)하는 <strong>agentic memory</strong>를 제안. 3단계: <strong>(1) Note construction, (2) Link generation, (3) Memory evolution</strong>.
+  </div>
+
+  <h3>(1) Note construction — 메모리 노트의 7요소</h3>
+  <div class="formula"><div class="fname">Memory note</div>
+    $$ m_i = \{ c_i,\; t_i,\; K_i,\; G_i,\; X_i,\; e_i,\; L_i \} $$
+    <p style="font-size:14px;margin:6px 0 0;">
+      \( c_i \): <strong>original content</strong> (원시 내용 — 사용자 쿼리 또는 LLM 생성) · \( t_i \): <strong>timestamp</strong> ·
+      \( K_i, G_i, X_i \): <strong>LLM-generated keyword, tags, description</strong> (프롬프트 \(P\)에 \(c_i \oplus t_i\)(결합, concatenation)를 넣어 생성 — 내용에 대한 고수준 메타데이터) ·
+      \( e_i \): <strong>text encoder의 vector representation</strong> (content와 \(K_i,G_i,X_i\)를 결합해 인코딩) ·
+      \( L_i \): <strong>set of linked memories</strong> (의미가 유사한 메모리들과의 연결).
+    </p>
+  </div>
+
+  <h3>(2) Link generation — 새 노트 \( m_n \) 추가 시</h3>
+  <ol class="steps">
+    <li>먼저 임베딩의 <strong>cosine similarity</strong>로 <strong>top-k most relevant memories</strong> 식별 (dense retriever와 동일한 아이디어) → \( m_n \)의 neighbor set</li>
+    <li>그 k개 후보를 \( m_n \)과 함께 <strong>LLM에 prompting하여 link set 생성</strong> — 어떤 메모리가 실제로 관련되는지는 LLM이 결정</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "모든 기존 메모리를 LLM에 보여주는 것이 더 넓은 시야겠지만 <strong>infeasible</strong>하므로, top-k 검색은 그 <strong>중간 해법(intermediate solution)</strong>입니다. 또한 \(K_i,G_i,X_i\)를 임베딩에 함께 쓰는 설계는 raw text보다 낫다고 저자들이 주장하지만, <strong>논쟁의 여지가 있는(arguable) 설계</strong>입니다."
+  </div>
+
+  <h3>(3) Memory evolution</h3>
+  <p>새 메모리가 들어오면, neighbor set 안의 각 메모리 \( m_j \)의 <strong>context(description), keywords, tags가 선택적으로(optionally) 업데이트</strong>된다 (예: "사용자가 노벨 물리학상·화학상·경제학상을 물었고 이제 또 물리학을 물음 → 이 분야에 더 관심" 식의 고수준 설명 갱신). <strong>진화된 메모리는 업데이트된 경우 원본을 대체(replace)</strong>한다.</p>
+
+  <h3>Memory retrieval &amp; 평가</h3>
+  <p>쿼리 \( q \)를 동일한 text encoder로 벡터화 → cosine similarity로 <strong>k개의 most relevant memories를 검색</strong> → 일반적인 RAG처럼 입력 프롬프트에 append.</p>
+  <p><strong>평가: LoCoMo QA</strong> (Maharana et al., <strong>ACL 2024</strong>; <u>Lo</u>ng-term <u>Co</u>nversational <u>M</u>em<u>o</u>ry) — single-hop / multi-hop / temporal reasoning / commonsense / 기타 5범주. 기존 벤치마크 대비 대화당 평균 turn 수·세션 수·timespan이 훨씬 김. 결과: <strong>A-Mem이 기존 메모리 기반 접근법(MemGPT 포함)보다 일관되게(consistently) 우수</strong>.</p>
+
+  <h3>📊 비교표: MemGPT vs A-Mem</h3>
+  <table>
+    <tr><th>구분</th><th>MemGPT (arXiv 23.10)</th><th>A-Mem (NeurIPS 2025)</th></tr>
+    <tr><td>설계 영감</td><td>OS 메모리 계층 (RAM ↔ disk)</td><td>LLM 특화 agentic memory</td></tr>
+    <tr><td>메모리 구조</td><td><strong>정적(static)</strong> — 구역(system instructions/working context/FIFO queue) 고정</td><td><strong>동적(dynamic)</strong> — LLM이 노트를 만들고 연결·진화시킴</td></tr>
+    <tr><td>단위</td><td>메시지/요약 (FIFO queue + recall/archival storage)</td><td>memory note \( m_i \) (7요소: \(c,t,K,G,X,e,L\))</td></tr>
+    <tr><td>관리 주체</td><td>Queue Manager(레이어) + LLM function call</td><td>LLM 자체 (link generation, memory evolution)</td></tr>
+    <tr><td>기존 메모리 갱신</td><td>working context 수정, eviction + recursive summary</td><td>이웃 노트의 description/keywords/tags가 진화하며 원본 대체</td></tr>
+    <tr><td>검색</td><td>function call로 recall/archival storage 검색</td><td>쿼리 임베딩 cosine similarity top-k → RAG식 append</td></tr>
+    <tr><td>성능 (LoCoMo)</td><td>베이스라인</td><td><strong>MemGPT보다 일관되게 우수</strong></td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    노트 7요소 기호와 의미 매칭(\(c_i\)=원본 내용, \(t_i\)=timestamp, \(K/G/X\)=LLM 생성 keyword/tags/description, \(e_i\)=인코더 벡터, \(L_i\)=링크 집합). link generation = <strong>cosine top-k 후보 → LLM 결정</strong>의 2단계. evolution은 <strong>optional</strong> 업데이트. LoCoMo는 ACL 2024.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In A-Mem, links between memories are determined purely by cosine similarity." → <strong>False</strong>. Cosine similarity only retrieves top-k candidates; the LLM is then prompted to generate the actual link set.</li>
+      <li>"K_i, G_i, X_i in A-Mem are written by human annotators." → <strong>False</strong>. They are LLM-generated keyword, tags, and description.</li>
+      <li>"Memory evolution in A-Mem always rewrites every memory in the system whenever a new note arrives." → <strong>False</strong>. Only memories in the neighbor set are (optionally) updated; the evolved memory replaces the original only if updated.</li>
+      <li>"The embedding e_i is computed from the original content alone." → <strong>False</strong>. The content is concatenated with the LLM-generated metadata (K, G, X) before encoding.</li>
+      <li>"A-Mem organizes memory using a fixed OS-like hierarchy as in MemGPT." → <strong>False</strong>. A-Mem's point is to replace the static structure with dynamic, LLM-driven (agentic) organization.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S9 ============ -->
+<section id="s9">
+  <h2><span class="num">9</span> Multi-agent System <span class="en">(MDAgents · Orchestration · Routing)</span></h2>
+
+  <h3>에이전트의 단위: 같은 LLM도 다른 에이전트가 될 수 있다</h3>
+  <ul>
+    <li><strong>Persona-based prompting</strong>: 같은 LLM에 다른 시스템 프롬프트(예: "탐색 담당" vs "비평 담당") → <strong>역할(role)이 다르면 다른 에이전트</strong>. 단일 LLM으로 여러 에이전트를 만드는 가장 표준적·편리한 방법 (예: MDAgents).</li>
+    <li><strong>Specialized LLM</strong>: 특화 도메인이면 다른 모델 사용 (예: 의료의 <strong>MedGemma</strong>, Google). 단, 필수는 아님 — agentic plan 설계가 좋다면 단일 LLM+역할 분담으로 충분.</li>
+  </ul>
+
+  <h3>MDAgents — 의료 의사결정 멀티에이전트</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>MDAgents</strong> (Kim et al., An Adaptive Collaboration of LLMs for Medical Decision-Making, <strong>NeurIPS 2024 Oral</strong>): 의료 의사결정에서 <strong>과제 난이도(complexity check)에 따라 에이전트 조직을 적응적으로(adaptive) 구성</strong>하는 시스템.
+  </div>
+  <ol class="steps">
+    <li><strong>Complexity check</strong> — orchestration layer(LLM checker)가 과제 난이도 판정</li>
+    <li><strong>Low(쉬움)</strong> → <strong>단일 에이전트(solo)</strong>가 일반 QA로 해결</li>
+    <li><strong>Moderate(중간)</strong> → 서로 다른 역할의 에이전트들로 <strong>팀(group) 구성</strong>: 전문가(experts)들이 moderator와 함께 initial assessment → collaborative discussion → 최종 결정</li>
+    <li><strong>High(어려움)</strong> → <strong>여러 팀</strong>을 만들어 팀 간 debate 또는 과제 분담 (계층 구조)</li>
+  </ol>
+  <p>각 전문가는 GPT/Gemini 같은 <strong>단일 LLM이지만 프롬프트(역할)가 다름</strong>. 결과: MDAgents &gt; 일반 단일 에이전트 및 멀티에이전트 베이스라인. 논문은 멀티에이전트를 <strong>single model 기반 vs multiple models 기반</strong>으로 구분해 비교.</p>
+
+  <h3>핵심 구성요소 (1): Structure (interaction type)</h3>
+  <p>Anthropic의 multi-agent research system 사례에서: 쉬우면 single agent, 중간이면 single team, 어려우면 multiple teams + hierarchical structure. 그 외 형태: <strong>single / voting / debate / meta-agent / reconfiguration</strong> 등.</p>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "각 논문의 특정 구조를 외우는 게 중요한 게 아니라, <strong>멀티에이전트 시스템에서 역할(role)이 어떻게 정의되고 상호작용(interaction)이 어떻게 정의되는지</strong>가 더 중요합니다."
+  </div>
+
+  <h4>Orchestration 기반 구조 (Claude 사례)</h4>
+  <p>가장 강력한 LLM을 중앙의 <strong>lead agent(orchestrator)</strong>로 두고, 과제에 따라 <strong>sub-agent에게 할당</strong>하는 구조 (Anthropic 등에서 널리 도입). 워크플로: 사용자 쿼리 → lead orchestrator(lead researcher) → sub-agents 호출·해결 → orchestration layer가 결과를 모아 단일 답 생성. 자연스러운 구성: <strong>orchestrator = Opus, sub-agents = Haiku</strong> — 비용 절약이 큰 동기이며, Haiku가 못 풀면 Sonnet/Opus 같은 더 능력 있는 모델을 호출하는 식의 비용 제어가 가능.</p>
+
+  <h3>핵심 구성요소 (2): Goal</h3>
+  <ul>
+    <li><strong>성능 개선</strong> — 가장 직접적인 목표</li>
+    <li><strong>비용 절약 = routing</strong> — BEST-Route (Ding et al., ICML 2025), IRT-Router (Song et al., ACL 2025)</li>
+    <li><strong>그 외</strong> — tabular data 피처 생성 (Nam et al., NeurIPS 2024), personalization (Kim et al., NAACL 2025), <strong>jailbreak</strong> (Koo et al., Align to Misalign, ICLR 2026 — 교수 연구실 연구: 멀티에이전트로 jailbreak 프롬프트 자동 생성)</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① MDAgents의 <strong>complexity check → solo/team/teams</strong> 적응 구조 (NeurIPS 2024 Oral). ② 같은 LLM + 다른 프롬프트(persona) = 다른 에이전트로 인정. ③ orchestration: 강한 모델이 lead, 싼 모델이 sub (Opus/Haiku), 동기는 성능+<strong>비용</strong>. ④ 멀티에이전트의 2대 구성요소: <strong>Structure(interaction type)와 Goal</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Two agents must be different LLMs to count as a multi-agent system." → <strong>False</strong>. The same LLM with different prompts/personas (different roles) counts as different agents (e.g., MDAgents).</li>
+      <li>"MDAgents always forms multiple teams of experts regardless of task difficulty." → <strong>False</strong>. It adaptively checks complexity: solo agent for easy, one group for moderate, multiple teams for hard tasks.</li>
+      <li>"In orchestration-based systems, the cheapest model is used as the lead agent to save cost." → <strong>False</strong>. The most capable model (e.g., Opus) is the lead/orchestrator; cheaper models (e.g., Haiku) serve as sub-agents.</li>
+      <li>"Routing in multi-agent systems refers only to network packet routing." → <strong>False</strong>. Routing = adaptively choosing which LLM handles a query, mainly to save cost (BEST-Route, IRT-Router).</li>
+      <li>"The goal of a multi-agent system is limited to improving task performance." → <strong>False</strong>. Goals include cost saving (routing), tabular data, personalization, and even jailbreak.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 중간고사 이후 범위)</span></h2>
+  <p class="en" style="margin-bottom:16px;">※ #11은 2025 중간 기출에 직접 출제된 바 없음(시험 범위 밖). 아래는 기출 문체·형식·난이도를 따른 예상문제. T/F는 정답 3점·오답 0점·<strong>무응답 1점</strong> — 확신 없으면 비워두는 것도 전략.</p>
+
+  <h3>True / False</h3>
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>ReAct extends the action space of an LLM agent to a combination of task-specific discrete actions and language, and is implemented by few-shot prompting rather than fine-tuning.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> ReAct integrates reasoning and acting within the LLM by extending action as a combination of task-specific discrete actions and language, and the slides explicitly state "it is implemented by few-shot prompting."</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the combined strategy "ReAct → CoT-SC", the system starts with CoT-SC and backs off to ReAct when the majority vote among n reasoning paths occurs less than n/2 times.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> The description is reversed. "ReAct → CoT-SC" starts with ReAct and backs off to CoT-SC when ReAct fails to return an answer within the given steps. The voting condition (&lt; n/2) belongs to "CoT-SC → ReAct".</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Reflexion improves the agent over trials by storing verbal self-reflections in an external memory, without performing any gradient-based update of the LLM's weights.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Reflexion is "verbal reinforcement learning": trajectories are evaluated, high-level linguistic feedback (reflection) is generated and accumulated in long-term memory, and this text — not a weight update — improves subsequent trajectories. Conceptually, &theta; encapsulates the LLM parameters together with the memory.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the Reflexion experiments on ALFWorld, the GPT-based self-evaluation function achieved a higher success rate than the heuristic-based evaluation function.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Somewhat surprisingly, GPT-based reflection was effective but <em>worse</em> than the heuristic-based evaluation. (Note: this is not deterministic — it depends on evaluation-function design and the task — but both variants beat ReAct alone.)</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In Tree of Thoughts, state evaluation can be performed either by scoring each state on a 1-10 scale (value) or by selecting one state among all states in the same layer (vote), both via LLM prompting.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> ToT estimates the goodness of each state via LLM prompting with two options: (1) Value — scoring each state (1-10); (2) Vote — selecting one among all states in the same layer. No trained value network is used.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In LLaVA's two-stage training, the pre-trained vision encoder is kept frozen in both stages; stage 1 trains only the projector, and stage 2 fine-tunes the projector and the LLM jointly.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Stage 1 (feature alignment) trains the randomly initialized projector W on small image-text pairs with everything else frozen; stage 2 (instruction tuning) keeps the visual encoder frozen and fine-tunes the projector and LLM simultaneously.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In MemGPT, when prompt tokens exceed 70% of the context window, the queue manager immediately evicts 50% of the messages in the FIFO queue.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> At the 70% threshold, the queue manager only inserts a warning system message (so the LLM may call functions to store information into working context or archival storage). Eviction of 50% of messages happens only when the context window limit (100%) is exceeded, followed by generating a recursive summary of the evicted messages.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In A-Mem, the link set of a new memory note is generated purely by cosine similarity between embeddings, without involving the LLM.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Cosine similarity is only used to identify the top-k most relevant candidate memories (an intermediate solution, since showing all memories to the LLM is infeasible). The LLM is then prompted to decide which of those candidates are actually linked, generating the link set.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Two agents in a multi-agent system can be instances of the same LLM, as long as they are given different prompts (e.g., personas) that assign them different roles.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Persona-based prompting is the most standard way to define multiple agents from a single LLM (e.g., MDAgents' experts are single LLMs like GPT/Gemini with different prompts). Specialized LLMs (e.g., MedGemma) are an option, not a requirement.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Diffusion models are generally known to be better than autoregressive modeling for generation in continuous domains such as vision and audio, which motivates unifying diffusion into LLMs (e.g., MetaQueries, BLIP3-o).</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The slides state that autoregressive modeling is not the best choice for generation in other domains, and diffusion is generally better at continuous domains (vision &amp; audio); MetaQueries (Meta AI) and BLIP3-o (Salesforce) add diffusion blocks/layers on top of (vision-)language models.</div>
+    </details>
+  </div>
+
+  <h3>Pick all that are correct <span class="en">(any wrong answer will lead to 0 points)</span></h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the key concepts of LLM agents?</p>
+      <ol type="a">
+        <li>An LLM agent is characterized as LLM + planning &amp; action + tools + memory.</li>
+        <li>These agentic capabilities are simply improved by scaling up model and data size.</li>
+        <li>An intelligent agent perceives its environment, takes actions, and can improve its own performance by repeating this procedure.</li>
+        <li>Memory is arguably the hardest capability to integrate inside the LLM itself, so it is often handled by external systems.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the definition used throughout the chapter (Lilian Weng's framework).</li>
+          <li class="wrong">(b) Incorrect. The slides explicitly say these capabilities are <em>not</em> simply improved by just scaling-up model &amp; data size; new training methods, data types, or harnesses are needed.</li>
+          <li>(c) Correct. Perception, (implicit) reasoning, action + self-improvement is the definition of an intelligent agent.</li>
+          <li>(d) Correct. The professor noted memory is probably the hardest part to integrate into the LLM (handled externally), whereas tool use can naturally be integrated via training.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about LLaVA and projection-based multimodality?</p>
+      <ol type="a">
+        <li>An image X_v &isin; R<sup>3&times;H&times;W</sup> is first mapped by a pre-trained vision encoder into grid features Z_v &isin; R<sup>L&times;D&prime;</sup>, where L is the number of patches.</li>
+        <li>The learnable projector W maps R<sup>D&prime;</sup> to R<sup>D</sup> so that the visual features lie in the LLM's word embedding space.</li>
+        <li>LLaVA's multimodal instruction-following dataset was collected by GPT-4 and ChatGPT for conversation, detailed description, and complex reasoning.</li>
+        <li>Vision tokens are integers drawn from a fixed vocabulary, exactly like text tokens.</li>
+        <li>VideoPoet applies the same projection idea to more modalities, assuming an efficient tokenization method for each domain.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (e)</span>
+        <ul>
+          <li>(a) Correct. This is the ViT-style patch embedding step.</li>
+          <li>(b) Correct. The projector resolves the dimension mismatch (D&prime; vs D) so H_v lies in the same subspace as the word embeddings.</li>
+          <li>(c) Correct. GPT-4/ChatGPT (text-only at the time) generated the artificial multimodal data.</li>
+          <li class="wrong">(d) Incorrect. Vision/video tokens are vectors, not integers; they have no fixed vocabulary or fixed word embedding, unlike text tokens.</li>
+          <li>(e) Correct. VideoPoet (ICML 2024) borrows pre-trained encoders per modality and connects them via projectors — the standard practice.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about ReAct and Reflexion?</p>
+      <ol type="a">
+        <li>In ReAct's Wikipedia-based QA setting, the possible actions are search, lookup, and finish.</li>
+        <li>On QA tasks, ReAct alone always outperforms CoT with self-consistency.</li>
+        <li>In Reflexion, a trajectory generated by the actor is evaluated (by a heuristic rule or an LLM), and a self-reflection model produces high-level verbal feedback stored in long-term memory.</li>
+        <li>On HotpotQA, the proportion of hallucination failure cases for ReAct saturates after about 5 trials, while Reflexion keeps reducing it.</li>
+        <li>IRCoT can be seen as a special case of ReAct where the action is fixed to a retriever.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d), (e)</span>
+        <ul>
+          <li>(a) Correct. The three actions are defined like Python functions the LLM can call.</li>
+          <li class="wrong">(b) Incorrect. CoT-SC alone can be much better than ReAct alone on QA; the combined backoff strategies achieve the best results.</li>
+          <li>(c) Correct. This is the actor / evaluator / self-reflection / memory structure.</li>
+          <li>(d) Correct. Note the y-axis of that figure is the failure (hallucination) rate, not the success rate.</li>
+          <li>(e) Correct. The professor explicitly made this connection: ReAct is the more general conceptual idea.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q14. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about Tree of Thoughts (ToT)?</p>
+      <ol type="a">
+        <li>Thought decomposition designs intermediate thought steps via prompting, leveraging properties of the problem (e.g., 3 steps for Game of 24).</li>
+        <li>Thought generation can use (1) i.i.d. sampling similar to CoT-SC or (2) sequential sampling via prompting.</li>
+        <li>The search over the tree is performed with Monte-Carlo Tree Search guided by a learned reward model.</li>
+        <li>On Game of 24, even ToT with b=1 outperforms input-output and chain-of-thought prompting, but ToT consumes roughly 100&times; more computation per answer.</li>
+        <li>On creative writing, simple input-output prompting with iterative refinement achieved performance very similar to ToT.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d), (e)</span>
+        <ul>
+          <li>(a) Correct. Numerical operations always take two numbers, so three reasoning steps are needed for Game of 24; creative writing needs only one step.</li>
+          <li>(b) Correct. These are the two thought-generation options.</li>
+          <li class="wrong">(c) Incorrect. ToT uses BFS or DFS (whose effectiveness is task-dependent), and state evaluation is done by LLM prompting (value 1-10 or vote), not a learned reward model or MCTS.</li>
+          <li>(d) Correct. b is the breadth (number of child nodes per step); even b=1 beats IO/CoT, at ~100&times; compute cost.</li>
+          <li>(e) Correct. This shows IO + refinement can be far more efficient than ToT for that task.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q15. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about MemGPT?</p>
+      <ol type="a">
+        <li>In-context memory corresponds to main memory (RAM), while external memory corresponds to disk storage, following an OS-inspired design.</li>
+        <li>The main context consists of system instructions (read-only), working context, and a FIFO queue.</li>
+        <li>Both incoming messages and LLM outputs are written into recall storage by the queue manager.</li>
+        <li>Data movement between context and memory is decided by the LLM itself via function calls, guided by descriptions in the system instructions (in-context learning).</li>
+        <li>On open-ended QA, MemGPT's performance degrades sharply once the number of retrieved passages exceeds the context window limit.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the core OS analogy of MemGPT.</li>
+          <li>(b) Correct. The FIFO queue holds agent-user messages, system messages (e.g., memory warnings), and function call inputs/outputs.</li>
+          <li>(c) Correct. The queue manager appends new messages to the FIFO queue, triggers the LLM, and writes both directions into the recall storage (message database).</li>
+          <li>(d) Correct. The function executor orchestrates data movement; the LLM adaptively decides which functions to call.</li>
+          <li class="wrong">(e) Incorrect. That describes the <em>baseline</em>. MemGPT is not bounded by the context window limit and achieves steady performance.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q16. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about A-Mem?</p>
+      <ol type="a">
+        <li>A memory note m_i consists of the original content c_i, timestamp t_i, LLM-generated keyword/tags/description (K_i, G_i, X_i), a vector representation e_i, and a set of linked memories L_i.</li>
+        <li>When a new note arrives, the top-k most relevant memories are first identified by embedding similarity, and then an LLM is prompted to generate the link set.</li>
+        <li>Memory evolution may update the context, keywords, and tags of memories in the neighbor set, and the evolved memory replaces the original if updated.</li>
+        <li>A-Mem was evaluated on the LoCoMo QA dataset (ACL 2024) and performed consistently better than previous memory-based approaches, including MemGPT.</li>
+        <li>Like MemGPT, A-Mem organizes memory with a static, OS-inspired structure.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. These are the seven elements of a memory note.</li>
+          <li>(b) Correct. Top-k retrieval is the feasible intermediate solution; the LLM makes the final linking decision.</li>
+          <li>(c) Correct. The update is optional and applies to the neighbor set.</li>
+          <li>(d) Correct. LoCoMo (long-term conversational memory; single-hop, multi-hop, temporal reasoning, commonsense, etc.) has far more turns/sessions and a longer timespan than prior benchmarks.</li>
+          <li class="wrong">(e) Incorrect. A-Mem's key idea is to organize memories <em>dynamically</em> in an agentic way, in contrast to MemGPT's static structure.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q17. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about multi-agent systems?</p>
+      <ol type="a">
+        <li>In MDAgents, an LLM first checks the complexity of the medical task and adaptively chooses between a solo agent (easy), a single group of experts with a moderator (moderate), and multiple teams (hard).</li>
+        <li>In an orchestration-based system, the most capable model serves as the lead agent/orchestrator and assigns tasks to cheaper sub-agents (e.g., Opus orchestrating Haiku).</li>
+        <li>Saving inference cost by adaptively selecting which model answers a query is often called routing.</li>
+        <li>A multi-agent system requires each agent to be a differently pre-trained LLM.</li>
+        <li>Multi-agent systems have also been used for goals beyond accuracy, such as tabular feature generation, personalization, and jailbreak.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (e)</span>
+        <ul>
+          <li>(a) Correct. This is MDAgents' adaptive collaboration hierarchy (NeurIPS 2024 Oral): complexity check → initial assessment → collaborative discussion → final decision for the group case.</li>
+          <li>(b) Correct. Cost saving and capability-based escalation (calling Sonnet/Opus when Haiku fails) are key motivations for orchestration.</li>
+          <li>(c) Correct. E.g., BEST-Route (ICML 2025), IRT-Router (ACL 2025).</li>
+          <li class="wrong">(d) Incorrect. Agents can be the same LLM with different prompts/personas; specialized models (e.g., MedGemma) are optional.</li>
+          <li>(e) Correct. Examples from the slides: optimized feature generation for tabular data, few-shot personalization, and automatic LLM jailbreak with meta-optimized judges.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ SUMMARY ============ -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>LLM Agent</strong></td><td>LLM(brain) + Planning &amp; Action + Tools + Memory — scaling만으로는 안 됨</td></tr>
+    <tr><td><strong>LLaVA</strong></td><td>vision encoder → grid features Z_v → projector W → H_v(LLM 공간); 2단계 학습(① projector만 ② projector+LLM, encoder는 항상 frozen), 데이터는 GPT-4 생성</td></tr>
+    <tr><td><strong>VideoPoet / VLA</strong></td><td>모달리티마다 encoder+projector = 표준 패턴; VLA는 action을 special token으로 출력 (OpenVLA)</td></tr>
+    <tr><td><strong>ReAct</strong></td><td>reasoning+acting interleave, few-shot prompting; step 초과→CoT-SC, 득표&lt;n/2→ReAct backoff</td></tr>
+    <tr><td><strong>Reflexion</strong></td><td>verbal RL: Actor→Evaluator(heuristic&gt;GPT)→Self-reflection→Memory 누적, weight update 없음</td></tr>
+    <tr><td><strong>Plan-and-Solve</strong></td><td>zero-shot로 "plan 먼저, 그다음 실행" 프롬프트 삽입</td></tr>
+    <tr><td><strong>ToT</strong></td><td>분해→생성(i.i.d./sequential)→평가(value/vote)→탐색(BFS/DFS); Game of 24 압승, 비용 ~100×</td></tr>
+    <tr><td><strong>Multi-modal Action</strong></td><td>연속 도메인은 diffusion이 우세 → LLM+diffusion 통합 (MetaQueries, BLIP3-o)</td></tr>
+    <tr><td><strong>MemGPT</strong></td><td>OS 비유(RAM↔in-context, disk↔external); main context = system instructions/working context/FIFO queue; 70% 경고→100%에 50% evict+recursive summary; 관리는 LLM function call</td></tr>
+    <tr><td><strong>A-Mem</strong></td><td>agentic(동적) 메모리: note {c,t,K,G,X,e,L} → cosine top-k+LLM link → evolution; LoCoMo에서 MemGPT 능가</td></tr>
+    <tr><td><strong>Multi-agent</strong></td><td>persona만 달라도 다른 에이전트; MDAgents = complexity check→solo/group/teams; orchestration = 강한 lead(Opus)+싼 sub(Haiku); Goal = 성능·routing(비용)·기타</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="6. RL with LLMs 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

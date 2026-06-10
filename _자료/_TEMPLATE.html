@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{N}}장. {{TITLE_KO}}</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="{{NEXT_FILE}}">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #{{N}}</div>
+  <h1>{{N_DISPLAY}}. {{TITLE_KO}} <span style="font-weight:400;font-size:20px;">({{TITLE_EN}})</span></h1>
+  <div class="subtitle">{{ONE_LINE_SUMMARY}}</div>
+  <div class="meta">
+    <span>📅 강의일: {{DATES}}</span><span>📊 예상 비중: {{WEIGHT}}</span><span>⏱ 분량: {{PAGES}}</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">...</a></li>
+  </ol>
+</div>
+
+<!-- ===== 본문 섹션 패턴 ===== -->
+<section id="s1">
+  <h2><span class="num">1</span> 섹션 제목 <span class="en">(English Term)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>용어(English term)</strong>: 정확한 정의. 시험에 나오는 영어 표현 그대로 병기.
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "강의 전사본에서 교수가 실제로 강조한 내용 인용/요약"
+  </div>
+
+  <div class="formula"><div class="fname">수식 이름</div>
+    $$ \mathcal{L} = -\log \pi_\theta(y|x) $$
+    <p style="font-size:14px;margin:6px 0 0;">각 기호 의미 설명: \( \pi_\theta \)는 정책...</p>
+  </div>
+
+  <ol class="steps">
+    <li><strong>Step 이름</strong> — 설명</li>
+  </ol>
+
+  <table>
+    <tr><th>구분</th><th>방법 A</th><th>방법 B</th></tr>
+    <tr><td>핵심 아이디어</td><td>...</td><td>...</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    이 섹션에서 반드시 기억할 것.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"흔한 오해 서술 (영어)" → <strong>False</strong>. 이유.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 문제 섹션 패턴 ===== -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 기출 & 예상문제</h2>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Speculative decoding eliminates the need for sequential generation.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> The draft model still generates tokens autoregressively...</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about ...?</p>
+      <ol type="a"><li>...</li><li>...</li><li>...</li><li>...</li></ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul><li>(a) Correct. ...</li><li class="wrong">(b) Incorrect. ...</li></ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 마무리 요약 카드 ===== -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>용어</strong></td><td>핵심 한 줄</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="{{NEXT_FILE}}">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

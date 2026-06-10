@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7장. LLM의 디코딩</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="2. AI Feedback 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #7</div>
+  <h1>7장. LLM의 디코딩 <span style="font-weight:400;font-size:20px;">(Decoding of Large Language Models)</span></h1>
+  <div class="subtitle">제어 가능성(Controllability)과 COLD Decoding — 제약을 에너지 함수로 정식화하고 Langevin dynamics로 로짓을 직접 업데이트하는 제약 생성 + 중간고사 디코딩 핵심 복습</div>
+  <div class="meta">
+    <span>📅 강의일: 2026-05-04</span><span>📊 예상 비중: 중 (COLD 신규 + 기출 Problem 5 재출제 대비)</span><span>⏱ 분량: 본문 7개 섹션 + 문제 20문항</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">중간고사 복습 — 디코딩 기초 & 고급 디코딩 요점 (기출 Problem 5 출처)</a></li>
+    <li><a href="#s2">Controllability — 동기와 문제 설정</a></li>
+    <li><a href="#s3">COLD Decoding — 정식화: 로짓 공간 \( \tilde{\boldsymbol{y}} \)와 제약 함수 \( f_i \)</a></li>
+    <li><a href="#s4">에너지 기반 모델(EBM)과 에너지 함수 \( E(\boldsymbol{y}) \)</a></li>
+    <li><a href="#s5">Langevin Dynamics — 그래디언트 기반 샘플링</a></li>
+    <li><a href="#s6">COLD 전체 알고리즘 & Lexically Constrained Decoding 실험</a></li>
+    <li><a href="#s7">COLD의 위상 — 프롬프팅 시대에 왜 덜 쓰이는가</a></li>
+    <li><a href="#quiz">기출 & 예상문제</a></li>
+  </ol>
+</div>
+
+<!-- ===================== 1. 중간고사 복습 ===================== -->
+<section id="s1">
+  <h2><span class="num">1</span> 중간고사 복습 — 디코딩 기초 & 고급 디코딩 <span class="en">(Decoding Basics Recap)</span></h2>
+
+  <p>교수는 #7 디코딩 챕터에서 <strong>기초(basics) → 고급 알고리즘(speculative / diverse decoding) → test-time compute → 제어 가능성(controllability)</strong> 순서로 진행했고, 시간 제약으로 이번 강의에서는 controllability만 신규로 다뤘다. 앞의 세 파트는 중간고사 범위였고 <strong>2025 중간 기출 Problem 5 전체(15점)가 전부 여기서 출제</strong>되었으므로, 기말 재출제에 대비해 요점만 압축 복습한다.</p>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "우리는 강의의 마지막 부분으로 디코딩을 다뤘습니다. 먼저 디코딩의 기초를 배웠고, 이후 speculative decoding이나 diverse decoding 같은 고급 디코딩 알고리즘으로 넘어갔으며, 그다음 보상 모델을 사용하는 test-time compute를 다뤘습니다. 이제 시간 제약 때문에 controllability라는 한 부분만 다루겠습니다."
+  </div>
+
+  <h3>1.1 Autoregressive Decoding (자기회귀 디코딩)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>자기회귀 디코딩(autoregressive decoding)</strong>: 한 번에 한 토큰씩, <strong>모든 이전 토큰을 조건으로(conditioning on all previous tokens)</strong> 다음 토큰을 생성. <strong>EOS(end-of-sequence) 토큰이 생성되거나 미리 정의된 최대 길이(pre-defined max length)에 도달할 때까지</strong> 반복.
+  </div>
+  <div class="formula"><div class="fname">자기회귀 분해 (Autoregressive Factorization)</div>
+    $$ p(\boldsymbol{y}\mid \boldsymbol{x}) = \prod_{t=1}^{T} p\big(y_t \mid \boldsymbol{x},\, y_{&lt;t}\big) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \boldsymbol{x} \)는 입력(프롬프트), \( y_{&lt;t} \)는 \(t\) 시점 이전에 생성된 모든 토큰. 각 스텝의 토큰은 모델이 출력하는 <strong>확률 분포(softmax over vocabulary)</strong>에서 선택/샘플링되며, 고정된 가우시안 분포 같은 것이 아니다.</p>
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"The decoding process can be parallelized across all tokens during inference." → <strong>False</strong>. Autoregressive decoding is <strong>inherently sequential</strong> — token \(t\) requires tokens \(1,\dots,t-1\). (Training-time teacher forcing은 병렬 가능하지만, inference-time decoding은 불가 — 기출 Problem 5-1(b))</li>
+      <li>"The next token is sampled from a fixed Gaussian distribution." → <strong>False</strong>. Sampled from the model's output probability distribution (softmax over logits). (기출 Problem 5-1(d))</li>
+    </ul>
+  </div>
+
+  <h3>1.2 Greedy / Beam Search / Diverse Beam Search</h3>
+  <table>
+    <tr><th>방법</th><th>핵심 아이디어</th><th>특징 / 함정</th></tr>
+    <tr><td><strong>Greedy decoding</strong></td><td>매 스텝 argmax 토큰 선택</td><td>지역 최적(local optimum) — 전체 시퀀스 확률 최대를 보장하지 않음. 결정적(deterministic).</td></tr>
+    <tr><td><strong>Beam search</strong></td><td>매 스텝 누적 확률 상위 \(k\)개 가설(beam)을 유지하며 탐색</td><td>greedy보다 높은 likelihood의 시퀀스 발견 가능. 그러나 빔들끼리 매우 유사해지는 다양성 부족 문제.</td></tr>
+    <tr><td><strong>Diverse Beam Search (DBS)</strong></td><td>빔을 그룹으로 나누고, 그룹 간 <strong>diversity term(페널티)</strong>을 목적함수에 추가</td><td>diversity 항 때문에 <strong>최종 선택 시퀀스가 perplexity 관점에서 최적이 아닐 수 있음</strong> — 기출 Problem 1(x)의 포인트.</td></tr>
+  </table>
+
+  <h3>1.3 Sampling 계열: Temperature / Top-k / Top-p</h3>
+  <div class="formula"><div class="fname">Temperature Scaling</div>
+    $$ p(y_t = v) = \frac{\exp(z_v / \tau)}{\sum_{v'} \exp(z_{v'} / \tau)} $$
+    <p style="font-size:14px;margin:6px 0 0;">\( z_v \)는 토큰 \(v\)의 로짓, \( \tau \)는 temperature. <strong>softmax 이전에 로짓을 rescale</strong>한다(applied <em>before</em> softmax — 기출 함정). \( \tau \downarrow \) → 분포가 뾰족(peaky)해져 더 결정적(deterministic) 출력, \( \tau \uparrow \) → 더 평평(smooth)해져 더 무작위적 출력. \( \tau \to 0 \)이면 greedy와 동일.</p>
+  </div>
+  <table>
+    <tr><th>구분</th><th>Top-k sampling</th><th>Top-p (nucleus) sampling</th></tr>
+    <tr><td>후보 집합 결정</td><td>확률 상위 <strong>고정 개수 \(k\)</strong>개</td><td><strong>누적 확률(cumulative probability)</strong>이 \(p\)를 넘는 최소 집합</td></tr>
+    <tr><td>후보 개수</td><td>항상 \(k\)개 (고정)</td><td>분포 모양(distribution's shape)에 따라 <strong>동적으로 변함</strong> (dynamic flexibility)</td></tr>
+    <tr><td>설계 목적</td><td>저확률 꼬리 토큰 제거</td><td><strong>unnatural / degenerate completion 방지</strong> (text degeneration 완화)</td></tr>
+    <tr><td>Temperature와의 관계</td><td colspan="2">둘 다 temperature와 <strong>함께 사용 가능</strong>(temperature로 분포를 조정한 뒤 truncation) — "temperature is irrelevant in top-k"는 False</td></tr>
+  </table>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Top-p is a special case of beam search with p=1." → <strong>False</strong>. Top-p is a <strong>sampling</strong> method, unrelated to beam search (search-based). (기출 Problem 5-3(b))</li>
+      <li>"Temperature is applied after the softmax operation." → <strong>False</strong>. It rescales <strong>logits before softmax</strong>. (기출 Problem 5-2(d))</li>
+      <li>"Lower temperature increases randomness." → <strong>False</strong>. Lower \( \tau \) → peakier distribution → <strong>more deterministic</strong>.</li>
+    </ul>
+  </div>
+
+  <h3>1.4 Speculative Decoding (추측 디코딩)</h3>
+  <ol class="steps">
+    <li><strong>Draft</strong> — 작은 <strong>draft model</strong>이 여러 토큰을 (자기회귀적으로) 빠르게 제안</li>
+    <li><strong>Verify</strong> — 큰 <strong>target model</strong>이 draft 토큰들을 <strong>한 번의 병렬 forward pass</strong>로 검증(accept/reject)</li>
+    <li><strong>Accept &amp; continue</strong> — 수락된 prefix까지 확정, 거절 지점부터 다시 draft → 큰 모델 호출 횟수 감소로 속도 향상. 출력 분포는 target model과 동일하게 유지.</li>
+  </ol>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"It eliminates the need for sequential generation." → <strong>False</strong>. The <strong>draft model still generates tokens autoregressively</strong>; only verification is parallelized. (기출 Problem 5-4(c))</li>
+      <li>"Speculation changes the output distribution of the large model." → <strong>False</strong>. Acceptance/rejection scheme은 target model의 분포를 보존하도록 설계됨.</li>
+    </ul>
+  </div>
+
+  <h3>1.5 Test-time Compute Scaling</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Test-time compute scaling</strong>: 학습이 아닌 <strong>추론(inference) 시점</strong>에 더 많은 연산을 투입해 성능을 높이는 전략. 어려운 질의에 동적으로 더 많은 compute를 할당(dynamically allocate more inference compute to harder queries)하고, "longer thinking"으로 복잡한 과제의 추론 정확도를 높임. 예: Best-of-N + reward model, self-consistency, 긴 chain-of-thought.
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"It is a technique for fine-tuning LLMs using RL." → <strong>False</strong>. It is an <strong>inference strategy</strong>, not a fine-tuning method. (기출 Problem 5-5(b))</li>
+      <li>"It improves model capacity by increasing the number of parameters at test time." → <strong>False</strong>. <strong>Parameters are fixed</strong>; only inference time/compute increases. (기출 Problem 5-5(d))</li>
+    </ul>
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    기출 Problem 5의 4대 오답 패턴을 외울 것: ① autoregressive = sequential(병렬 불가), ② temperature = <em>before</em> softmax &amp; low τ = deterministic, ③ top-p = dynamic candidate set(beam search와 무관), ④ speculative = draft는 여전히 autoregressive / test-time compute = 파라미터 고정·inference 전략. DBS는 diversity 항 때문에 최저 perplexity 시퀀스를 보장하지 않음.
+  </div>
+</section>
+
+<!-- ===================== 2. Controllability ===================== -->
+<section id="s2">
+  <h2><span class="num">2</span> Controllability — 동기와 문제 설정 <span class="en">(Controllability: Motivation)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>제어 가능성(Controllability)</strong>: 출력 생성에서 <strong>우도(likelihood)만이 아니라 추가적인 제약(constraints)</strong>을 만족하도록 디코딩하는 것. 슬라이드 원문: "Adding constraints in output generation (<strong>not only likelihood</strong>)".
+  </div>
+
+  <p>기존 디코딩(greedy, beam, sampling)은 모두 <strong>likelihood 하나의 목적</strong>을 중심으로 동작한다. 그러나 응용에 따라 likelihood 외의 제약을 생성 과정에 넣고 싶을 수 있다. 교수가 든 예시:</p>
+  <ul>
+    <li><strong>Diversity</strong> — 가장 고전적인 예. DBS가 likelihood 목적에 diversity를 추가 제약으로 넣은 사례 → controllability의 한 형태로 볼 수 있음.</li>
+    <li><strong>Keyword inclusion (lexical constraint)</strong> — 특정 키워드(예: "cat", "fox")를 반드시 포함하는 문장 생성.</li>
+    <li><strong>Infilling (text in-between)</strong> — <strong>과거 문맥(past context)과 미래 문맥(future context)이 둘 다 주어졌을 때</strong> 그 사이의 중간 텍스트를 생성. 기존 autoregressive 디코딩은 <strong>과거만</strong> 조건으로 보지만, 여기서는 생성 결과가 <strong>미래 문맥 관점에서도 자연스러워야</strong> 하므로 이것이 추가 제약으로 모델링됨.</li>
+    <li><strong>Counterfactual reasoning</strong> — 조건의 일부가 바뀌었을 때 일관되도록 텍스트 일부를 수정하는 생성.</li>
+  </ul>
+
+  <h3>2.1 프롬프팅 vs 디코딩 수준 제어</h3>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "최근 LLM 시대에 더 직접적인 해법은 프롬프팅이겠죠? 예를 들어 'cat을 키워드로 포함해야 한다'고 프롬프트에 주면 됩니다. 하지만 이런 프롬프팅은 <strong>암묵적(implicit) 해법</strong>이라서, 특정 출력을 실제로 제어할 수는 없습니다. 그래서 디코딩에서 controllability의 목표는 <strong>디코딩 알고리즘 자체를 직접 수정</strong>하는 것입니다."
+  </div>
+  <table>
+    <tr><th>구분</th><th>Prompting (e.g., "include the keyword cat")</th><th>Decoding-level control (e.g., COLD)</th></tr>
+    <tr><td>제어 방식</td><td>입력 문맥으로 제약을 전달 — <strong>implicit</strong></td><td>디코딩 목적함수/알고리즘을 직접 수정 — <strong>explicit</strong></td></tr>
+    <tr><td>보장</td><td>모델이 지시를 따를 것이라는 보장 없음</td><td>제약 함수를 직접 최적화 → 만족 확률을 원칙적으로 높임</td></tr>
+    <tr><td>학습 필요</td><td>없음</td><td>없음 (COLD도 <strong>training-free</strong>, 디코딩만 수정)</td></tr>
+  </table>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Controllable decoding aims to maximize only the likelihood of the output." → <strong>False</strong>. The whole point is adding constraints <strong>beyond likelihood</strong>.</li>
+      <li>"Prompting with the constraint (e.g., 'include keyword X') guarantees that the output satisfies the constraint." → <strong>False</strong>. Prompting is an <strong>implicit</strong> solution and cannot directly control the output.</li>
+      <li>"Text infilling with both past and future contexts can be handled by standard autoregressive decoding without modification." → <strong>False</strong>. Standard AR decoding conditions only on the <strong>past</strong>; naturalness w.r.t. the future context must be modeled as an additional constraint.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 3. COLD 정식화 ===================== -->
+<section id="s3">
+  <h2><span class="num">3</span> COLD Decoding — 정식화 <span class="en">(Formulation: Logit Space &amp; Constraint Functions)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>COLD Decoding</strong> (Qin et al., <em>COLD Decoding: Energy-based <u>Co</u>nstrained Text Generation with <u>L</u>angevin <u>D</u>ynamics</em>, <strong>NeurIPS 2022</strong>): 제약 생성을 ① <strong>제약을 수학적 목적함수(에너지 함수)로 정식화</strong>하고 ② <strong>출력(로짓) 수준에서 gradient-based update</strong>를 반복해 제약을 만족시키는 <strong>에너지 기반(energy-based) 제약 텍스트 생성</strong> 프레임워크. 모델 파라미터는 건드리지 않는다.
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "핵심 아이디어는 첫째, 제약을 수학적 목적함수로 정식화하고, 둘째, 제약을 만족시키기 위해 <strong>출력 수준에서</strong> gradient-based 업데이트를 수행한다는 것입니다. <strong>adversarial example을 위한 gradient descent와 매우 유사</strong>합니다 — 파라미터가 아니라 입력/출력을 업데이트한다는 점에서요."
+  </div>
+
+  <h3>3.1 표기법: 왜 로짓 공간인가</h3>
+  <ul>
+    <li>\( \boldsymbol{y} \in \mathbb{N}^{T} \) : 출력 텍스트(토큰 ID 시퀀스). \( T \) = 출력 토큰 개수.</li>
+    <li>\( \tilde{\boldsymbol{y}} \in \mathbb{R}^{T \times V} \) : \( \boldsymbol{y} \)의 <strong>로짓(logit)</strong>. \( V \) = LLM의 vocabulary 크기. 각 위치마다 \(V\)차원 실수 벡터(soft token representation).</li>
+    <li>\( f_i(\boldsymbol{y}) \in \mathbb{R} \) : \(i\)번째 <strong>제약 함수(constraint function)</strong>. 각 제약이 스칼라 함수로 포착될 수 있다고 가정. 값이 <strong>클수록 제약을 잘 만족</strong>.</li>
+  </ul>
+  <div class="formula"><div class="fname">이산 → 연속 완화 (Discrete-to-Continuous Relaxation)</div>
+    $$ \boldsymbol{y} \in \mathbb{N}^{T} \;\;\xrightarrow{\text{discrete, no gradient}}\;\; \tilde{\boldsymbol{y}} \in \mathbb{R}^{T \times V} \;\;(\text{continuous, differentiable}) $$
+    <p style="font-size:14px;margin:6px 0 0;">텍스트 \( \boldsymbol{y} \)는 <strong>이산(discrete)</strong> 값이므로 그래디언트를 직접 구할 수 없다. COLD의 해결책: 이산 토큰 공간 대신 <strong>연속인 로짓 공간 \( \tilde{\boldsymbol{y}} \)를 최적화 변수</strong>로 삼아 업데이트한다. 마지막에만 이산화(discretization)하여 실제 토큰으로 되돌린다.</p>
+  </div>
+
+  <h3>3.2 제약 함수 \( f_i \)의 예</h3>
+  <table>
+    <tr><th>제약 종류</th><th>제약 함수 \( f_i \)의 구현</th></tr>
+    <tr><td><strong>Fluency constraint</strong> (유창성)</td><td>LM이 매기는 <strong>likelihood of \( \boldsymbol{y} \)</strong> — 슬라이드의 대표 예시 ("e.g., likelihood of \( \boldsymbol{y} \) as fluency constraint")</td></tr>
+    <tr><td><strong>Keyword/lexical constraint</strong></td><td>목표 키워드와의 <strong>counting / n-gram overlap (n-gram match)</strong></td></tr>
+    <tr><td><strong>Future-context coherence</strong></td><td>미래 문맥에 조건부인 likelihood (역방향 LM 등)</td></tr>
+  </table>
+  <p>이후 할 일은 <strong>\( f_i \)들을 최대화하도록 \( \tilde{\boldsymbol{y}} \)를 업데이트</strong>하는 것. 업데이트된 \( \tilde{\boldsymbol{y}} \)는 제약을 만족할 가능성이 더 큰 후보가 된다. 남는 질문: "어떻게 <strong>원칙에 입각한(principled)</strong> 방식으로 업데이트하는가?" → 에너지 기반 모델(§4)과 Langevin dynamics(§5)가 답.</p>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    COLD의 3대 키워드 매핑을 정확히: <strong>optimization variable = 로짓 \( \tilde{\boldsymbol{y}} \in \mathbb{R}^{T\times V} \)</strong> (이산 \( \boldsymbol{y} \in \mathbb{N}^T \)가 아님), <strong>constraint = 스칼라 함수 \( f_i(\boldsymbol{y}) \in \mathbb{R} \)</strong>, <strong>update = gradient-based</strong> (output-level, parameter-level 아님). 차원 표기 \( \mathbb{R}^{T\times V} \), \( \mathbb{N}^T \)가 그대로 T/F로 나올 수 있다.
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"COLD performs gradient updates directly on the discrete token sequence \( \boldsymbol{y} \)." → <strong>False</strong>. Gradients are intractable in the discrete space; COLD updates the <strong>continuous logits \( \tilde{\boldsymbol{y}} \)</strong>.</li>
+      <li>"COLD fine-tunes the LLM's parameters to satisfy the constraints." → <strong>False</strong>. It is a <strong>decoding-time</strong> method; the update target is the output logits, not model parameters.</li>
+      <li>"Each constraint \( f_i \) must be a binary indicator (satisfied / not satisfied)." → <strong>False</strong>. \( f_i(\boldsymbol{y}) \in \mathbb{R} \) is a real-valued (differentiable) score, e.g., likelihood or n-gram overlap.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 4. EBM ===================== -->
+<section id="s4">
+  <h2><span class="num">4</span> 에너지 기반 모델과 에너지 함수 <span class="en">(Energy-Based Model &amp; Energy Function)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>에너지 기반 모델(Energy-Based Model, EBM)</strong>: <strong>에너지 함수 \( E(\boldsymbol{y}) \)</strong>로 확률 분포를 기술하는 모델링 방식. <strong>에너지가 낮을수록 안정(stable) → 높은 확률</strong>, 에너지가 높을수록 불안정(unstable) → 낮은 확률. (교수의 직관: 화학에서 분자의 에너지 — 낮은 에너지 = 안정 상태)
+  </div>
+
+  <div class="formula"><div class="fname">COLD의 에너지 함수 — 제약의 선형 결합</div>
+    $$ E(\boldsymbol{y}) := -\sum_{i} \lambda_i\, f_i(\boldsymbol{y}) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \lambda_i \ge 0 \)는 \(i\)번째 제약의 가중치. <strong>마이너스 부호</strong>에 주의: \( f_i \)가 클수록(제약을 잘 만족할수록) 에너지 \(E\)는 <strong>낮아진다</strong>. 즉 "제약 만족 = 저에너지 = 고확률"의 방향이 되도록 정의.</p>
+  </div>
+
+  <div class="formula"><div class="fname">에너지 기반 분포 (Boltzmann form)</div>
+    $$ p(\boldsymbol{y}) = \frac{\exp\!\big(-E(\boldsymbol{y})\big)}{Z}, \qquad Z = \sum_{\boldsymbol{y}'} \exp\!\big(-E(\boldsymbol{y}')\big) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( Z \)는 분모의 <strong>정규화 항(normalizing term/constant)</strong>. \( -E(\boldsymbol{y}) = \sum_i \lambda_i f_i(\boldsymbol{y}) \)이므로, 이 분포에서 \( \boldsymbol{y} \sim p(\boldsymbol{y}) \)를 샘플링하면 <strong>높은 확률로 제약들을 만족하는 텍스트</strong>가 나온다. 따라서 "제약 하의 텍스트 생성 = 에너지 기반 분포 \(p\)로부터의 샘플링" 으로 문제가 재정의된다.</p>
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "에너지가 높으면 샘플링될 확률이 낮고, 에너지가 낮으면 샘플링될 확률이 높습니다. 높은 에너지는 불안정한 상태를 나타내기 때문에 마이너스 E를 취합니다. 유일한 문제는: <strong>어떻게 이 분포로부터 샘플링하는가?</strong> 단순한 분포가 아니기 때문에(정규화 항 \(Z\) 계산 불가) 직접 샘플링이 간단하지 않습니다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① \( E(\boldsymbol{y}) = -\sum_i \lambda_i f_i(\boldsymbol{y}) \)의 <strong>마이너스 부호와 방향성</strong>(높은 \(f_i\) ⇒ 낮은 에너지 ⇒ 높은 확률), ② \( p(\boldsymbol{y}) \propto \exp(-E(\boldsymbol{y})) \), ③ 이 분포에서의 직접 샘플링은 intractable → <strong>Langevin dynamics가 필요해지는 이유</strong>. 이 3단 논리 흐름이 Pick-all로 나오기 좋다.
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In COLD, a higher energy \( E(\boldsymbol{y}) \) means the text is more likely to satisfy the constraints." → <strong>False</strong>. <strong>Lower</strong> energy ↔ higher constraint satisfaction ↔ higher probability under \(p\).</li>
+      <li>"The energy function is defined as the product of the constraint functions." → <strong>False</strong>. It is a (negative) <strong>weighted linear combination</strong>: \( E = -\sum_i \lambda_i f_i \).</li>
+      <li>"Sampling from the energy-based distribution \( p(\boldsymbol{y}) \) is straightforward since \(p\) is explicitly normalized." → <strong>False</strong>. The normalizing constant \(Z\) is intractable; that is exactly why Langevin dynamics is used.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 5. Langevin dynamics ===================== -->
+<section id="s5">
+  <h2><span class="num">5</span> Langevin Dynamics — 그래디언트 기반 샘플링 <span class="en">(Sampling via Langevin Dynamics)</span></h2>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Langevin dynamics</strong>: 에너지 기반 분포처럼 직접 샘플링이 어려운 분포에서, <strong>임의의 점에서 시작해 에너지 함수의 그래디언트 \( \nabla_{\boldsymbol{y}} E(\boldsymbol{y}) \)를 따라 내려가면서 가우시안 잡음을 더하는</strong> 반복(Markov chain)으로 샘플을 얻는 고전적 샘플링 알고리즘. (수렴 증명: Welling &amp; Teh, <em>Bayesian Learning via Stochastic Gradient Langevin Dynamics</em>, ICML 2011)
+  </div>
+
+  <div class="formula"><div class="fname">Langevin 업데이트 (Markov chain / gradient step)</div>
+    $$ \tilde{\boldsymbol{y}}^{(n+1)} \;=\; \tilde{\boldsymbol{y}}^{(n)} \;-\; \eta\, \nabla_{\tilde{\boldsymbol{y}}}\, E\big(\tilde{\boldsymbol{y}}^{(n)}\big) \;+\; \epsilon^{(n)}, \qquad \epsilon^{(n)} \sim \mathcal{N}(0, \sigma) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \eta \)는 <strong>step size</strong>, \( \epsilon^{(n)} \)은 반복 \(n\)에서의 <strong>가우시안 잡음(Gaussian noise)</strong>. 잡음 항 덕분에 단순 경사 하강(한 점으로의 수렴)이 아니라 <strong>분포로부터의 샘플링</strong>이 된다. 핵심 성질: \( n \to \infty \)일 때 \( \tilde{\boldsymbol{y}}^{(n)} \)의 분포가 목표 분포 \( p(\tilde{\boldsymbol{y}}) \)로 <strong>수렴함이 증명</strong>되어 있다.</p>
+  </div>
+
+  <h3>5.1 경사 하강(파라미터 학습)과의 비교 — 교수의 핵심 직관</h3>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "손실 함수를 최소화하려고 <strong>파라미터 수준에서</strong> 경사 하강할 때와 매우 유사한 식이죠? 유일한 차이는, <strong>파라미터 자리에 \( \tilde{\boldsymbol{y}} \)가, 손실 함수 자리에 에너지 함수가</strong> 대입된다는 것뿐입니다. 업데이트 대상이 출력으로, 목적이 에너지 함수로 바뀐 것입니다."
+  </div>
+  <table>
+    <tr><th>구분</th><th>일반 학습 (gradient descent)</th><th>COLD의 Langevin dynamics</th></tr>
+    <tr><td>업데이트 변수</td><td>모델 파라미터 \( \theta \)</td><td>출력 로짓 \( \tilde{\boldsymbol{y}} \) (모델은 고정)</td></tr>
+    <tr><td>목적 함수</td><td>손실 \( \mathcal{L}(\theta) \)</td><td>에너지 \( E(\tilde{\boldsymbol{y}}) = -\sum_i \lambda_i f_i \)</td></tr>
+    <tr><td>잡음 항</td><td>없음 (결정적 하강)</td><td>가우시안 잡음 \( \epsilon^{(n)} \sim \mathcal{N}(0,\sigma) \) <strong>필수</strong> — 샘플링이 되게 함</td></tr>
+    <tr><td>결과</td><td>손실 최소점</td><td>\( n\to\infty \)에서 \( p(\tilde{\boldsymbol{y}}) \)로부터의 샘플 (수렴 보장)</td></tr>
+    <tr><td>유사 사례</td><td>—</td><td>adversarial example 생성(입력에 대한 gradient)과 구조 동일</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    Langevin 업데이트 식의 3요소를 식별할 수 있어야 함: <strong>① gradient term \( -\eta \nabla_{\tilde{\boldsymbol{y}}} E \)</strong> (에너지를 낮추는 방향 = 제약 만족도를 높이는 방향), <strong>② noise term \( \epsilon^{(n)} \sim \mathcal{N}(0,\sigma) \)</strong>, <strong>③ 수렴 성질</strong> ("distribution of \( \tilde{\boldsymbol{y}}^{(n)} \) converges to \( p \) as \( n \to \infty \)"). "Markov chain을 형성한다"는 표현도 슬라이드 원문.
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Langevin dynamics in COLD performs gradient <em>ascent</em> on the energy function." → <strong>False</strong>. It takes gradient <strong>descent</strong> steps on \(E\) (lower energy = better constraint satisfaction). (Equivalently, gradient ascent on \( \sum_i \lambda_i f_i \).)</li>
+      <li>"The Gaussian noise term is an optional trick for escaping local minima and can be dropped without changing what the procedure computes." → <strong>False</strong>. The noise is what makes the iterates <strong>samples from \(p\)</strong> rather than a deterministic minimizer; the convergence-to-\(p\) guarantee relies on it.</li>
+      <li>"After a finite, small number of steps, \( \tilde{\boldsymbol{y}}^{(n)} \) is guaranteed to be an exact sample from \( p \)." → <strong>False</strong>. The guarantee is asymptotic: convergence holds as \( n \to \infty \).</li>
+      <li>"Langevin dynamics requires computing the normalizing constant \(Z\) of \(p\)." → <strong>False</strong>. It only needs \( \nabla_{\tilde{\boldsymbol{y}}} E \) — \(Z\)와 무관하다는 점이 이 방법을 쓰는 이유.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 6. 알고리즘 & 실험 ===================== -->
+<section id="s6">
+  <h2><span class="num">6</span> COLD 전체 알고리즘 &amp; Lexically Constrained Decoding <span class="en">(Algorithm &amp; Experiments)</span></h2>
+
+  <h3>6.1 전체 알고리즘 (Algorithm Description)</h3>
+  <p><strong>입력</strong>: 제약 함수들 \( \{f_i\} \) (목표 속성에 맞게 사용자가 직접 정의), 반복 횟수 \(N\), 출력 길이 \(T\).</p>
+  <ol class="steps">
+    <li><strong>초기화 (Initialization)</strong> — 전통적인 우도 기반 디코딩으로 초기 로짓 \( \tilde{\boldsymbol{y}}^{(0)} \)을 얻는다 (이 초기 생성은 제약을 위반할 수 있는 vanilla 출력).</li>
+    <li><strong>에너지 함수 정식화</strong> — 제약들의 선형 결합으로 \( E(\tilde{\boldsymbol{y}}) = -\sum_i \lambda_i f_i(\tilde{\boldsymbol{y}}) \) 구성.</li>
+    <li><strong>Langevin 업데이트 × N회</strong> — \( \tilde{\boldsymbol{y}}^{(n+1)} = \tilde{\boldsymbol{y}}^{(n)} - \eta \nabla_{\tilde{\boldsymbol{y}}} E(\tilde{\boldsymbol{y}}^{(n)}) + \epsilon^{(n)} \) 를 \(n = 0,\dots,N-1\) 반복.</li>
+    <li><strong>이산화 (Discretization)</strong> — 업데이트된 로짓 \( \tilde{\boldsymbol{y}}^{(N)} \)에서 전통적 방식(top-k 필터링 등)으로 실제 토큰 시퀀스 \( \boldsymbol{y} \)를 샘플링.</li>
+  </ol>
+
+  <h3>6.2 응용: Lexically Constrained Decoding (어휘 제약 디코딩)</h3>
+  <p>COLD 논문에는 여러 응용(abductive reasoning, counterfactual reasoning 등)이 있지만, 강의에서는 가장 직관적인 <strong>어휘 제약 디코딩</strong>만 소개. 목표: <strong>특정 키워드들을 포함하는 자연스러운 문장</strong> 생성.</p>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "우려되는 점은 <strong>reward hacking</strong>입니다 — 제약을 만족시키는 부자연스러운 방식은 키워드를 <strong>무작위 위치에 삽입</strong>해 버리는 것이죠. 제약 측면에서는 만족되지만 문장은 자연스럽지 않습니다. 그래서 목표는: <strong>자연스러운 문장을 생성하되, 키워드를 가능한 한 자연스럽게 포함</strong>시키는 것입니다."
+  </div>
+
+  <h4>설계된 에너지 함수 \( E_1 \) — 4개의 제약 함수 결합</h4>
+  <div class="formula"><div class="fname">Lexically constrained decoding을 위한 에너지 (개념 구조)</div>
+    $$ E_1(\tilde{\boldsymbol{y}}) \;=\; -\Big[\, \lambda_a\, \underbrace{f_{\overrightarrow{\mathrm{LM}}}(\tilde{\boldsymbol{y}};\boldsymbol{x})}_{\text{① 순방향 유창성}} \;+\; \lambda_b\, \underbrace{f_{\overleftarrow{\mathrm{LM}}}(\tilde{\boldsymbol{y}})}_{\text{② 역방향 유창성}} \;+\; \lambda_c\, \underbrace{f_{\mathrm{pred}}(\boldsymbol{x}\mid\tilde{\boldsymbol{y}})}_{\text{③ 입력 부분의 우도}} \;+\; \lambda_d\, \underbrace{f_{\mathrm{sim}}(\tilde{\boldsymbol{y}};\boldsymbol{y}^{*})}_{\text{④ n-gram match}} \,\Big] $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \boldsymbol{y}^{*} \)는 목표 키워드(target keywords). 각 항의 의미는 아래 표 참조.</p>
+  </div>
+  <table>
+    <tr><th>항</th><th>제약 함수</th><th>의미 (강의 설명)</th></tr>
+    <tr><td>① soft fluency</td><td>좌→우(forward) LM likelihood의 cross-entropy</td><td>출력의 <strong>자연스러움(naturalness)</strong> — 우도의 전통적 정의. 주어진 문맥에 대한 확률 계산.</td></tr>
+    <tr><td>② reverse LM fluency</td><td><strong>같은 모델</strong>로 우도의 <strong>역방향(reverse direction)</strong> 고려</td><td>역방향에서도 유창하도록 — 키워드 삽입이 앞뒤 어느 쪽에서 봐도 자연스럽게.</td></tr>
+    <tr><td>③ future-context / input likelihood</td><td>출력 \( \boldsymbol{y} \)가 주어졌을 때 <strong>입력 \( \boldsymbol{x} \) 부분 자체의 우도</strong></td><td>출력이 아니라 <strong>입력 부분을 우도 측면에서</strong> 생각 — 출력이 입력 문맥과 일관되도록.</td></tr>
+    <tr><td>④ n-gram similarity</td><td>현재 \( \tilde{\boldsymbol{y}} \)와 목표 키워드 \( \boldsymbol{y}^{*} \)의 <strong>n-gram match</strong></td><td>어휘 제약의 <strong>가장 직접적 목적</strong> — 키워드 포함 정도를 측정.</td></tr>
+  </table>
+  <p>이 네 제약을 하나의 에너지 함수로 결합해 그래디언트를 취한다. ①~③은 "자연스럽게", ④는 "키워드를 포함하게" — ④만 있으면 reward hacking(무작위 삽입)이 일어나므로 <strong>유창성 제약들과의 결합이 핵심 설계</strong>다.</p>
+
+  <h3>6.3 실험 결과 (vs NeuroLogic 등 베이스라인)</h3>
+  <ul>
+    <li>COLD는 이전 알고리즘들 대비 <strong>더 유창(fluent)</strong>한 출력을 생성.</li>
+    <li><strong>키워드 포함률(coverage) 약 95%</strong> — 대부분의 키워드를 성공적으로 포함.</li>
+    <li>단, <strong>NeuroLogic 베이스라인과 비교하면</strong> human 평가 기준 점수에서 <strong>perplexity가 상당히 낮음(= 더 유창함)</strong>이 COLD의 강점으로 제시됨 — 즉 NeuroLogic 같은 탐색 기반 방법 대비 fluency에서 우위.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    알고리즘 4단계의 <strong>순서</strong>(likelihood 초기화 → 에너지 정식화 → N회 Langevin 업데이트 → 이산화)와, lexical constraint에서 <strong>에너지 함수가 4개 항</strong>(forward fluency / reverse fluency / input-side likelihood / n-gram match)으로 구성된다는 것, 그리고 <strong>fluency 항들이 reward hacking(키워드 무작위 삽입)을 막기 위해 존재</strong>한다는 설계 의도. 실험 수치는 "~95% keyword coverage + more fluent than baselines (incl. NeuroLogic)".
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In COLD's lexically constrained decoding, the n-gram match term alone is sufficient to produce natural outputs." → <strong>False</strong>. Alone it invites <strong>reward hacking</strong> (inserting keywords at random positions); fluency terms (forward + reverse LM) are needed.</li>
+      <li>"COLD initializes \( \tilde{\boldsymbol{y}}^{(0)} \) randomly from Gaussian noise." → <strong>False</strong>. It is initialized using <strong>conventional likelihood-based decoding</strong> (the vanilla generation).</li>
+      <li>"The final output of COLD is the continuous logit \( \tilde{\boldsymbol{y}}^{(N)} \) itself." → <strong>False</strong>. A <strong>discretization</strong> step samples actual tokens from the updated logits at the end.</li>
+      <li>"The reverse-LM term in \(E_1\) requires training a separate backward language model from scratch." → <strong>False</strong> (강의 기준). The <strong>same model</strong> is used to consider the reverse direction of the likelihood.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 7. 위상 ===================== -->
+<section id="s7">
+  <h2><span class="num">7</span> COLD의 위상 — 프롬프팅 시대의 controllable decoding <span class="en">(Where COLD Stands Today)</span></h2>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "만약 언어 모델이 in-context learning을 완전히 수행해서 — 'cat과 fox를 키워드로 포함하라' 같은 — 여러분의 지시를 <strong>100% 따를 수 있다면, 이런 종류의 디코딩은 필요하지 않겠죠?</strong> 그것이 이 알고리즘이 최근에 자주 사용되지 않는 이유입니다. 하지만 이런 모델링 기법은 <strong>고급 디코딩에 관한 지식 체계의 일부로서 소개할 가치가 충분</strong>하다고 생각합니다."
+  </div>
+  <ul>
+    <li><strong>현대적 한계</strong>: 강력한 instruction-following LLM에서는 프롬프팅(in-context learning)만으로 제약 만족이 상당 부분 가능 → COLD류 명시적 제약 디코딩의 실용적 수요 감소.</li>
+    <li><strong>그럼에도 배우는 이유</strong>: ① 프롬프팅은 여전히 implicit·무보장, ② 에너지 기반 정식화 + Langevin 샘플링이라는 <strong>모델링 기법 자체의 일반성</strong> (출력 공간 최적화, training-free 제어라는 사고방식은 test-time 기법 전반과 연결됨).</li>
+  </ul>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"COLD-style constrained decoding is widely used in production with today's instruction-following LLMs." → <strong>False</strong>. The professor explicitly noted it is <strong>not frequently used recently</strong>, since strong in-context instruction following often suffices.</li>
+      <li>"Because prompting can express constraints, decoding-level controllability is conceptually equivalent to prompting." → <strong>False</strong>. Prompting is implicit with no guarantee; decoding-level control <strong>directly modifies the decoding objective/algorithm</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== Q. 문제 ===================== -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 기출 &amp; 예상문제</h2>
+
+  <h3>Q-A. 2025 중간 기출 — 원문 그대로 (재출제 대비)</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A1. Problem 1 (x) (True/False, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Diverse Beam Search (DBS) always chooses the most probable sequence (i.e., the lowest perplexity) from all beams.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> As the diversity term is introduced, the selected sequence can be not optimal in the perspective of perplexity. <span class="en">(diversity 페널티가 목적함수에 추가되므로, 선택된 시퀀스가 perplexity 기준 최적이 아닐 수 있음)</span></div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A2. Problem 5-1 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following are true about autoregressive decoding in LLMs?</p>
+      <ol type="a">
+        <li>Each token is generated by conditioning on all previous tokens.</li>
+        <li>The decoding process can be parallelized across all tokens during inference.</li>
+        <li>The process continues until an end-of-sequence (EOS) token is generated or upon reaching a pre-defined max length.</li>
+        <li>The next token is sampled from a fixed Gaussian distribution.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. Standard autoregressive decoding generates one token at a time, using all the previous tokens.</li>
+          <li class="wrong">(b) Incorrect. It is inherently sequential (not parallel).</li>
+          <li>(c) Correct. Generation typically stops when an EOS token is generated or predefined threshold is reached.</li>
+          <li class="wrong">(d) Incorrect. Tokens are sampled from the model's output probability distribution, not Gaussian.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A3. Problem 5-2 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following are true about temperature-controlled sampling?</p>
+      <ol type="a">
+        <li>Temperature controls the sharpness or smoothness of the output distribution.</li>
+        <li>Lower temperature values result in more deterministic outputs.</li>
+        <li>Temperature is irrelevant in top-k sampling.</li>
+        <li>Temperature is applied after the softmax operation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b)</span>
+        <ul>
+          <li>(a) Correct. High temperature → more randomness, low temperature → peaky distribution.</li>
+          <li>(b) Correct. Lower temperatures lead to more confident predictions.</li>
+          <li class="wrong">(c) Incorrect. Temperature is still relevant and often used alongside top-k.</li>
+          <li class="wrong">(d) Incorrect. It rescales logits before applying softmax.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A4. Problem 5-3 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following statements are correct about top-p (nucleus) sampling?</p>
+      <ol type="a">
+        <li>Top-p sampling adjusts the candidate set based on cumulative probability.</li>
+        <li>Top-p is a special case of beam search with p=1.</li>
+        <li>Top-p allows dynamic flexibility based on the distribution's shape.</li>
+        <li>It is designed to avoid unnatural or degenerate completions.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. The candidate pool is chosen based on cumulative probability and predefined threshold.</li>
+          <li class="wrong">(b) Incorrect. Top-p is not related to beam search.</li>
+          <li>(c) Correct. It adapts the number of candidates per step.</li>
+          <li>(d) Correct. It was designed to mitigate degeneration in sampling.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A5. Problem 5-4 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following describe speculative decoding?</p>
+      <ol type="a">
+        <li>It uses a small draft model to propose multiple tokens at once.</li>
+        <li>It verifies the drafts with a larger target model.</li>
+        <li>It eliminates the need for sequential generation.</li>
+        <li>It speeds up decoding by reducing the number of expensive large model inferences.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. A lightweight model proposes token drafts.</li>
+          <li>(b) Correct. The large target model checks and filters the drafts.</li>
+          <li class="wrong">(c) Incorrect. The draft model still generates the tokens via autoregressive generation.</li>
+          <li>(d) Correct. It reduces the number of calls to the large model.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">A6. Problem 5-5 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following describe the concept of test-time compute scaling in LLMs?</p>
+      <ol type="a">
+        <li>It allows models to dynamically allocate more inference compute to harder queries.</li>
+        <li>It is a technique for fine-tuning large language models using reinforcement learning.</li>
+        <li>It enables more accurate reasoning by allowing "longer thinking" on complex tasks.</li>
+        <li>It improves model capacity by increasing the number of parameters at test time.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. Dynamic inference strategies help allocate more resources to harder problems.</li>
+          <li class="wrong">(b) Incorrect. Test-time compute scaling is not a fine-tuning method, but an inference strategy.</li>
+          <li>(c) Correct. It enables the model to produce better results by spending more compute.</li>
+          <li class="wrong">(d) Incorrect. The number of parameters is fixed; it increases inference time, not model size.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <h3>Q-B. 예상문제 — True/False (COLD / Controllability 중심)</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In COLD decoding, the gradient-based update is performed on the discrete token sequence \( \boldsymbol{y} \in \mathbb{N}^{T} \) directly.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Since \( \boldsymbol{y} \) is discrete, gradients are intractable. COLD instead updates the continuous logits \( \tilde{\boldsymbol{y}} \in \mathbb{R}^{T \times V} \), and discretizes only at the end.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In COLD decoding, the energy function is defined as \( E(\boldsymbol{y}) := -\sum_i \lambda_i f_i(\boldsymbol{y}) \), so that an output satisfying the constraints better (higher \( f_i \)) has lower energy and thus higher probability under the energy-based distribution.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> \( p(\boldsymbol{y}) \propto \exp(-E(\boldsymbol{y})) = \exp(\sum_i \lambda_i f_i(\boldsymbol{y})) \); higher constraint satisfaction → lower energy → higher sampling probability, mirroring the stable/unstable intuition of energy-based models.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Langevin dynamics in COLD adds Gaussian noise at each iteration, and the distribution of the updated variable \( \tilde{\boldsymbol{y}}^{(n)} \) is proved to converge to the target energy-based distribution as \( n \to \infty \).</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The update is \( \tilde{\boldsymbol{y}}^{(n+1)} = \tilde{\boldsymbol{y}}^{(n)} - \eta \nabla_{\tilde{\boldsymbol{y}}} E(\tilde{\boldsymbol{y}}^{(n)}) + \epsilon^{(n)} \) with \( \epsilon^{(n)} \sim \mathcal{N}(0,\sigma) \); convergence to the target distribution as \( n \to \infty \) was proved by Welling et al. (ICML 2011).</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>COLD decoding requires fine-tuning the language model so that its outputs satisfy the target constraints.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> COLD is a decoding-time (training-free) method: the model parameters are fixed, and only the output logits \( \tilde{\boldsymbol{y}} \) are iteratively updated via gradients of the energy function.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In COLD's lexically constrained decoding, using only the n-gram match constraint with the target keywords is enough, since maximizing keyword overlap naturally produces fluent sentences.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Maximizing the n-gram match alone invites a reward-hacking style failure: keywords can be inserted at random positions, satisfying the constraint but producing unnatural text. Hence fluency constraints (forward and reverse LM likelihoods) are combined in the energy function.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In COLD decoding, the initial logits \( \tilde{\boldsymbol{y}}^{(0)} \) are obtained by conventional likelihood-based decoding, and the final text is obtained by discretizing the updated logits after N Langevin iterations.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The algorithm: initialize \( \tilde{\boldsymbol{y}}^{(0)} \) with conventional likelihood, formulate the energy as a linear combination of constraints, take N gradient-based (Langevin) updates, then sample tokens from the updated logits via conventional discretization.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Prompting an instruction-following LLM with a constraint (e.g., "include the keyword cat") is an explicit control method that guarantees the constraint is satisfied in the output.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Prompting is an implicit solution — it cannot directly control the output and provides no guarantee. Decoding-level controllability methods like COLD explicitly modify the decoding algorithm/objective instead.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">B8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Sampling from the energy-based distribution \( p(\boldsymbol{y}) = \exp(-E(\boldsymbol{y}))/Z \) is non-trivial because the normalizing term is intractable, which is why COLD resorts to Langevin dynamics using the gradient \( \nabla_{\boldsymbol{y}} E(\boldsymbol{y}) \).</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Direct sampling from the unnormalized energy-based distribution is not straightforward; Langevin dynamics only requires gradients of the energy (not \(Z\)), making sampling tractable.</div>
+    </details>
+  </div>
+
+  <h3>Q-C. 예상문제 — Pick all that are correct</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C1. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the formulation of COLD decoding?</p>
+      <ol type="a">
+        <li>The output text \( \boldsymbol{y} \) lives in \( \mathbb{N}^{T} \), while its logit \( \tilde{\boldsymbol{y}} \) lives in \( \mathbb{R}^{T \times V} \), where \(V\) is the vocabulary size.</li>
+        <li>Each constraint is assumed to be captured by a real-valued function \( f_i(\boldsymbol{y}) \in \mathbb{R} \), e.g., the likelihood of \( \boldsymbol{y} \) as a fluency constraint.</li>
+        <li>The optimization variable is the discrete token sequence, since logits are not differentiable.</li>
+        <li>Working in the logit space mitigates the challenge that gradients are hard to compute in the discrete space.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This is exactly the notation in the lecture: \( \boldsymbol{y} \in \mathbb{N}^T \), \( \tilde{\boldsymbol{y}} \in \mathbb{R}^{T \times V} \).</li>
+          <li>(b) Correct. Constraints are scalar functions; likelihood serves as the fluency constraint example.</li>
+          <li class="wrong">(c) Incorrect. It is the opposite: the discrete sequence is not differentiable, so the continuous logits are optimized.</li>
+          <li>(d) Correct. The continuous relaxation is precisely the motivation for considering \( \tilde{\boldsymbol{y}} \).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C2. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the energy-based formulation in COLD decoding?</p>
+      <ol type="a">
+        <li>The energy function is defined as \( E(\boldsymbol{y}) := -\sum_i \lambda_i f_i(\boldsymbol{y}) \), a weighted linear combination of constraint functions.</li>
+        <li>Generating text under constraints is cast as sampling from the energy-based distribution \( p(\boldsymbol{y}) \propto \exp(-E(\boldsymbol{y})) \).</li>
+        <li>Higher energy corresponds to higher probability of being sampled.</li>
+        <li>The framework is motivated by energy-based models, where low energy indicates a stable (preferred) state.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the slide's definition of \(E\).</li>
+          <li>(b) Correct. Constrained generation = sampling \( \boldsymbol{y} \sim p(\boldsymbol{y}) \) from the energy-based distribution.</li>
+          <li class="wrong">(c) Incorrect. Higher energy means an unstable state and <em>lower</em> probability; the minus sign in \( \exp(-E) \) encodes this.</li>
+          <li>(d) Correct. The chemistry analogy: low-energy molecules are stable.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C3. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about Langevin dynamics as used in COLD decoding?</p>
+      <ol type="a">
+        <li>The update rule takes a gradient step on the energy function plus Gaussian noise: \( \tilde{\boldsymbol{y}}^{(n+1)} = \tilde{\boldsymbol{y}}^{(n)} - \eta \nabla_{\tilde{\boldsymbol{y}}} E(\tilde{\boldsymbol{y}}^{(n)}) + \epsilon^{(n)} \).</li>
+        <li>The iterates form a Markov chain whose distribution converges to the target distribution as the number of iterations goes to infinity.</li>
+        <li>The update is structurally similar to gradient descent for training, except that the parameters are replaced by the output logits and the loss by the energy function.</li>
+        <li>Langevin dynamics requires explicitly computing the normalizing constant of the energy-based distribution at each step.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. \( \eta \) is the step size and \( \epsilon^{(n)} \sim \mathcal{N}(0,\sigma) \) is the noise at iteration \(n\).</li>
+          <li>(b) Correct. This convergence property (Welling et al., ICML 2011) is what guarantees the updates yield samples from \(p\).</li>
+          <li>(c) Correct. The professor's key analogy: same equation as parameter-level gradient descent, with \( \tilde{\boldsymbol{y}} \) in place of parameters and \(E\) in place of the loss.</li>
+          <li class="wrong">(d) Incorrect. It only needs the gradient of the energy; avoiding the intractable normalizer is exactly why it is used.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C4. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following correctly describe the COLD decoding algorithm?</p>
+      <ol type="a">
+        <li>\( \tilde{\boldsymbol{y}}^{(0)} \) is initialized using conventional likelihood-based decoding.</li>
+        <li>The energy function is formulated as a linear combination of the user-defined constraint functions.</li>
+        <li>The gradient-based update is repeated for a fixed number of iterations N.</li>
+        <li>The final output text is read off directly from \( \tilde{\boldsymbol{y}}^{(N)} \) without any discretization step.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. The vanilla likelihood-based generation provides the starting point (which may violate the constraints).</li>
+          <li>(b) Correct. \( E = -\sum_i \lambda_i f_i \), with constraints defined by the user for the target property.</li>
+          <li>(c) Correct. The Langevin update is applied N times.</li>
+          <li class="wrong">(d) Incorrect. A conventional discretization step samples actual tokens from the updated logits at the end.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C5. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about COLD's lexically constrained decoding experiments?</p>
+      <ol type="a">
+        <li>The designed energy function combines four constraint terms, including forward and reverse LM fluency terms.</li>
+        <li>One term computes the likelihood of the input part \( \boldsymbol{x} \) given the output, rather than the likelihood of the output itself.</li>
+        <li>The keyword constraint is implemented as an n-gram match between the current \( \tilde{\boldsymbol{y}} \) and the target keywords \( \boldsymbol{y}^{*} \).</li>
+        <li>COLD covered fewer keywords than the baselines but produced less fluent text.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. \(E_1\) consists of four constraint functions: forward fluency, reverse-direction fluency, input-side likelihood, and n-gram match.</li>
+          <li>(b) Correct. The third term evaluates the input part's likelihood given the output, encouraging coherence with the context.</li>
+          <li>(c) Correct. The most direct lexical objective is the n-gram match with the target keywords.</li>
+          <li class="wrong">(d) Incorrect. The opposite: COLD was <em>more</em> fluent than previous algorithms and successfully included about 95% of the keywords.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">C6. (Pick all that are correct; any wrong answer will lead to 0 points) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about controllability in LLM decoding?</p>
+      <ol type="a">
+        <li>Controllability means adding constraints to output generation beyond the likelihood objective.</li>
+        <li>Generating text in-between a past and a future context requires modeling naturalness with respect to the future context, which standard autoregressive decoding does not consider.</li>
+        <li>Diversity-promoting decoding (e.g., diverse beam search) can be viewed as a classic example of adding a constraint to the likelihood objective.</li>
+        <li>With perfectly instruction-following LLMs, explicit constrained-decoding algorithms like COLD would become even more necessary.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. This is the definition: constraints in output generation, not only likelihood.</li>
+          <li>(b) Correct. AR decoding conditions only on the past; coherence with the future context must be added as a constraint.</li>
+          <li>(c) Correct. The professor cited diversity as the classic example of an added constraint.</li>
+          <li class="wrong">(d) Incorrect. The opposite — if models followed instructions 100%, such decoding would not be needed, which is why it is less used recently.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===================== 요약 ===================== -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>Controllability</strong></td><td>likelihood만이 아니라 추가 제약(키워드, 미래 문맥, 다양성 등)을 디코딩에 직접 반영 — 프롬프팅은 implicit·무보장, 디코딩 수정은 explicit</td></tr>
+    <tr><td><strong>COLD Decoding</strong> (Qin et al., NeurIPS 2022)</td><td>① 제약을 에너지 함수로 정식화 ② 로짓 공간에서 gradient 업데이트 — training-free 제약 생성</td></tr>
+    <tr><td><strong>로짓 완화</strong></td><td>이산 \( \boldsymbol{y} \in \mathbb{N}^T \)는 미분 불가 → 연속 로짓 \( \tilde{\boldsymbol{y}} \in \mathbb{R}^{T \times V} \)를 최적화 변수로</td></tr>
+    <tr><td><strong>에너지 함수</strong></td><td>\( E(\boldsymbol{y}) = -\sum_i \lambda_i f_i(\boldsymbol{y}) \) — 제약 만족↑ = 에너지↓ = \( p \propto \exp(-E) \)에서 확률↑</td></tr>
+    <tr><td><strong>Langevin dynamics</strong></td><td>\( \tilde{\boldsymbol{y}}^{(n+1)} = \tilde{\boldsymbol{y}}^{(n)} - \eta\nabla E + \epsilon^{(n)} \), \( \epsilon \sim \mathcal{N}(0,\sigma) \) — \(n\to\infty\)에서 목표 분포로 수렴 (Welling, ICML 2011)</td></tr>
+    <tr><td><strong>알고리즘 4단계</strong></td><td>likelihood 초기화 → 에너지 정식화 → N회 Langevin 업데이트 → 이산화(discretization)</td></tr>
+    <tr><td><strong>Lexical constraint \(E_1\)</strong></td><td>forward fluency + reverse fluency + 입력측 우도 + n-gram match — fluency 항들이 키워드 무작위 삽입(reward hacking)을 방지; ~95% coverage, NeuroLogic보다 유창</td></tr>
+    <tr><td><strong>현대적 위상</strong></td><td>instruction following이 강해져 최근엔 덜 쓰이나, 출력 공간 최적화라는 모델링 기법으로서 가치</td></tr>
+    <tr><td><strong>중간 복습 4종</strong></td><td>AR = sequential·EOS까지 / temperature = before softmax·low τ = deterministic / top-p = 누적확률 동적 후보 / speculative = draft도 autoregressive·test-time compute = 파라미터 고정</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="2. AI Feedback 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

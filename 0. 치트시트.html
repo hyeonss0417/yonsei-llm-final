@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0. 시험 직전 치트시트 — CAS4133 기말</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.62; padding: 26px 14px; font-size: 14px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 26px 30px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 8px 30px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:4px 12px; border-radius:16px;
+    font-size:12px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
+  .hero h1 { font-size: 25px; font-weight: 800; margin-bottom: 4px; }
+  .hero .subtitle { font-size: 13.5px; opacity:.92; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:14px; font-size:13px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:6px 14px; border-radius:9px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 14px; padding: 20px 22px; margin-bottom: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 19px; color: var(--primary-dark); margin-bottom: 12px; padding-bottom: 7px;
+    border-bottom: 2.5px solid var(--primary); font-weight: 700; }
+  p { margin-bottom: 8px; }
+  ul, ol { padding-left: 19px; margin-bottom: 8px; }
+  li { margin-bottom: 3.5px; }
+  strong { color: var(--primary-dark); }
+  code { background: var(--code); border-radius:4px; padding:1px 5px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px; background:#fff;
+    border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); font-size:13px; }
+  th { background: var(--primary); color:#fff; padding:7px 10px; text-align:left; font-weight:600; font-size:12.5px; }
+  td { padding:6px 10px; border-top:1px solid var(--border); vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  /* ===== 치트시트 전용 ===== */
+  .exam-bar { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .exam-bar .cell { background:var(--highlight); border:1.5px solid var(--warm); border-radius:10px; padding:10px 14px; font-size:13px; }
+  .exam-bar .cell b { display:block; color:#b07c2a; font-size:12px; letter-spacing:.5px; margin-bottom:3px; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .chap { background:var(--card); border:1.5px solid var(--border); border-radius:13px; overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.04); display:flex; flex-direction:column; }
+  .chap .head { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:8px 14px;
+    font-weight:800; font-size:14.5px; display:flex; justify-content:space-between; align-items:center; }
+  .chap .head .tag { font-size:11px; font-weight:600; background:rgba(255,255,255,.22); border-radius:10px; padding:1px 9px; }
+  .chap .body { padding:11px 14px 13px; }
+  .chap ul.core { padding-left:16px; margin-bottom:7px; }
+  .chap ul.core li { margin-bottom:2.5px; font-size:13px; }
+  .chap .fbox { background:#f7f8ff; border:1px dashed var(--primary); border-radius:8px;
+    padding:6px 10px; margin:7px 0; font-size:12.5px; overflow-x:auto; }
+  .chap .traps { background:#fdeef0; border:1px solid var(--red); border-radius:8px; padding:6px 10px; margin:7px 0; }
+  .chap .traps .t { font-size:12.5px; margin-bottom:2px; }
+  .chap .traps .t::before { content:"✗ "; color:var(--red); font-weight:900; }
+  .chap .traps .t b { color:#c0392b; }
+  .chap .vs { background:#eef9f2; border:1px solid var(--green); border-radius:8px; padding:5px 10px;
+    font-size:12.5px; color:#27704f; font-weight:600; }
+
+  .xrow { background:var(--soft); border-left:4px solid var(--accent); border-radius:0 9px 9px 0;
+    padding:8px 13px; margin-bottom:8px; font-size:13.5px; }
+  .xrow b.topic { color:var(--accent); }
+
+  .fitem { display:flex; gap:12px; align-items:flex-start; border-bottom:1px dashed var(--border); padding:7px 2px; }
+  .fitem:last-child { border-bottom:none; }
+  .fitem .fn { flex:0 0 168px; font-weight:700; color:var(--primary-dark); font-size:12.5px; padding-top:4px; }
+  .fitem .fx { flex:1; overflow-x:auto; font-size:13px; }
+  .fitem .fm { color:var(--muted); font-size:12px; margin-top:1px; }
+
+  .check { counter-reset: ck; list-style:none; padding-left:0; }
+  .check li { counter-increment: ck; position:relative; padding:7px 10px 7px 40px; margin-bottom:6px;
+    background:var(--soft); border-radius:9px; font-size:13.5px; }
+  .check li::before { content: counter(ck); position:absolute; left:9px; top:8px; width:22px; height:22px;
+    background:var(--red); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:12px; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} .chap{break-inside:avoid} }
+  @media (max-width:760px){ .grid2{grid-template-columns:1fr} .exam-bar{grid-template-columns:1fr} .fitem{flex-direction:column;gap:2px} .fitem .fn{flex:none} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="1. Decoding 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <span class="label">CAS4133 LLM · 기말 대비 · FINAL CHEAT SHEET</span>
+  <h1>0. 시험 직전 치트시트 — 10분 안에 전 범위 훑기</h1>
+  <div class="subtitle">#7 Decoding → #14 AI Text Detection · 챕터 핵심 + 교차 비교 + 수식 전부 + 논문 매핑 + 마지막 점검</div>
+</div>
+
+<!-- ════════ 1. 시험 정보 바 ════════ -->
+<section>
+  <h2>⏱ 시험 전략 리마인드</h2>
+  <div class="exam-bar">
+    <div class="cell"><b>TRUE / FALSE (10문항)</b>정답 <strong>3점</strong> · 오답 <strong>0점</strong> · <strong>무응답 1점</strong>.<br>확신이 정답 확률 1/3 미만이면 <strong>빈칸이 기댓값상 이득</strong>. 애매하면 비워라.</div>
+    <div class="cell"><b>PICK ALL THAT ARE CORRECT</b>"any wrong answer will lead to 0 points" — <strong>틀린 보기 하나라도 고르면 0점</strong>. 확실한 것만 체크, 욕심내지 말 것.</div>
+    <div class="cell"><b>문제는 영어 출제</b>함정은 늘 디테일: <em>before/after softmax</em>, <em>premise/hypothesis 방향</em>, <em>min/max·upper/lower bound</em>, <em>L⁻−L⁺ 부호</em> 같은 방향성을 마지막에 재확인.</div>
+  </div>
+  <div style="margin-top:10px;background:#fff7e8;border:1.5px solid #f3ce8a;border-radius:10px;padding:10px 14px;font-size:13.5px;">
+    📢 <b>마지막 수업 확정 공지</b>: 객관식(Pick-all) Problem은 <strong>3~4개</strong>이며 그중 <strong>1개는 특강 통합(#13 Jailbreak + #14 AI Text Detection)</strong> 문제.
+    교수 recap 강조: RAG는 <em>inference(REPLUG·IRCoT·RetRobust) vs training(Self-RAG·Search-R1)</em>, Tool은 <em>Toolformer(self-supervised) vs ToolLLM(SFT)</em>, Agents는 <em>planning(ReAct·Reflexion·ToT)+memory(MemGPT·A-Mem)</em>, RL은 <em>RLHF+PPO·GRPO</em>.
+    특강 recap은 <em>Jailbroken·AutoDAN·SafeDecoding·Gradient Cuff / DetectGPT 계열·watermarking</em> 중심(GCG·COLD-Attack은 recap 미언급).
+    성적: 기말 <strong>30%</strong>+프로젝트 20%가 남은 절반 · 절대평가 · A+만 엄격.
+  </div>
+</section>
+
+<!-- ════════ 2. 챕터별 핵심 카드 ════════ -->
+<section>
+  <h2>📦 챕터별 핵심 카드 (#7 ~ #14)</h2>
+  <div class="grid2">
+
+  <!-- #7 -->
+  <div class="chap"><div class="head">#7 Decoding · COLD <span class="tag">기출 P5 재출제 대비</span></div><div class="body">
+    <ul class="core">
+      <li><strong>AR decoding</strong>: sequential(병렬 불가), EOS/max-len까지, softmax 분포에서 샘플</li>
+      <li><strong>Temperature</strong>: softmax <strong>이전</strong> 로짓 rescale; τ↓=deterministic, τ→0=greedy</li>
+      <li><strong>Top-k</strong>=고정 k개 / <strong>Top-p</strong>=누적확률 동적 후보(분포 모양 따라 변함)</li>
+      <li><strong>Speculative</strong>: draft는 여전히 AR, 큰 모델은 병렬 verify, 출력 분포 보존</li>
+      <li><strong>Test-time compute</strong>: 추론 전략(파라미터 고정), fine-tuning 아님</li>
+      <li><strong>COLD</strong>(Qin, NeurIPS 2022): 제약→에너지 함수, 이산 \(\boldsymbol{y}\)→연속 로짓 \(\tilde{\boldsymbol{y}}\) 완화, Langevin으로 업데이트, training-free</li>
+      <li>알고리즘 4단계: 초기화→에너지 정식화→N회 Langevin→<strong>discretization</strong></li>
+      <li>Lexical 제약 \(E_1\): fluency 항들이 키워드 막삽입(reward hacking) 방지, ~95% coverage</li>
+    </ul>
+    <div class="fbox">\( E(\boldsymbol{y})=-\sum_i \lambda_i f_i(\boldsymbol{y}) \), \( p\propto e^{-E} \) · \( \tilde{\boldsymbol{y}}^{(n+1)}=\tilde{\boldsymbol{y}}^{(n)}-\eta\nabla E+\epsilon^{(n)} \)</div>
+    <div class="traps">
+      <div class="t">"Decoding can be parallelized across all tokens at inference." → <b>False</b> (sequential)</div>
+      <div class="t">"Temperature is applied after the softmax." → <b>False</b> (before, on logits)</div>
+      <div class="t">"Top-p is a special case of beam search with p=1." → <b>False</b> (sampling ≠ search)</div>
+    </div>
+    <div class="vs">프롬프팅=implicit·무보장 ↔ COLD=explicit 에너지 최적화 / 제약 만족↑ = 에너지↓ = 확률↑</div>
+  </div></div>
+
+  <!-- #8 -->
+  <div class="chap"><div class="head">#8 AI Feedback <span class="tag">기출: LC win rate</span></div><div class="body">
+    <ul class="core">
+      <li><strong>G-Eval</strong>(EMNLP 2023): 사람은 task info+criteria만, <strong>eval steps는 LLM이 자동 생성</strong>, instance-wise 채점; GPT-4일 때만 전통 지표(ROUGE/BERTScore) 능가</li>
+      <li><strong>LLM-as-a-Judge</strong>(MT-Bench, NeurIPS 2023): <strong>pairwise</strong>; 80 multi-turn Q·8 categories; GPT-4↔human <strong>85%</strong> &gt; human↔human <strong>81%</strong></li>
+      <li><strong>3대 bias</strong>: Position(swap 2회→불일치=Tie, 2× cost; proxy=random shuffle) / Verbosity(중복 정보여도 긴 답 선호) / Self-preference(<strong>open problem</strong>)</li>
+      <li><strong>LC win rate</strong>(COLM 2024): 회귀로 length 효과 제거; Chatbot Arena 상관 <strong>0.98</strong></li>
+      <li><strong>RLHF 한계 3</strong>: implicit goodness / OOD·adversarial query / 모델↑일수록 레이블 곤란</li>
+      <li><strong>H vs H</strong>: helpfulness·harmlessness는 competing objectives → jointly maximize; PMP=community votes 사전학습</li>
+      <li><strong>Constitutional AI</strong>(Anthropic 22.12): 사람은 헌법만 작성; <strong>SL-CAI</strong>=critique→revision→SFT / <strong>RL-CAI</strong>=principle-conditioned RM→RL(<strong>=RLAIF</strong>)</li>
+      <li><strong>Self-Rewarding LM</strong>(ICML 2024): generator 겸 judge로 반복 자기학습</li>
+    </ul>
+    <div class="fbox">수식 없음 — instance-wise/pairwise, SL/RL 단계, bias↔해법 매칭이 전부</div>
+    <div class="traps">
+      <div class="t">"Human–human agreement is higher than GPT-4–human on MT-Bench." → <b>False</b> (81% &lt; 85%)</div>
+      <div class="t">"SL-CAI trains a principle-conditioned reward model." → <b>False</b> (that is RL-CAI)</div>
+      <div class="t">"Swapped-position evaluation removes position bias at no extra cost." → <b>False</b> (2× cost)</div>
+    </div>
+    <div class="vs">G-Eval=instance-wise 점수 ↔ Judge=pairwise 비교 / SL-CAI=SFT 데이터 생성 ↔ RL-CAI=AI 선호 레이블(RLAIF)</div>
+  </div></div>
+
+  <!-- #9 -->
+  <div class="chap"><div class="head">#9 RAG <span class="tag">최대 분량 챕터</span></div><div class="body">
+    <ul class="core">
+      <li>동기: 정적 데이터셋 → <strong>knowledge cutoff</strong>(GPT-4o 2023-10, LLaMA3 2023-12)·hallucination; 새 지식 fine-tuning은 기존 능력 손상</li>
+      <li>RAG = retrieve-and-read에서 <strong>generator만 LLM 교체</strong>; inference-based vs training-based</li>
+      <li><strong>PageRank</strong>: \(1-d\)=random jump 확률; 의미 정보 안 씀 / <strong>BM25</strong>: sparse, 무학습, IDF는 corpus 전체 기준</li>
+      <li><strong>DPR</strong>: 인코더 2개+dot product+contrastive loss(labeled \(p^+\)+in-batch negatives), OOD 약함 / <strong>Contriever</strong>: 같은 문서 crop=positive(자기지도), loss는 DPR과 동일, OOD 강건</li>
+      <li><strong>REPLUG</strong>: LM frozen(black-box), 문서별 독립 prepend→확률 가중 앙상블; <strong>LSR</strong>=retrieval↔LM likelihood <strong>KL 최소화</strong>로 검색기만 학습</li>
+      <li><strong>IRCoT</strong>: CoT 1스텝↔검색 교차; <strong>마지막 스텝만 질의</strong>, 구절은 누적; multi-hop QA</li>
+      <li><strong>RetRobust</strong>: NLI 필터(passage=<strong>premise</strong>, Q+A=<strong>hypothesis</strong>; not-entailed→direct answering) + 소량 학습</li>
+      <li><strong>Self-RAG</strong>(ICLR 2024 Oral): <strong>SFT</strong>로 4 reflection 토큰(Retrieve/IsREL/IsSUP/IsUSE); GPT-4→critic(90% agree)→generator; 검색 청크 loss 제외</li>
+      <li><strong>Search-R1</strong>(25.03): <strong>RL, outcome reward만</strong>; &lt;think&gt;/&lt;search&gt;/&lt;information&gt;/&lt;answer&gt;; retrieved token masking; interleaved 검색 자동 창발</li>
+      <li>지표: <strong>EM</strong>=완전일치 0/1 / <strong>F1</strong>=단어 수준 / <strong>Recall@K</strong>=검색기 지표</li>
+    </ul>
+    <div class="fbox">\( \text{sim}(q,p)=E_Q(q)^{\top}E_P(p) \) · REPLUG: \( p(y|x,\mathcal{D}')=\sum_d p(y|d\circ x)\lambda(d,x) \)</div>
+    <div class="traps">
+      <div class="t">"Dense retrievers always outperform BM25." → <b>False</b> (OOD에선 BM25가 이기기도)</div>
+      <div class="t">"LSR maximizes the KL divergence." → <b>False</b> (minimize — 두 분포 일치)</div>
+      <div class="t">"IRCoT uses the full accumulated CoT as query." → <b>False</b> (last step only)</div>
+    </div>
+    <div class="vs">BM25=lexical·무학습 / DPR=supervised dense / Contriever=self-supervised dense · Self-RAG=SFT ↔ Search-R1=RL</div>
+  </div></div>
+
+  <!-- #10 -->
+  <div class="chap"><div class="head">#10 Tool Use <span class="tag">Toolformer vs ToolLLM</span></div><div class="body">
+    <ul class="core">
+      <li>동기: 정확한 계산·실시간 정보·외부 행동은 LLM 단독 불가; <strong>retrieval(RAG) ⊂ tool use</strong>; agent 3요소=tool use/memory/planning&action</li>
+      <li><strong>Function calling</strong>(prompting): 모델은 <strong>이름+인자만 반환</strong>, 실행은 개발자 측; 이름 일관성+상세 설명 둘 다 중요; large LLM에서만 신뢰</li>
+      <li><strong>Toolformer</strong>(NeurIPS 2023 Oral): self-supervised — "useful tool = next-token loss를 낮추는 호출"; in-context로 후보 샘플→실행→<strong>loss filtering</strong>→표준 LM loss로 FT</li>
+      <li>GPT-J 6B+<strong>5 tools</strong>가 GPT-3 능가(이득은 tool call 자체에서); 비용이 도구 수에 비례→확장 불가</li>
+      <li><strong>ToolLLM</strong>(ICLR 2024): RapidAPI <strong>3,451 tools / 16,464 APIs</strong>(tool 1개=API 여러 개); N개 subsample로 instruction 생성; <strong>DFSDT</strong>로 solution path 주석, "Finish" 도달분만 golden</li>
+      <li>추론=RAG 유사 2단계(API retrieval→generation); 자체 <strong>BERT dense retriever</strong> &gt; Ada·BM25; <strong>Pass</strong>=완수율 / <strong>Win</strong>=ChatGPT 대비 품질; retrieved top-5 &gt; ground-truth(diversity)</li>
+    </ul>
+    <div class="fbox">filtering: \( L_i^- - L_i^+ \ge \tau \Rightarrow \) keep, \( L_i^-=\min\big(L_i(\varepsilon),\,L_i(e(c_i,\varepsilon))\big) \)</div>
+    <div class="traps">
+      <div class="t">"Toolformer keeps a call when \(L_i^+ - L_i^- \ge \tau\)." → <b>False</b> (부호 반대)</div>
+      <div class="t">"Toolformer checks whether the API answer is factually correct." → <b>False</b> (loss 감소만 봄)</div>
+      <div class="t">"ToolLLM filters data by loss reduction like Toolformer." → <b>False</b> (ChatGPT가 실제로 풀어 Finish 도달분만)</div>
+    </div>
+    <div class="vs">Toolformer=loss로 거르는 self-supervised 5-tool ↔ ToolLLM=ChatGPT가 풀어 거르는 16K-API SFT+DFSDT</div>
+  </div></div>
+
+  <!-- #11 -->
+  <div class="chap"><div class="head">#11 LLM Agents <span class="tag">기말 핵심·3강 분량</span></div><div class="body">
+    <ul class="core">
+      <li><strong>Agent</strong> = LLM(brain) + Planning&Action + Tools + Memory; <strong>"not simply improved by scaling-up"</strong></li>
+      <li><strong>LLaVA</strong>: vision encoder→\(\mathbf{Z}_v\)→projector \(\mathbf{W}\)→\(\mathbf{H}_v\); Stage1=projector만 / Stage2=projector+LLM, <strong>encoder는 항상 frozen</strong>; 데이터는 GPT-4 생성</li>
+      <li><strong>ReAct</strong>(ICLR 2023): reasoning+acting interleave, <strong>few-shot prompting</strong>(학습 아님); CoT-SC→ReAct는 득표&lt;n/2일 때 backoff</li>
+      <li><strong>Reflexion</strong>(NeurIPS 2023): <strong>verbal RL</strong> — Actor→Evaluator(ALFWorld에선 heuristic&gt;GPT)→Self-reflection→Memory, <strong>weight update 없음</strong></li>
+      <li><strong>Plan-and-Solve</strong>: zero-shot "plan 먼저" 프롬프트 / <strong>ToT</strong>(NeurIPS 2023 Oral): 분해→생성→평가(value/vote, LLM 프롬프팅)→탐색(BFS/DFS); Game of 24 압승, 비용 ~100×</li>
+      <li><strong>MemGPT</strong>: OS 비유(RAM=in-context↔disk=external); <strong>70%→경고만, 100%→50% evict+recursive summary</strong>; 관리는 LLM function call</li>
+      <li><strong>A-Mem</strong>(NeurIPS 2025): note \(m_i=\{c,t,K,G,X,e,L\}\); cosine top-k는 후보만, <strong>링크는 LLM이 생성</strong>; evolution은 이웃만 갱신</li>
+      <li><strong>Multi-agent</strong>: persona만 달라도 다른 agent; <strong>MDAgents</strong>=complexity check→solo/group/teams; orchestration=강한 lead(Opus)+싼 sub(Haiku); routing=비용 최적화</li>
+    </ul>
+    <div class="fbox">LLaVA projector: \( \mathbf{Z}_v\in\mathbb{R}^{L\times D'} \xrightarrow{\mathbf{W}} \mathbf{H}_v\in\mathbb{R}^{L\times D} \) (vision token은 벡터, vocabulary 없음)</div>
+    <div class="traps">
+      <div class="t">"LLaVA stage 2 fine-tunes the vision encoder." → <b>False</b> (always frozen)</div>
+      <div class="t">"Reflexion updates the LLM's weights from feedback." → <b>False</b> (verbal memory only)</div>
+      <div class="t">"MemGPT evicts at 70% usage." → <b>False</b> (70%=warning, 100%=evict 50%+summary)</div>
+    </div>
+    <div class="vs">ReAct=interleave 프롬프팅 / Reflexion=언어 피드백 메모리 / PS=zero-shot 계획 / ToT=트리 탐색(+고비용)</div>
+  </div></div>
+
+  <!-- #12 -->
+  <div class="chap"><div class="head">#12 RL with LLMs <span class="tag">수식 최다</span></div><div class="body">
+    <ul class="core">
+      <li><strong>매핑</strong>: policy=LLM / state=input tokens / action=next-token generation; 목표=return(누적 보상) 최대화</li>
+      <li>\(V^\pi\)=state 조건부, \(Q^\pi\)=state+action 조건부, \( V^\pi(s)=\mathbb{E}_{a\sim\pi}[Q^\pi(s,a)] \); γ는 infinite-horizon 발산 방지용</li>
+      <li><strong>PG 유도 3요소</strong>: log-derivative trick / 환경항(\(\rho_0\), transition) gradient=0 / Monte Carlo 표본평균(on-policy)</li>
+      <li><strong>분산 감소 3종</strong>: reward-to-go(t 이후만) / baseline \(b(s_t)\)(state만 의존, 기댓값 불변·분산↓) / advantage \(A=Q-V\)</li>
+      <li><strong>PPO-Clip</strong>: ratio를 \([1\!-\!\epsilon,1\!+\!\epsilon]\)로 clip; <strong>A&gt;0→상한(ceiling), A&lt;0→하한</strong>; value model 필요; 멀어짐 완전 보장은 안 됨 (수업 표기 "Proximal Point Optimization"도 동일물)</li>
+      <li><strong>TRL</strong>: rollout은 <code>torch.no_grad</code>(샘플링만); 별도 value 모델 대신 <strong>value head</strong>(LM head=vocab 분포, value head=스칼라)</li>
+      <li><strong>GRPO</strong>: value model 제거 — 그룹 G개 rollout의 mean/std로 advantage; <strong>clip은 PPO 그대로</strong>+KL(ref, 다른 estimator); 동기=value 의존 제거(stability 아님); 생성 비용↑</li>
+      <li>변형: Dr.GRPO=std 제거 / REINFORCE++=query-wise; <strong>GLM-5</strong>: SFT→Reasoning RL→Agentic RL→General RL(<strong>alignment 마지막</strong>), 여전히 GRPO; <strong>On-policy distillation</strong>: student가 생성한 데이터에 teacher가 supervision→forgetting 강건</li>
+    </ul>
+    <div class="fbox">\( \nabla J=\mathbb{E}[\sum_t\nabla\log\pi_\theta(a_t|s_t)A^\pi] \) · \( \hat{A}_{i}=\frac{r_i-\text{mean}(\{r\})}{\text{std}(\{r\})} \)</div>
+    <div class="traps">
+      <div class="t">"A baseline may depend on the action." → <b>False</b> (state-only, else biased)</div>
+      <div class="t">"When A&gt;0 the clip term is a lower bound." → <b>False</b> (upper bound; lower는 A&lt;0)</div>
+      <div class="t">"GRPO's motivation is preventing abrupt updates like PPO." → <b>False</b> (value 제거가 동기)</div>
+    </div>
+    <div class="vs">REINFORCE=R(τ) 그대로 / PPO=clip+<strong>value model</strong> / GRPO=group 정규화+<strong>value 없음</strong>(clip·KL은 유지)</div>
+  </div></div>
+
+  <!-- #13 -->
+  <div class="chap"><div class="head">#13 Jailbreak <span class="tag">Special Lecture</span></div><div class="body">
+    <ul class="core">
+      <li><strong>Training-level 방어</strong>: Red Teaming(전문가→학습 데이터, 비용↑) / <strong>RBRM</strong>=rule-based reward로 RLHF <strong>보강</strong>(대체 아님, 선호 학습 아님)</li>
+      <li><strong>DAN</strong>=수작업 역할부여(refusal suppression류); good bot=<strong>refuse</strong>, bad bot=on-topic 응답</li>
+      <li><strong>Failure mode 2</strong>(Jailbroken, NeurIPS 2023 Oral): ① Competing objectives — prefix injection(next-token vs safety)·refusal suppression(instruction following vs safety) ② Mismatched generalization — Base64; <strong>Comb_3가 SOTA ASR</strong></li>
+      <li><strong>GCG</strong>(Zou 2023): gradient 기반 suffix — 의미 없음 → <strong>perplexity filter에 쉽게 탐지</strong></li>
+      <li><strong>AutoDAN</strong>(ICLR 2024): hierarchical <strong>genetic algorithm</strong>; 초기화=handcrafted DAN(중요!), fitness=proxy target likelihood, crossover=문장 교환/word scoring mutation; fluent→perplexity 방어 생존, 전이성↑; ASR=keyword 기반(GPT 판정은 Recheck)</li>
+      <li><strong>COLD-Attack</strong>(ICML 2024): COLD와 알고리즘 <strong>exactly the same</strong>(energy+Langevin on logits), 제약만 attack/fluency/similarity/lexical로 교체; GCG·AutoDAN보다 빠름</li>
+      <li><strong>SafeDecoding</strong>(ACL 2024): LoRA expert와 contrastive decoding으로 refusal 토큰↑; <strong>first m tokens만</strong>; benign에선 보정항 cancel; inference-level</li>
+      <li><strong>Gradient Cuff</strong>(NeurIPS 2024): refusal loss \(f&lt;0.5\) + <strong>zeroth-order</strong> gradient norm&gt;t 2단계; benign=flat / malicious=steep; SafeDecoding과 trade-off(우열 없음)</li>
+    </ul>
+    <div class="fbox">SafeDecoding: \( P_n(x)=p_\theta+\alpha(p_{\theta'}-p_\theta) \) · refusal loss: \( \phi_\theta(x)=1-\mathbb{E}_{y}[JB(y)] \), \(JB(y)\!=\!1\)=refusal</div>
+    <div class="traps">
+      <div class="t">"Base64 attack exploits competing objectives." → <b>False</b> (mismatched generalization)</div>
+      <div class="t">"GCG evades perplexity-based detectors." → <b>False</b> (정반대 — 쉽게 탐지됨)</div>
+      <div class="t">"\(JB(y)=1\) when jailbreak succeeds." → <b>False</b> (1=refusal; "Sure, here is..."=0)</div>
+    </div>
+    <div class="vs">GCG=gradient·탐지됨 / AutoDAN=GA·fluent / COLD-Attack=Langevin·최고속 · 방어: SafeDecoding(디코딩 보정) vs Gradient Cuff(탐지·거부)</div>
+  </div></div>
+
+  <!-- #14 -->
+  <div class="chap"><div class="head">#14 AI Text Detection <span class="tag">Special Lecture</span></div><div class="body">
+    <ul class="core">
+      <li><strong>3갈래</strong>: ① Zero-shot(DetectGPT/Fast-DetectGPT) ② Training-based(RoBERTa, ReMoDetect) ③ Watermarking(생성 시점에 패턴 삽입)</li>
+      <li><strong>DetectGPT</strong>(ICML 2023): LLM 텍스트는 \(\log p_\theta\)의 <strong>local maxima(negative curvature)</strong>; perturbation은 <strong>별도 mask-fill LM(T5)</strong>, 의미 보존; <strong>black-box 아님</strong>(\(\log p_\theta\) 필요); ~100 perturbations에서 포화; OOD에서 supervised보다 우수(in-dist는 on-par); AUROC=전 threshold 적분</li>
+      <li><strong>Curvature 해석</strong>: Taylor + Hutchinson(조건: \(\mathbb{E}[z]=0,\text{Var}=1\); 대칭성은 추가 가정) → score \(=-\frac12\text{tr}(H_f)\), full Hessian 불필요</li>
+      <li><strong>Fast-DetectGPT</strong>(ICLR 2024): \(p_\theta(\tilde x)\to p_\theta(\tilde x|x)\), conditional <strong>independent</strong> sampling(원본 prefix 조건)으로 N×L→L inferences; <strong>×340</strong>(22h→4min), 성능 유지~상회</li>
+      <li><strong>ReMoDetect</strong>(NeurIPS 2024): reward model은 LLM 생성문(LGT)에 biased→탐지기로; continual preference tuning은 <strong>LGT를 preferred로</strong>(직관 반대!)+replay buffer; Mixed responses(LLM≻Mixed≻Human); DPO 모델에도 적용 가능</li>
+      <li><strong>Watermark</strong>(Kirchenbauer, ICML 2023): 이전 토큰 hash→green/red <strong>매 위치 재분할</strong>; hard=red 금지 / <strong>soft=green logit+δ</strong>; 사람에겐 imperceptible; <strong>탐지에 모델 접근 불필요</strong>(z-test만); τ=4→FP≈3×10⁻⁵, 16+ 토큰; SynthID 채택</li>
+    </ul>
+    <div class="fbox">\( \mathbf{d}=\log p_\theta(x)-\mathbb{E}_{\tilde x}[\log p_\theta(\tilde x)] \) · \( z=\frac{2(|s|_G-T/2)}{\sqrt{T}} \)</div>
+    <div class="traps">
+      <div class="t">"DetectGPT works fully black-box." → <b>False</b> (needs \(\log p_\theta\); watermark 탐지는 모델 불필요)</div>
+      <div class="t">"Fast-DetectGPT is faster because it uses fewer samples." → <b>False</b> (conditional independent sampling 덕분)</div>
+      <div class="t">"In continual preference tuning, human text is preferred." → <b>False</b> (LGT가 preferred)</div>
+    </div>
+    <div class="vs">Zero-shot=곡률(모델 logprob 필요) / Trained=reward model 활용 / Watermark=생성에 개입·탐지는 통계 검정만</div>
+  </div></div>
+
+  </div>
+</section>
+
+<!-- ════════ 3. 교차 비교 ════════ -->
+<section>
+  <h2>🔀 교차 비교 — 챕터를 넘나드는 헷갈림 정리</h2>
+  <div class="xrow"><b class="topic">COLD(#7) vs COLD-Attack(#13)</b> — 알고리즘은 <strong>완전히 동일</strong>(에너지 함수 + 로짓 공간 Langevin dynamics + discretization). COLD-Attack은 제약(에너지 항)만 attack·fluency·similarity·lexical로 바꿔 jailbreak에 적용. "COLD-Attack proposes a new sampling algorithm" → <strong>False</strong>.</div>
+  <div class="xrow"><b class="topic">Langevin dynamics 등장 위치</b> — #7 COLD와 #13 COLD-Attack 둘뿐. 원 논문은 Welling (ICML 2011). \( \tilde{\boldsymbol{y}}^{(n+1)}=\tilde{\boldsymbol{y}}^{(n)}-\eta\nabla E+\epsilon \), 노이즈 \(\epsilon\sim\mathcal{N}(0,\sigma)\)이 있어 단순 gradient descent가 아니라 <strong>샘플링</strong>.</div>
+  <div class="xrow"><b class="topic">학습 방식 3종: Self-RAG vs Search-R1 vs ToolLLM</b> — Self-RAG=<strong>SFT</strong>(GPT-4 주석→critic→generator, reflection 토큰) / Search-R1=<strong>RL</strong>(outcome reward만, 주석 불필요, interleaved 검색 창발) / ToolLLM=<strong>SFT(instruction tuning)</strong>(ChatGPT가 DFSDT로 푼 golden path). 공통점: Self-RAG·Search-R1 모두 <strong>검색된 토큰은 loss에서 제외(masking)</strong>.</div>
+  <div class="xrow"><b class="topic">DetectGPT curvature(#14) vs COLD energy(#7)</b> — 둘 다 "함수의 모양"을 보지만 정반대 용도: DetectGPT는 \(\log p_\theta\)의 <strong>local maxima 여부(음의 곡률)를 측정</strong>해 탐지, COLD는 에너지 \(E\)를 <strong>내려가며(gradient) 텍스트를 생성</strong>. 측정 vs 최적화.</div>
+  <div class="xrow"><b class="topic">RLHF · RLAIF · Constitutional AI 관계</b> — RLHF=사람 선호 레이블(응답은 AI 생성, 레이블만 사람). RLAIF=선호 레이블도 AI. Constitutional AI = SL-CAI(critique→revision SFT) + <strong>RL-CAI(=RLAIF의 구체화</strong>, principle-conditioned RM). 사람의 역할은 헌법 작성뿐. RL-CAI의 시작점은 helpfulness-only RLHF 모델(베이스 LM 아님).</div>
+  <div class="xrow"><b class="topic">PPO가 등장하는 모든 맥락</b> — ① RLHF/InstructGPT(#8·#12, Ouyang NeurIPS 2022)의 학습 알고리즘 ② TRL 구현(#12, value head·no_grad rollout) ③ Search-R1(#9)의 목적함수(PPO/GRPO 호환, KL 포함) ④ GRPO(#12)가 clip 구조를 상속 ⑤ GLM-5(#12)도 결국 GRPO 계열. "GRPO is not policy gradient" → <strong>False</strong> (둘 다 policy optimization).</div>
+  <div class="xrow"><b class="topic">Reward model의 4가지 얼굴</b> — ① Test-time compute의 Best-of-N(#7) ② RLHF 선호 학습(#8·#12) ③ <strong>RBRM(#13)은 예외: rule-based, 선호 학습 아님</strong> ④ ReMoDetect(#14)는 reward model의 LGT bias를 탐지기로 역이용.</div>
+  <div class="xrow"><b class="topic">"Contrastive"의 두 의미</b> — #9 DPR/Contriever의 contrastive <strong>loss</strong>(positive 가깝게, negative 멀게)와 #13 SafeDecoding의 contrastive <strong>decoding</strong>(expert−base 확률 차로 보정)은 전혀 다른 개념.</div>
+  <div class="xrow"><b class="topic">Training-free 계열 총정리</b> — BM25(#9), COLD(#7), prompting 기반 tool use(#10), ReAct/ToT(#11, 프롬프팅), DetectGPT·Fast-DetectGPT(#14), inference-based RAG(REPLUG의 LM·IRCoT). 반대편(학습): DPR·Contriever·Self-RAG·Search-R1·Toolformer·ToolLLM·ReMoDetect·SafeDecoding expert.</div>
+  <div class="xrow"><b class="topic">자동 공격 3종 최적화 방식</b> — GCG=<strong>greedy gradient search</strong>(이산) / AutoDAN=<strong>genetic algorithm</strong>(DAN 초기화) / COLD-Attack=<strong>Langevin</strong>(연속 로짓). 유창성: GCG ✗(탐지됨) / AutoDAN ✓ / COLD-Attack ✓(+빠름).</div>
+</section>
+
+<!-- ════════ 4. 수식 모음 ════════ -->
+<section>
+  <h2>∑ 수식 한 곳 모음 (이름 → 수식 → 한 줄 의미)</h2>
+
+  <div class="fitem"><div class="fn">AR factorization (#7)</div><div class="fx">$$ p(\boldsymbol{y}\mid\boldsymbol{x})=\prod_{t=1}^{T}p(y_t\mid\boldsymbol{x},y_{<t}) $$<div class="fm">한 토큰씩, 모든 이전 토큰 조건부 — 그래서 inference는 sequential.</div></div></div>
+  <div class="fitem"><div class="fn">Temperature (#7)</div><div class="fx">$$ p(y_t=v)=\frac{\exp(z_v/\tau)}{\sum_{v'}\exp(z_{v'}/\tau)} $$<div class="fm">softmax 이전 로짓 rescale; τ↓ peaky(deterministic), τ↑ smooth.</div></div></div>
+  <div class="fitem"><div class="fn">COLD energy (#7/#13)</div><div class="fx">$$ E(\boldsymbol{y})=-\sum_i\lambda_i f_i(\boldsymbol{y}),\qquad p(\boldsymbol{y})=\frac{e^{-E(\boldsymbol{y})}}{Z} $$<div class="fm">제약 만족↑ → 에너지↓ → 확률↑ (Boltzmann form).</div></div></div>
+  <div class="fitem"><div class="fn">Langevin dynamics (#7/#13)</div><div class="fx">$$ \tilde{\boldsymbol{y}}^{(n+1)}=\tilde{\boldsymbol{y}}^{(n)}-\eta\,\nabla_{\tilde{\boldsymbol{y}}}E(\tilde{\boldsymbol{y}}^{(n)})+\epsilon^{(n)},\quad \epsilon^{(n)}\sim\mathcal{N}(0,\sigma) $$<div class="fm">gradient step + 가우시안 노이즈 → n→∞에서 목표 분포 샘플링.</div></div></div>
+  <div class="fitem"><div class="fn">PageRank (#9)</div><div class="fx">$$ PR(A)=\frac{1-d}{N}+d\sum_{B_i\in\text{In}(A)}\frac{PR(B_i)}{L(B_i)} $$<div class="fm">중요도=이웃 중요도/링크수 합; \(1-d\)=random jump 확률; power iteration 수렴.</div></div></div>
+  <div class="fitem"><div class="fn">BM25 (#9)</div><div class="fx">$$ \text{score}(D,Q)=\sum_i \text{IDF}(q_i)\cdot\frac{f(q_i,D)(k_1+1)}{f(q_i,D)+k_1\big(1-b+b\frac{|D|}{\text{avgdl}}\big)},\;\; \text{IDF}(q_i)=\ln\!\Big(\frac{N-n(q_i)+0.5}{n(q_i)+0.5}+1\Big) $$<div class="fm">IDF=corpus 전체 희소성 × TF=대상 문서 빈도(길이 보정); 무학습.</div></div></div>
+  <div class="fitem"><div class="fn">DPR loss (#9)</div><div class="fx">$$ \mathcal{L}=-\log\frac{e^{\text{sim}(q,p^+)}}{e^{\text{sim}(q,p^+)}+\sum_j e^{\text{sim}(q,p_j^-)}},\qquad \text{sim}(q,p)=E_Q(q)^{\top}E_P(p) $$<div class="fm">contrastive: positive 유사도↑, negative↓; Contriever도 같은 loss(데이터만 자기지도).</div></div></div>
+  <div class="fitem"><div class="fn">REPLUG ensemble (#9)</div><div class="fx">$$ p(y\mid x,\mathcal{D}')=\sum_{d\in\mathcal{D}'}p(y\mid d\circ x)\cdot\lambda(d,x),\qquad \lambda(d,x)=\frac{e^{s(d,x)}}{\sum_{d'}e^{s(d',x)}} $$<div class="fm">문서별 독립 prepend 출력을 retrieval score로 가중 평균(블랙박스 LM).</div></div></div>
+  <div class="fitem"><div class="fn">REPLUG LSR (#9)</div><div class="fx">$$ \mathcal{L}_{LSR}=\mathbb{E}_x\,\mathrm{KL}\big(P_R(d\mid x)\,\|\,Q_{LM}(d\mid x,y)\big) $$<div class="fm">retrieval likelihood ↔ LM likelihood의 KL <strong>최소화</strong> — LM은 frozen, 검색기만 학습.</div></div></div>
+  <div class="fitem"><div class="fn">Self-RAG generator loss (#9)</div><div class="fx">$$ \max_{\mathcal{M}}\;\mathbb{E}_{(x,y,r)\sim\mathcal{D}_{gen}}\big[\log p_{\mathcal{M}}(y,r\mid x)\big] $$<div class="fm">reflection 토큰 \(r\) 포함 표준 likelihood; 검색 청크는 loss에서 마스킹.</div></div></div>
+  <div class="fitem"><div class="fn">Search-R1 objective (#9)</div><div class="fx">$$ \max_{\pi_\theta}\;\mathbb{E}_{x,\,y\sim\pi_\theta(\cdot|x;R)}\big[r_\phi(x,y)\big]-\beta\,\mathbb{D}_{KL}\big[\pi_\theta(y|x;R)\,\|\,\pi_{ref}(y|x;R)\big] $$<div class="fm">RLHF 목적과 동형(+검색기 R 개입); outcome reward만, retrieved token masking.</div></div></div>
+  <div class="fitem"><div class="fn">Toolformer loss (#10)</div><div class="fx">$$ L_i(\mathbf{z})=-\sum_{j=i}^{n}w_{j-i}\log p_M(x_j\mid\mathbf{z},x_{1:j-1}) $$<div class="fm">호출 위치 \(i\) 이후의 가중 next-token loss; \(\mathbf{z}\)=프리픽스로 넣는 API 텍스트.</div></div></div>
+  <div class="fitem"><div class="fn">Toolformer filtering (#10)</div><div class="fx">$$ L_i^+=L_i(e(c_i,r_i)),\quad L_i^-=\min\big(L_i(\varepsilon),L_i(e(c_i,\varepsilon))\big),\quad L_i^--L_i^+\ge\tau\Rightarrow\text{keep} $$<div class="fm">호출+결과가 loss를 τ 이상 낮춰야 keep; τ 클수록 적게 살아남음.</div></div></div>
+  <div class="fitem"><div class="fn">Policy gradient (#12)</div><div class="fx">$$ \nabla_\theta J(\pi_\theta)=\mathbb{E}_{\tau\sim\pi_\theta}\Big[\sum_{t=0}^{T}\nabla_\theta\log\pi_\theta(a_t\mid s_t)\,R(\tau)\Big] $$<div class="fm">log-derivative trick + 환경항 gradient=0; MC 표본 평균으로 추정(on-policy).</div></div></div>
+  <div class="fitem"><div class="fn">Baseline / Advantage (#12)</div><div class="fx">$$ \mathbb{E}_{a_t\sim\pi_\theta}\big[\nabla_\theta\log\pi_\theta(a_t|s_t)\,b(s_t)\big]=0,\qquad A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s) $$<div class="fm">state-only baseline은 기댓값 불변·분산↓; advantage=평균 대비 우수성.</div></div></div>
+  <div class="fitem"><div class="fn">PPO-Clip (#12)</div><div class="fx">$$ L=\min\!\Big(\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}A^{\pi_{\theta_k}},\;\mathrm{clip}\Big(\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)},1\!-\!\epsilon,1\!+\!\epsilon\Big)A^{\pi_{\theta_k}}\Big) $$<div class="fm">A&gt;0→min이 상한, A&lt;0→하한; 급격한 정책 변화 억제(완전 보장은 아님).</div></div></div>
+  <div class="fitem"><div class="fn">GRPO advantage & KL (#12)</div><div class="fx">$$ \hat{A}_{i,t}=\frac{r_i-\mathrm{mean}(\{r_1..r_G\})}{\mathrm{std}(\{r_1..r_G\})},\qquad \mathbb{D}_{KL}=\frac{\pi_{ref}}{\pi_\theta}-\log\frac{\pi_{ref}}{\pi_\theta}-1 $$<div class="fm">그룹 내 정규화로 value model 대체; KL은 별도 estimator(항상 ≥0).</div></div></div>
+  <div class="fitem"><div class="fn">AutoDAN objective (#13)</div><div class="fx">$$ \max_{J_i}\;\prod_{t=1}^{k}p\big(r_{m+t}\mid J_i,Q_i,r_{m+1:m+t-1}\big) $$<div class="fm">proxy target("Sure, here is...")의 likelihood를 GA의 fitness로 최대화.</div></div></div>
+  <div class="fitem"><div class="fn">SafeDecoding (#13)</div><div class="fx">$$ P_n(x)=p_\theta(x\mid x_{1:n-1})+\alpha\big(p_{\theta'}(x\mid x_{1:n-1})-p_\theta(x\mid x_{1:n-1})\big) $$<div class="fm">expert(LoRA)와의 차이로 refusal 확률 증폭; first m tokens만; benign에선 cancel.</div></div></div>
+  <div class="fitem"><div class="fn">Refusal loss / Gradient Cuff (#13)</div><div class="fx">$$ \phi_\theta(x)=1-p_\theta(x),\quad p_\theta(x)=\mathbb{E}_{y\sim T_\theta(x)}[JB(y)],\qquad g_\theta(x)=\tfrac{1}{P}\sum_i\tfrac{f(e(x)\oplus\mu\mathbf{u}_i)-f(e(x))}{\mu}\mathbf{u}_i $$<div class="fm">\(JB=1\)이면 refusal; zeroth-order로 기울기 norm 추정 — malicious=steep.</div></div></div>
+  <div class="fitem"><div class="fn">DetectGPT discrepancy (#14)</div><div class="fx">$$ \mathbf{d}(x,p_\theta,q)=\log p_\theta(x)-\mathbb{E}_{\tilde{x}\sim q(\cdot|x)}[\log p_\theta(\tilde{x})] \;=\; -\tfrac12\,\mathrm{tr}\big(H_f(x)\big) $$<div class="fm">크면 machine(local maximum); Taylor+Hutchinson으로 Hessian trace와 연결.</div></div></div>
+  <div class="fitem"><div class="fn">Fast-DetectGPT (#14)</div><div class="fx">$$ \mathbf{d}(x,p_\theta,q_\varphi)=\frac{\log p_\theta(x|x)-\tilde{\mu}}{\tilde{\sigma}},\qquad \tilde{\mu}=\mathbb{E}_{\tilde{x}\sim q_\varphi(\cdot|x)}[\log p_\theta(\tilde{x}|x)] $$<div class="fm">조건부 독립 샘플링으로 N×L→L inferences (×340 가속).</div></div></div>
+  <div class="fitem"><div class="fn">Watermark z-test & soft (#14)</div><div class="fx">$$ z=\frac{2(|s|_G-T/2)}{\sqrt{T}},\qquad p_k^{(t)}=\frac{\exp(l_k^{(t)}+\delta\,\mathbb{1}[k\in G])}{\sum_i\exp(l_i^{(t)}+\delta\,\mathbb{1}[i\in G])} $$<div class="fm">green 비율의 one-proportion z-test(τ=4→FP≈3×10⁻⁵); soft=green logit에 δ만 가산.</div></div></div>
+</section>
+
+<!-- ════════ 5. 암기 카드: 논문 매핑 ════════ -->
+<section>
+  <h2>🗂 암기 카드 — 논문 ↔ 학회 ↔ 연도 ↔ 키워드</h2>
+  <table>
+    <tr><th>장</th><th>논문/방법</th><th>학회·연도</th><th>핵심 키워드 1줄</th></tr>
+    <tr><td>#7</td><td><strong>COLD Decoding</strong> (Qin et al.)</td><td>NeurIPS 2022</td><td>제약=에너지 함수, 로짓 Langevin, training-free</td></tr>
+    <tr><td>#7</td><td>Langevin dynamics (Welling)</td><td>ICML 2011</td><td>gradient step+노이즈 = 샘플링</td></tr>
+    <tr><td>#8</td><td><strong>G-Eval</strong> (Liu et al.)</td><td>EMNLP 2023</td><td>criteria→LLM이 eval steps 생성, instance-wise</td></tr>
+    <tr><td>#8</td><td><strong>MT-Bench / LLM-as-a-Judge</strong> (Zheng et al.)</td><td>NeurIPS 2023</td><td>pairwise, 80 multi-turn Q, 85%&gt;81%</td></tr>
+    <tr><td>#8</td><td><strong>AlpacaEval LC win rate</strong> (Dubois et al.)</td><td>COLM 2024</td><td>회귀로 length bias 제거, Arena 상관 0.98</td></tr>
+    <tr><td>#8</td><td>HH-RLHF (Bai et al.)</td><td>Anthropic 2022</td><td>helpful vs harmless 트레이드오프, PMP</td></tr>
+    <tr><td>#8</td><td><strong>Constitutional AI</strong></td><td>Anthropic 22.12</td><td>헌법만 사람이, SL-CAI→RL-CAI(RLAIF)</td></tr>
+    <tr><td>#8</td><td>Self-Rewarding LM (Yuan et al., Meta)</td><td>ICML 2024</td><td>generator 겸 judge 반복 자기학습</td></tr>
+    <tr><td>#9</td><td><strong>DPR</strong> (Karpukhin et al.)</td><td>EMNLP 2020</td><td>dual encoder + contrastive + in-batch negatives</td></tr>
+    <tr><td>#9</td><td><strong>Contriever</strong> (Izacard et al.)</td><td>TMLR 2022</td><td>같은 문서 crop=positive, 자기지도, OOD 강건</td></tr>
+    <tr><td>#9</td><td><strong>REPLUG</strong> (Shi et al.)</td><td>NAACL 2023</td><td>블랙박스 LM, 앙상블 + LSR(KL min)</td></tr>
+    <tr><td>#9</td><td><strong>IRCoT</strong> (Trivedi et al.)</td><td>ACL 2023</td><td>CoT↔검색 교차, 마지막 스텝=질의, multi-hop</td></tr>
+    <tr><td>#9</td><td><strong>RetRobust</strong> (Yoran et al.)</td><td>ICLR 2024</td><td>NLI 필터 + 소량 학습으로 noise 강건</td></tr>
+    <tr><td>#9</td><td><strong>Self-RAG</strong> (Asai et al.)</td><td>ICLR 2024 Oral</td><td>4 reflection 토큰, SFT, critic 90% agree</td></tr>
+    <tr><td>#9</td><td><strong>Search-R1</strong> (Jin et al.)</td><td>arXiv 25.03</td><td>RL·outcome reward만, retrieved masking</td></tr>
+    <tr><td>#10</td><td><strong>Toolformer</strong> (Schick et al.)</td><td>NeurIPS 2023 Oral</td><td>self-supervised, loss filtering, GPT-J+5 tools</td></tr>
+    <tr><td>#10</td><td><strong>ToolLLM</strong> (Qin et al.)</td><td>ICLR 2024</td><td>16,464 APIs, DFSDT, Pass/Win, BERT retriever</td></tr>
+    <tr><td>#11</td><td>ViT (Dosovitskiy et al.)</td><td>ICLR 2021 Oral</td><td>패치 임베딩 = 이미지의 토큰화</td></tr>
+    <tr><td>#11</td><td><strong>LLaVA</strong> (Visual Instruction Tuning)</td><td>NeurIPS 2023 Oral</td><td>projector 2단계 학습, encoder frozen, GPT-4 데이터</td></tr>
+    <tr><td>#11</td><td>VideoPoet (Kondratyuk et al., Google)</td><td>ICML 2024</td><td>모달리티별 encoder+projector 표준 패턴</td></tr>
+    <tr><td>#11</td><td><strong>ReAct</strong> (Yao et al.)</td><td>ICLR 2023</td><td>reason+act interleave, few-shot prompting</td></tr>
+    <tr><td>#11</td><td><strong>Reflexion</strong> (Shinn et al.)</td><td>NeurIPS 2023</td><td>verbal RL, 외부 메모리, weight update 없음</td></tr>
+    <tr><td>#11</td><td>Plan-and-Solve (Wang et al.)</td><td>ACL 2023</td><td>zero-shot "plan 먼저" 프롬프트</td></tr>
+    <tr><td>#11</td><td><strong>Tree of Thoughts</strong> (Yao et al.)</td><td>NeurIPS 2023 Oral</td><td>생성→평가(value/vote)→BFS/DFS, ~100× 비용</td></tr>
+    <tr><td>#11</td><td><strong>MemGPT</strong> (Packer et al.)</td><td>arXiv 23.10</td><td>OS 비유(RAM/disk), 70% 경고·100% evict</td></tr>
+    <tr><td>#11</td><td><strong>A-Mem</strong> (Xu et al.)</td><td>NeurIPS 2025</td><td>agentic 노트+LLM 링크 생성+evolution</td></tr>
+    <tr><td>#11</td><td>MDAgents (Kim et al.)</td><td>NeurIPS 2024 Oral</td><td>의료, complexity 적응형 solo/group/teams</td></tr>
+    <tr><td>#12</td><td>TRPO (Schulman et al.)</td><td>ICML 2015</td><td>2차 미분 비용 → PPO로 단순화</td></tr>
+    <tr><td>#12</td><td><strong>RLHF / InstructGPT</strong> (Ouyang et al., OpenAI)</td><td>NeurIPS 2022</td><td>3단계 SFT→RM→PPO</td></tr>
+    <tr><td>#12</td><td><strong>GRPO / DeepSeekMath</strong> (Shao et al.)</td><td>arXiv 24.04</td><td>group 정규화 advantage, value 제거</td></tr>
+    <tr><td>#12</td><td>DeepSeek-R1</td><td>arXiv 25.01</td><td>GRPO를 대규모 reasoning RL로 입증</td></tr>
+    <tr><td>#12</td><td>GLM-5 (Team)</td><td>arXiv 26.02</td><td>Reasoning→Agentic→General RL, alignment 마지막</td></tr>
+    <tr><td>#13</td><td><strong>Jailbroken</strong> (Wei et al.)</td><td>NeurIPS 2023 Oral</td><td>2 failure modes, Comb_3 SOTA</td></tr>
+    <tr><td>#13</td><td>GCG (Zou et al.)</td><td>arXiv 2023</td><td>gradient suffix, perplexity에 탐지됨</td></tr>
+    <tr><td>#13</td><td><strong>AutoDAN</strong> (Liu et al.)</td><td>ICLR 2024</td><td>hierarchical GA, DAN 초기화, fluent</td></tr>
+    <tr><td>#13</td><td><strong>COLD-Attack</strong> (Guo et al.)</td><td>ICML 2024</td><td>COLD 알고리즘 그대로 + 공격 제약</td></tr>
+    <tr><td>#13</td><td><strong>SafeDecoding</strong> (Xu et al.)</td><td>ACL 2024</td><td>LoRA expert contrastive, first m tokens</td></tr>
+    <tr><td>#13</td><td><strong>Gradient Cuff</strong> (Hu et al.)</td><td>NeurIPS 2024</td><td>refusal loss landscape, zeroth-order 2단계</td></tr>
+    <tr><td>#13</td><td>FGSM / PGD (Goodfellow / Madry)</td><td>ICLR 2015 / 2018</td><td>1-step vs multi-step+projection</td></tr>
+    <tr><td>#14</td><td><strong>DetectGPT</strong> (Mitchell et al.)</td><td>ICML 2023</td><td>negative curvature, zero-shot, not black-box</td></tr>
+    <tr><td>#14</td><td><strong>Fast-DetectGPT</strong> (Bao et al.)</td><td>ICLR 2024</td><td>conditional curvature, ×340 가속</td></tr>
+    <tr><td>#14</td><td><strong>ReMoDetect</strong> (Lee et al.)</td><td>NeurIPS 2024</td><td>reward model의 LGT bias 역이용, training-based</td></tr>
+    <tr><td>#14</td><td><strong>Watermark</strong> (Kirchenbauer et al.)</td><td>ICML 2023</td><td>green/red hash 분할, z-test, SynthID</td></tr>
+  </table>
+</section>
+
+<!-- ════════ 6. 마지막 점검 ════════ -->
+<section>
+  <h2>✅ 마지막 점검 — 이거 헷갈리면 그 챕터 다시 봐</h2>
+  <ol class="check">
+    <li><strong>Temperature는 softmax 이전</strong> 로짓에 적용, τ↓=deterministic. Top-p 후보 개수는 동적. (#7)</li>
+    <li>Toolformer는 <strong>\(L_i^- - L_i^+ \ge \tau\)</strong>일 때 keep (반대 방향이면 False); 사실성 검사 안 함. (#10)</li>
+    <li><strong>\(A=Q-V\)</strong> (V−Q 아님); baseline은 <strong>state에만</strong> 의존해야 unbiased. (#12)</li>
+    <li>PPO clip: <strong>A&gt;0 → min이 상한(ceiling)</strong>, A&lt;0 → 하한. GRPO의 동기는 stability가 아니라 <strong>value model 제거</strong>. (#12)</li>
+    <li>Self-RAG=<strong>SFT</strong> / Search-R1=<strong>RL</strong>; 둘 다 검색된 토큰은 <strong>loss에서 마스킹</strong>. Search-R1 원버전 보상은 outcome만. (#9)</li>
+    <li>RetRobust NLI: <strong>passage=premise, Q+A=hypothesis</strong>; not-entailed면 재검색이 아니라 <strong>direct answering</strong>. (#9)</li>
+    <li>Good bot=<strong>refuse</strong>; prefix injection=next-token vs safety / refusal suppression=instruction following vs safety / <strong>Base64=mismatched generalization</strong>. (#13)</li>
+    <li>DetectGPT는 <strong>black-box 아님</strong>(\(\log p_\theta\) 필요); watermark 탐지는 <strong>모델 접근 불필요</strong>(z-test만). perturbation은 별도 T5. (#14)</li>
+    <li><strong>RBRM=rule-based</strong>(선호 데이터 학습 ✗); LC win rate=회귀로 length 제거; position bias swap은 <strong>2× cost</strong>, 불일치=Tie. (#8/#13)</li>
+    <li>MemGPT: <strong>70%=경고만, 100%=50% evict+recursive summary</strong>; LLaVA encoder는 <strong>두 단계 모두 frozen</strong>; Reflexion은 weight update 없음. (#11)</li>
+  </ol>
+</section>
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="1. Decoding 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,481 @@
+CAS 4133: Large Language Models
+Mid-term Exam, Spring 2025
+Instructor: Jaehyung Kim
+Tuesday, April 22, 2025, 4:10 PM - 5:50 PM
+
+Instructions
+1. Please fill in your personal information here:
+Name:
+
+Student ID:
+
+E-mail:
+
+2. You have 1 hour and 40 minutes.
+3. Directly writing the answers to this print, and submit it.
+4. You can leave the room after 50 minutes (5:00 PM)
+5. Please sign for the following honor pledge by hand:
+As a member of the Yonsei University community, I promise to uphold honor with
+my words and actions. I will not lie, cheat, or steal. I accept responsibility for my
+own actions and for what other members of the community may do in my presence.
+I understand the need for honor and pledge to defend it.
+Your sign:
+6. Good luck!
+
+Score Sheet
+Problem #
+1
+2
+3
+4
+5
+Total
+
+Topic
+Score
+True / False
+30
+N-Gram, RNN, Transformer
+15
+Large Language Models
+20
+Alignment of LLMs
+20
+Decoding
+15
+100
+
+1
+
+Your score
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+Problem 1: True / False (30 Points)
+Identify whether the following statements are True or False. You will get 3 points for
+each correct answer, 0 points for each wrong answer, and 1 point for each unanswered
+question.
+(i) A bigram model assumes that each token depends on all previous tokens in the
+sequence.
+Answer: False. A bigram model assume that each word only depends on the last
+previous word in the sentence.
+(ii) Vocabulary size is a hyperparameter that can be defined by the user in Byte-Pair
+Encoding.
+Answer: True. Unlike character-level or word-level tokenizers, BPE can control a
+vocabulary size.
+(iii) Seq2seq with LSTM can theoretically handle sequences of any length.
+Answer: True. There is no limitation in theory while it suffers issues such as GPU
+memory or limited performance from forgetting issues in practice.
+(iv) Positional encoding is learned via backpropagation in standard Transformers.
+Answer: False. As we leanred in lecture, the original Transformer paper introduces
+the fixed rule utilizing sign and cosine functions to generated positional encoding.
+(v) Model-based data filtering refers to a technique that uses LLM’s in-context learning
+to filter out all the low-quality data.
+Answer: False. As size of pre-training data is too large to apply LLM for all data,
+it is applied for limited number of data to generate labeled data and the separate
+classifier is trained on that.
+(vi) In-context learning is an example of an emergent ability in LLMs.
+Answer: True. Small LLMs do not exhibit in-context learning capability and it is
+not predictable with scaling law.
+(vii) FLAN fine-tunes models to follow instructions using cross-entropy loss.
+Answer: True.
+(viii) Main motivation of preference learning is improving model performance on held-out
+datasets.
+Answer: False. Main motivation is improving alignment; it can compete with
+model performance like accuracy on held-out test datasets.
+(ix) SimPO introduces a length-normalized reward and no reference model.
+Answer: True. Unlike DPO, SimPO introduces length-normalization term in implicit reward, and removes the reference model as well.
+(x) Diverse Beam Search (DBS) always chooses the most probable sequence (i.e., the
+lowest perplexity) from all beams.
+Answer: False. As the diversity term is introduced, the selected sequence can be
+not optimal in the perspective of perplexity.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+Problem 2: N-gram, RNN, Transformer (15 Points)
+Answer the following questions about N-gram, RNN, Transformer.
+1. What are the typical limitations of N-gram language models? (Pick all that are
+correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) They suffer from data sparsity, especially for large N.
+(b) They can model arbitrarily long context sequences effectively.
+(c) They struggle with Out-of-Vocabulary (OOV) words.
+(d) The input space size grows exponentially with the value of N.
+Answer: (a), (c), (d)
+Explanation:
+(a) Correct. Data sparsity is a major issue—most word sequences don’t appear
+often in the corpus.
+(b) Incorrect. N-gram models can only handle a fixed-length window and do not
+capture long contexts.
+(c) Correct. OOV words are problematic since they are not in the vocabulary and
+hence not modeled.
+(d) Correct. The number of possible N-grams grows exponentially with N and
+vocabulary size.
+2. Which of the following statements about tokenization in language models is true?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) Tokenization is the process of converting input text into a sequence of continuous units.
+(b) Subword tokenization typically results in smaller vocabulary compared to
+word-level tokenization.
+(c) Byte-Pair Encoding is not used in any state-of-the-art language models.
+(d) Character-level tokenization leads to longer input sequences compared to wordlevel tokenization.
+Answer: (b), (d)
+Explanation:
+(a) Incorrect. Tokenization maps text into a sequence of tokens (i.e., discrete
+units), which are model input units.
+(b) Correct. Subword-level tokenization typically reduces vocabulary size by breaking words into smaller units.
+(c) Incorrect. BPE is used in many modern LMs such as GPT and Roberta.
+(d) Correct. Character-level tokenization results in longer sequences due to finer
+granularity of vocabulary.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+3. Which of the following are correct about the limitations of vanilla RNNs? (Pick all
+that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) RNNs are prone to vanishing gradients during backpropagation through input
+time steps.
+(b) RNNs always preserve long-term dependencies thanks to their recursive structure.
+(c) Exploding gradients can occur in RNNs and can be mitigated using gradient
+clipping.
+(d) Vanilla RNNs require a fixed sequence length to function properly.
+Answer: (a), (c)
+Explanation:
+(a) Correct. Vanishing gradients are a major issue in vanilla RNNs when modeling
+long sequences.
+(b) Incorrect. RNNs often fail to preserve long-term dependencies due to vanishing
+gradients.
+(c) Correct. Exploding gradients can occur and are commonly managed using
+gradient clipping.
+(d) Incorrect. RNNs do not require fixed sequence length; they are flexible with
+variable-length input.
+4. Which of the following are true about self-attention in Transformers? (Pick all that
+are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) Self-attention computes interactions among all tokens in the same sequence.
+(b) The query, key, and value matrices are learned during training.
+(c) The decoder attends to encoder outputs through cross-attention.
+(d) The encoder uses causal (masked) self-attention to prevent attending to future
+positions.
+Answer: (a), (b), (c)
+Explanation:
+(a) Correct. Self-attention models relationships among all tokens in the input.
+(b) Correct. Query, key, and value matrices are trainable and learned during
+training.
+(c) Correct. Cross-attention is the same attention mechanism introduced in seq2seq
+model.
+(d) Incorrect. The decoder uses causal attention, not the encoder.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+5. Which of the following are correct regarding multi-head attention in the Transformer? (Pick all that are correct; any wrong answer will lead to 0 points.) (3
+pts)
+(a) Each attention head has its own set of query, key, and value weights.
+(b) Multi-head attention forces the model to capture different types of relationships in parallel.
+(c) It is only applicable for a bi-directional self-attention in the encoder.
+(d) Using multiple heads increases model capacity without significantly increasing
+the overall computation cost compared to a single head with larger hidden
+dimension.
+Answer: (a), (d)
+Explanation:
+(a) Correct. Each head has separate Q/K/V projections to capture different patterns.
+(b) Incorrect. They are not forced to learn different relationship, but has an
+implicit tendency.
+(c) Incorrect. It can be also applicable to the decoder or encoder-decoder models.
+(d) Correct. Overall computation is almost same when the dimension of projection
+layer is divided into the number of multiple heads.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+Problem 3: Large Language Models (20 Points)
+Answer the following questions about LMs, LLMs, scaling laws, and emergent abilities.
+1. Which of the following correctly compare BERT and GPT? (Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) BERT is based on Transformer encoder; GPT is based on Transformer decoder.
+(b) BERT uses bidirectional attention; GPT uses unidirectional (causal) attention.
+(c) GPT is better suited for generation tasks like story writing.
+(d) GPT is pre-trained on next-token prediction, while BERT is trained with
+masked token prediction.
+Answer: (a), (b), (c), (d)
+Explanation:
+(a) Correct. BERT = encoder-only; GPT = decoder-only.
+(b) Correct. BERT allows bidirectional context; GPT is strictly left-to-right.
+(c) Correct. GPT is better suited for generation tasks; BERT is for classification/QA.
+(d) Correct. BERT uses masked LM; GPT uses next-token prediction.
+2. Which of the following are true about GPT-3’s architecture and training? (Pick all
+that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) GPT-3 is trained using masked language modeling.
+(b) GPT-3 introduces in-context learning (ICL) where no parameter updates are
+needed to learn from examples directly within the input prompt.
+(c) GPT-3 scales up the number of parameters to 110 million.
+(d) GPT-3 uses both encoder and decoder modules from the Transformer architecture.
+Answer: (b)
+Explanation:
+(a) Incorrect. GPT-3 uses next-token prediction, not masked LM.
+(b) Correct. In-context learning is a key feature of GPT-3.
+(c) Incorrect. The largest GPT-3 has 175B parameters.
+(d) Incorrect. GPT-3 uses only the decoder portion of the Transformer.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+3. Which of the followings are correctly describe innovations in DeepSeek-V3? (Pick
+all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) Multi-Head Latent Attention (MLA) is proposed to reduce the computational
+cost such as KV cache.
+(b) Mixture-of-Experts (MoE) activates all experts during inference.
+(c) Fill-in-the-Middle (FIM) pre-training requires to modify the architecture as it
+relies on right-to-left modeling.
+(d) Multi-Token Prediction (MTP) requires additional training modules to predict
+multiple tokens at once.
+Answer: (a), (d)
+Explanation:
+(a) Correct. MLA compresses Q/K/V to reduce memory cost.
+(b) Incorrect. MoE activates top-K experts, not all.
+(c) Incorrect. FIM does not modify the architecture; instead, it modifies the
+format of training data.
+(d) Correct. MTP requires additional training modules and they can be removed
+or recycled at inference time.
+4. Which of the following correctly describe the contributions of the Chinchilla paper?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) Chinchilla shows that model size should be prioritized over data size under
+fixed FLOPs.
+(b) Chinchilla proposes a revised scaling law showing that both model size and
+data are equally important.
+(c) Chinchilla achieved better performance than Gopher using the same compute
+budget.
+(d) The empirical result supports training smaller models with fewer tokens for
+optimal performance.
+Answer: (b), (c)
+Explanation:
+(a) Incorrect. This is Kaplan’s suggestion; Chinchilla shows both size and data
+matter equally.
+(b) Correct. Chinchilla revises Kaplan’s law to emphasize balance.
+(c) Correct. Chinchilla outperformed Gopher with the same training FLOPs.
+(d) Incorrect. Chinchilla actually promotes smaller models trained on more data
+for optimal scaling.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+5. Which of the following correctly describe Chain-of-Thought (CoT) prompting in
+LLMs? (Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) CoT requires structured step-by-step reasoning examples during training.
+(b) CoT enables reasoning capabilities in large language models.
+(c) The benefit of CoT increases as model size increases.
+(d) CoT cannot be used in zero-shot settings.
+Answer: (b), (c)
+Explanation:
+(a) Incorrect. While few-shot CoT uses examples, zero-shot CoT does not need
+them.
+(b) Correct. CoT makes LLMs better at reasoning-intensive tasks like math QA.
+(c) Correct. The gain from CoT is more prominent in larger models.
+(d) Incorrect. Zero-shot CoT (e.g., with triggers like “Let’s think step by step”)
+is effective.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+Problem 4: Alignment of LLMs (20 Points)
+Answer the following questions about alignment of LLMs.
+1. Which of the following are true about instruction tuning in LLMs? (Pick all that
+are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) Instruction tuning trains models to follow natural language instructions across
+multiple tasks.
+(b) Instruction tuning is only effective for tasks with a single correct answer.
+(c) Instruction tuning enables zero-shot generalization to unseen tasks.
+(d) Instruction tuning typically involves supervised fine-tuning (SFT) on labeled
+instruction datasets.
+Answer: (a), (c), (d)
+Explanation:
+(a) Correct. Instruction tuning uses language-based instructions to guide models.
+(b) Incorrect. It is effective for both objective and subjective tasks.
+(c) Correct. It improves zero-shot generalization to new tasks.
+(d) Correct. SFT is commonly used during instruction tuning with instructionoutput pairs.
+2. Which of the following are part of the RLHF pipeline used in InstructGPT? (Pick
+all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) Supervised fine-tuning (SFT) on human demonstrations.
+(b) Training a reward model on human preference data.
+(c) Fine-tuning the language model using reinforcement learning such as PPO.
+(d) Directly optimizing language model using supervised loss on preference pairs.
+Answer: (a), (b), (c)
+Explanation:
+(a) Correct. First step of RLHF is conducting SFT on prompts and human-written
+completions.
+(b) Correct. Reward model is trained using pairwise comparisons.
+(c) Correct. Proximal Policy Optimization (PPO) is used for policy fine-tuning.
+(d) Incorrect. This is DPO’s method, not RLHF.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+3. Which of the following are correct about DPO? (Pick all that are correct; any wrong
+answer will lead to 0 points.) (4 pts)
+(a) DPO is derived from the same objective as RLHF’s PPO fine-tuning.
+(b) The Bradley-Terry model is used to relate preference and reward.
+(c) DPO updates language model to minimize the difference between chosen and
+rejected outputs.
+(d) DPO approximates reinforcement learning using multi-agent simulation.
+Answer: (a), (b)
+Explanation:
+(a) Correct. DPO reformulates RLHF’s objective analytically.
+(b) Correct. It uses the Bradley-Terry model to interpret preference scores.
+(c) Incorrect. DPO loss encourages preferred outputs by maximizing their relative
+log-likelihood and discourages dispreferred outputs.
+(d) Incorrect. No simulation or multi-agent system is involved.
+4. Which of the following are limitations of DPO highlighted in recent studies? (Pick
+all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) DPO requires a separate reward model trained on human preferences.
+(b) DPO causes computational overhead due to the reference model.
+(c) DPO tends to generate shorter outputs regardless of quality.
+(d) DPO is inherently an online learning algorithm.
+Answer: (b)
+Explanation:
+(a) Incorrect. Unlike RLHF, DPO does not require a separate reward model.
+(b) Correct. DPO still depends on a reference model, which adds compute cost.
+(c) Incorrect. Studies show DPO can induce longer outputs unintentionally.
+(d) Incorrect. DPO is based on fixed preference datasets (offline), unlike online
+RLHF.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+5. Which of the following are true about evaluation bias introduced by DPO? (Pick
+all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) Longer responses often receive higher preference scores from human evaluators.
+(b) The length-controlled (LC) win rate metric considers differences in instruction
+difficulty.
+(c) Ignoring length bias in evaluation can lead to misleading alignment conclusions.
+(d) LC win rate is a type of perplexity-based evaluation.
+Answer: (b), (c)
+Explanation:
+(a) Incorrect. Bias toward longer outputs has been observed in LLM evaluations.
+(b) Correct. LC win rate uses regression to capture length and difficulty effects.
+(c) Correct. Evaluating without controlling for length may misrepresent performance.
+(d) Incorrect. LC win rate is preference-based, not perplexity-based.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+Problem 5: Decoding (15 Points)
+Answer the following questions about alignment of LLMs.
+1. Which of the following are true about autoregressive decoding in LLMs? (Pick all
+that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) Each token is generated by conditioning on all previous tokens.
+(b) The decoding process can be parallelized across all tokens during inference.
+(c) The process continues until an end-of-sequence (EOS) token is generated or
+upon reaching a pre-defined max length.
+(d) The next token is sampled from a fixed Gaussian distribution.
+Answer: (a), (c)
+Explanation:
+(a) Correct. Standard autoregressive decoding generates one token at a time,
+using all the previous tokens.
+(b) Incorrect. It is inherently sequential (not parallel).
+(c) Correct. Generation typically stops when an EOS token is generated or predefined threshold is reached.
+(d) Incorrect. Tokens are sampled from the model’s output probability distribution, not Gaussian.
+2. Which of the following are true about temperature-controlled sampling? (Pick all
+that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) Temperature controls the sharpness or smoothness of the output distribution.
+(b) Lower temperature values result in more deterministic outputs.
+(c) Temperature is irrelevant in top-k sampling.
+(d) Temperature is applied after the softmax operation.
+Answer: (a), (b)
+Explanation:
+(a) Correct. High temperature → more randomness, low temperature → peaky
+distribution.
+(b) Correct. Lower temperatures lead to more confident predictions.
+(c) Incorrect. Temperature is still relevant and often used alongside top-k.
+(d) Incorrect. It rescales logits before applying softmax.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+3. Which of the following statements are correct about top-p (nucleus) sampling?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) Top-p sampling adjusts the candidate set based on cumulative probability.
+(b) Top-p is a special case of beam search with p=1.
+(c) Top-p allows dynamic flexibility based on the distribution’s shape.
+(d) It is designed to avoid unnatural or degenerate completions.
+Answer: (a), (c), (d)
+Explanation:
+(a) Correct. The candidate pool is chosen based on cumulative probability and
+predefined threshold.
+(b) Incorrect. Top-p is not related to beam search.
+(c) Correct. It adapts the number of candidates per step.
+(d) Correct. It was designed to mitigate degeneration in sampling.
+4. Which of the following describe speculative decoding? (Pick all that are correct;
+any wrong answer will lead to 0 points.) (3 pts)
+(a) It uses a small draft model to propose multiple tokens at once.
+(b) It verifies the drafts with a larger target model.
+(c) It eliminates the need for sequential generation.
+(d) It speeds up decoding by reducing the number of expensive large model inferences.
+Answer: (a), (b), (d)
+Explanation:
+(a) Correct. A lightweight model proposes token drafts.
+(b) Correct. The large target model checks and filters the drafts.
+(c) Incorrect. The draft model still generates the tokens via autoregressive generation.
+(d) Correct. It reduces the number of calls to the large model.
+
+CAS 4133
+
+Mid-term Exam
+
+April 22, 2025
+
+5. Which of the following describe the concept of test-time compute scaling in LLMs?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) It allows models to dynamically allocate more inference compute to harder
+queries.
+(b) It is a technique for fine-tuning large language models using reinforcement
+learning.
+(c) It enables more accurate reasoning by allowing “longer thinking” on complex
+tasks.
+(d) It improves model capacity by increasing the number of parameters at test
+time.
+Answer: (a), (c)
+Explanation:
+(a) Correct. Dynamic inference strategies help allocate more resources to harder
+problems.
+(b) Incorrect. Test-time compute scaling is not a fine-tuning method, but an
+inference strategy.
+(c) Correct. It enables the model to produce better results by spending more
+compute.
+(d) Incorrect. The number of parameters is fixed; it increases inference time, not
+model size.
+

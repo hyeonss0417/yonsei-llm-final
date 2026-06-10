@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9장. 검색 증강 생성 (RAG)</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="4. Tool Use 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #9</div>
+  <h1>9장. 검색 증강 생성 <span style="font-weight:400;font-size:20px;">(Retrieval-Augmented Generation, RAG)</span></h1>
+  <div class="subtitle">지식 컷오프·환각을 외부 검색으로 보완 — 검색기(PageRank/BM25/DPR/Contriever)부터 REPLUG·IRCoT·RetRobust·Self-RAG·Search-R1까지, 추론 기반 → 학습 기반(SFT → RL)으로 진화하는 RAG의 전체 흐름</div>
+  <div class="meta">
+    <span>📅 강의일: 5/6 · 5/13 · 5/18 (4개 강의에 걸친 최대 분량 챕터)</span><span>📊 예상 비중: 매우 높음 (기말 범위 첫 대형 챕터)</span><span>⏱ 분량: 본문 8섹션 + 문제 17</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">RAG 동기와 기본 파이프라인 (Knowledge Cutoff, Hallucination, Retrieve-and-Read)</a></li>
+    <li><a href="#s2">검색 방법 ①: 웹 검색(PageRank) & 텍스트 기반(BM25)</a></li>
+    <li><a href="#s3">검색 방법 ②: 밀집 검색 (DPR, Contriever) + 3-way 비교</a></li>
+    <li><a href="#s4">REPLUG — 블랙박스 LM + 학습 가능한 검색기 (Ensemble, LSR)</a></li>
+    <li><a href="#s5">IRCoT — CoT와 검색의 교차 반복 (Multi-hop QA, EM/F1/Recall@K)</a></li>
+    <li><a href="#s6">RetRobust — 노이즈-강건 RAG (NLI 필터링 & 소규모 학습)</a></li>
+    <li><a href="#s7">Self-RAG — Reflection 토큰으로 적응적 RAG 학습 (SFT)</a></li>
+    <li><a href="#s8">Search-R1 — RL로 검색을 배우는 LLM (+ 3대 방법 총비교)</a></li>
+    <li><a href="#quiz">예상문제 (T/F 10 + Pick-all 7)</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. RAG 동기와 기본 파이프라인 ============ -->
+<section id="s1">
+  <h2><span class="num">1</span> RAG 동기와 기본 파이프라인 <span class="en">(Motivation & Pipeline)</span></h2>
+
+  <p>이번 챕터부터 강의는 LLM의 <strong>기초(foundation)</strong>(학습·해석)에서 <strong>응용(application)</strong>으로 전환된다. 첫 번째 킬러 애플리케이션이 바로 <strong>검색 증강 생성(Retrieval-Augmented Generation, RAG)</strong>이다.</p>
+
+  <h3>1.1 LLM의 근본 한계: 정적 데이터셋</h3>
+  <p>RLHF로 정렬(alignment)을 마쳐도 LLM은 완벽하지 않다. 핵심 원인은 LLM이 <strong>고정된(fixed/static) 학습 데이터셋</strong>으로 학습된다는 점이다.</p>
+  <ul>
+    <li><strong>환각(Hallucination)</strong> <span class="en">non-factual but seemingly plausible generation</span> — 사실이 아니지만 그럴듯해 보이는 생성. 학습 시점과 추론 시점(inference time) 사이의 불일치(mismatch)가 주요 원인 중 하나.</li>
+    <li><strong>최신 지식 반영의 어려움</strong> <span class="en">difficulty to incorporate up-to-date knowledge</span> — 파라미터 속 지식은 데이터 수집 시점까지로 제한된다.</li>
+  </ul>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>지식 컷오프(Knowledge cutoff)</strong>: 사전 학습 데이터가 포함하는 마지막 시점. 모델 공개 시 함께 공개된다. 예) <strong>GPT-4o (&amp; mini): 2023-10</strong>, <strong>LLaMA3: 2023-12</strong>. 컷오프 이후의 사실을 물으면 높은 확률로 환각을 생성한다.
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "2024년에 데이터를 수집해 2025년에 배포한 모델에게 2025년의 사실을 물으면 옳은 답을 줄 수 없다. 이 <strong>학습 시점-추론 시점 mismatch</strong>가 환각의 주요 원인이다. 예전 GPT-3가 '대통령이 누구냐'는 질문에 (정권 교체 후에도) 학습 데이터 시점의 대통령을 답한 것이 전형적인 예다."
+  </div>
+
+  <h3>1.2 RAG가 아닌 대안들이 실패하는 이유</h3>
+  <table>
+    <tr><th>대안</th><th>아이디어</th><th>한계</th></tr>
+    <tr><td><strong>답변 거부 (Abstaining)</strong></td><td>모르는 질문은 "답할 수 없다"고 거부</td><td>사용자 관점에서 <strong>효용(utility)</strong> 저하 → 도움이 안 됨</td></tr>
+    <tr><td><strong>지속 학습 (Continued fine-tuning)</strong></td><td>새 데이터로 주기적 재학습</td><td>새 지식 fine-tuning은 <strong>기존 능력 손상</strong> 위험 (Gekhman et al., arXiv:24.05 — known data 성능이 몇 epoch 후 하락하는 <strong>sweet spot</strong> 존재) + 추가 계산 비용 → 기업들이 큰 릴리스를 비동기적으로만 내는 이유</td></tr>
+    <tr><td><strong>RAG</strong></td><td>외부 지식을 입력으로 증강</td><td>현재 표준(standard) 접근 ✅</td></tr>
+  </table>
+
+  <h3>1.3 Retrieve-and-Read 파이프라인</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Retrieve-and-read</strong>: 오픈 도메인 질의응답(Open-Domain QA, ODQA)의 고전적 시스템. ① <strong>검색기(Retriever)</strong>가 외부 지식 소스(external knowledge source)에서 질의 관련 정보를 수집 → ② <strong>리더/생성기(Reader/Generator)</strong>가 그 정보를 바탕으로 답변. LLM 시대에는 <strong>생성기 부분만 LLM으로 대체</strong>된 것이 곧 RAG다 (검색기 부분은 동일).
+  </div>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "오픈북 시험과 똑같다. 외부 소스에서 관련된 부분을 먼저 찾고(retrieve), 그 다음 질문에 답한다(read). 이 시스템은 LLM 이전부터 있었고, generator만 LLM으로 바뀐 것이 오늘날의 RAG다."
+  </div>
+
+  <h3>1.4 RAG의 두 가지 활용 방식</h3>
+  <ol class="steps">
+    <li><strong>추론 기반 (Inference-based)</strong> — 검색된 정보를 추가 입력으로 <strong>덧붙이기(appending/prepending)</strong>만 함. 사전 학습된 검색기 + 사전 학습된 LLM을 학습 없이 결합(프롬프트 최적화 정도만 가능). 가장 쉽고 상업적으로 흔한 방식 → <strong>REPLUG, IRCoT</strong>가 이 계열.</li>
+    <li><strong>학습 기반 (Training-based)</strong> — 검색 정보를 활용하도록 LLM을 <strong>학습</strong>. 추론 기반은 LLM이 검색 문서 활용을 학습한 적이 없어 최적이 아닐 수 있으므로 등장한 최근 패러다임 → <strong>RetRobust(일부), Self-RAG(SFT), Search-R1(RL)</strong>이 이 계열.</li>
+  </ol>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① Knowledge cutoff 구체값(GPT-4o 2023-10, LLaMA3 2023-12)과 "fine-tuning으로 새 지식 주입은 한계가 있다"는 논거. ② RAG = retrieve-and-read에서 <strong>generator만 LLM으로 교체</strong>. ③ inference-based vs training-based의 구분 — 이 챕터 전체가 이 축으로 전개된다.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Fine-tuning on new knowledge is an effective and reliable way to keep LLMs up-to-date." → <strong>False</strong>. Fitting on new knowledge can decrease overall accuracy (known-data performance drops after several epochs); that is exactly why RAG is preferred.</li>
+      <li>"RAG requires retraining the LLM to incorporate retrieved documents." → <strong>False</strong>. Inference-based RAG simply appends retrieved information to the input without any training (training-based RAG also exists, but it is not required).</li>
+      <li>"Hallucination means the model refuses to answer." → <strong>False</strong>. Hallucination is a <em>non-factual but seemingly plausible</em> generation, not a refusal.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 2. PageRank & BM25 ============ -->
+<section id="s2">
+  <h2><span class="num">2</span> 검색 방법 ①: 웹 검색과 텍스트 기반 검색 <span class="en">(PageRank & BM25)</span></h2>
+
+  <p>RAG의 첫 구성요소인 <strong>검색기(retriever)</strong>를 만드는 세 방향: ① 웹 검색(web search, PageRank), ② 텍스트 기반(text-based = <strong>sparse retriever</strong>, BM25), ③ 임베딩 기반(embedding-based = <strong>dense retriever</strong>, DPR/Contriever).</p>
+
+  <h3>2.1 PageRank (Page, Technical Report 1997)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>PageRank</strong>: 웹 페이지의 <strong>중요도(importance)는 그 페이지로 링크된 이웃들의 중요도의 평균</strong>이라는 철학으로 페이지를 랭킹. 구글 검색 알고리즘의 토대. 수학적으로 \( PR(A) \)는 <strong>많은 클릭 후 페이지 A에 도달할 확률</strong>이다.
+  </div>
+  <div class="formula"><div class="fname">PageRank 점수</div>
+    $$ PR(A) = \frac{1-d}{N} + d \sum_{B_i \in \text{In}(A)} \frac{PR(B_i)}{L(B_i)} $$
+    <p style="font-size:14px;margin:6px 0 0;">\( d \): <strong>감쇠 인자(damping factor)</strong> — \( 1-d \)는 링크를 따르지 않고 <strong>무작위 페이지로 점프할 확률</strong>(좌측 항 = 직접 방문 시나리오). \( L(B_i) \): 페이지 \( B_i \)의 아웃링크 수 — 한 페이지의 중요도는 아웃링크들에게 <strong>균등 분배</strong>되므로 \(L\)로 나눈다(우측 항 = 링크 타고 도달 시나리오, 일종의 message-passing).</p>
+  </div>
+  <ul>
+    <li><strong>계산법(power iteration)</strong>: 각 노드를 \( 1/N \)(균등 분포)이나 무작위 값으로 초기화 후 위 식을 반복 적용하면 <strong>유일한 해(unique solution)로 수렴</strong>함이 증명되어 있다 — 이 수렴 값이 중요도 점수.</li>
+    <li><strong>한계</strong>: 링크 <strong>연결성(connectivity)</strong> 정보만 쓰고 <strong>본문의 의미(semantic) 정보를 전혀 활용하지 않음</strong> → 텍스트 기반/임베딩 기반 검색이 등장한 동기.</li>
+  </ul>
+
+  <h3>2.2 BM25 (Robertson &amp; Zaragoza, Foundations and Trends in IR 2009)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>BM25</strong>: <strong>원시 텍스트 수준(raw text-level)</strong> 검색 — 질의와의 <strong>단어 겹침(word overlap)이 클수록 검색 점수가 높다</strong>. 학습이 전혀 없는 비지도(unsupervised) 방법이며, 이산적 단어 기반이라 <strong>희소 검색기(sparse retriever)</strong>로 분류된다.
+  </div>
+  <div class="formula"><div class="fname">BM25 점수 (질의 \(Q\)의 키워드 \(q_i\), 문서 \(D\))</div>
+    $$ \text{score}(D, Q) = \sum_{i} \text{IDF}(q_i)\cdot \frac{f(q_i, D)\,(k_1+1)}{f(q_i, D) + k_1\left(1-b+b\cdot\frac{|D|}{\text{avgdl}}\right)}, \qquad \text{IDF}(q_i) = \ln\!\left(\frac{N - n(q_i) + 0.5}{n(q_i) + 0.5} + 1\right) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( N \): 전체 문서 수, \( n(q_i) \): 키워드 \(q_i\)를 포함하는 문서 수, \( f(q_i,D) \): 문서 \(D\) 내 \(q_i\)의 <strong>단어빈도(term frequency)</strong>, \( |D| \)/avgdl: 문서 길이/평균 문서 길이, \( k_1, b \): <strong>하이퍼파라미터</strong>(보통 사전 설정).</p>
+  </div>
+  <ul>
+    <li><strong>IDF(역문서빈도, inverse document frequency)</strong>: "the", "all"처럼 <strong>말뭉치 전체에서 흔한 단어를 보정</strong> — 대상 문서와 무관하게 전체 말뭉치의 빈도만 본다. 키워드가 corpus 전반에 흔할수록 값 ↓.</li>
+    <li><strong>TF 항</strong>: 대상 문서 안에서의 빈도. <strong>결합 효과</strong>: 특정 키워드가 <em>문서 D에서만</em> 자주 등장 → 높은 점수 / corpus 전체에서도 흔함 → IDF가 깎음.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "BM25의 본질적 한계: 단어의 의미는 <strong>맥락(context)</strong>에 따라 변한다. 'apple'이 'company'와 함께 오면 회사, 'breakfast'와 오면 과일이다. 단어 겹침 방식은 이런 <strong>맥락 의존성을 유사도 점수에 포착할 수 없다</strong> → 신경망 기반 임베딩 검색이 등장한 이유."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① PageRank: damping factor의 의미(1−d = random jump 확률), power iteration의 <strong>유일해 수렴</strong>, "연결성만 쓰고 의미는 안 쓴다". ② BM25: IDF는 <strong>corpus 전체</strong> 기준 / TF는 <strong>대상 문서</strong> 기준, \(k_1, b\)는 하이퍼파라미터, sparse retriever라는 명칭.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In PageRank, the damping factor \(d\) is the probability of jumping to a random page." → <strong>False</strong>. \(1-d\) is the random-jump probability; \(d\) weights the neighbor-based (link-following) term.</li>
+      <li>"BM25 requires training on labeled query-document pairs." → <strong>False</strong>. BM25 is an unsupervised, training-free method based on word overlap counting (\(k_1, b\) are preset hyperparameters, not learned).</li>
+      <li>"The IDF term in BM25 measures how frequently a keyword appears in the target document." → <strong>False</strong>. IDF only considers frequency over <em>all documents in the corpus</em>; within-document frequency is the term-frequency \(f(q_i,D)\) part.</li>
+      <li>"BM25 can capture that the meaning of a word changes depending on context." → <strong>False</strong>. That is precisely its limitation, motivating dense (embedding-based) retrieval.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 3. Dense Retrieval ============ -->
+<section id="s3">
+  <h2><span class="num">3</span> 검색 방법 ②: 밀집 검색 <span class="en">(Dense Retrieval — DPR, Contriever)</span></h2>
+
+  <h3>3.1 DPR — Dense Passage Retrieval (Karpukhin et al., EMNLP 2020)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>DPR</strong>: <strong>두 개의 문장 인코더</strong>(예: BERT) — 질의용 인코더 \(E_Q\)와 구절(passage)용 인코더 \(E_P\) — 를 사용해 질의·구절을 벡터 공간으로 매핑하고, 유사도를 <strong>특징 벡터의 내적(dot-product)</strong>으로 계산하는 밀집 검색기. "관련이면 유사도 ↑, 무관이면 유사도 ↓"라는 성질을 <strong>대조 손실(contrastive loss)</strong>로 직접 부과한다.
+  </div>
+  <div class="formula"><div class="fname">DPR 유사도 & 대조 손실</div>
+    $$ \text{sim}(q, p) = E_Q(q)^{\top} E_P(p) $$
+    $$ \mathcal{L}(q, p^+, p_1^-, \ldots, p_n^-) = -\log \frac{e^{\,\text{sim}(q,\,p^+)}}{e^{\,\text{sim}(q,\,p^+)} + \sum_{j=1}^{n} e^{\,\text{sim}(q,\,p_j^-)}} $$
+    <p style="font-size:14px;margin:6px 0 0;">최소화의 의미: 분자 최대화 = 질의-<strong>긍정 구절</strong> \(p^+\) 유사도 ↑, 분모 최소화 = 질의-<strong>부정 구절</strong> \(p^-\) 유사도 ↓. 두 인코더를 <strong>jointly</strong> 학습.</p>
+  </div>
+  <ul>
+    <li><strong>긍정 \(p^+\)</strong>: 인간이 레이블링한 데이터(labeled data).</li>
+    <li><strong>부정 \(p^-\)</strong>: 난이도를 위한 labeled negatives + <strong>in-batch negatives</strong>(같은 배치 내 다른 질의의 구절들을 부정으로 재활용).</li>
+    <li><strong>한계</strong>: 각 질의에 대해 긍정/부정 구절을 <strong>수작업 수집해야 함</strong> → 비용이 큼.</li>
+  </ul>
+
+  <h3>3.2 Contriever (Izacard et al., TMLR 2022)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Contriever</strong>: <strong>자기지도(self-supervised) 대조 학습</strong> 기반 밀집 검색기. 인간 레이블 긍정 쌍을 <strong>인위적으로 생성한 쌍으로 대체</strong> — 같은 (위키피디아) 문서 내의 두 <strong>조각(crop)</strong>을 긍정 쌍 \(k^+\)으로, <strong>다른 문서</strong>의 조각을 부정 \(k_i\)로 간주. 학습 목적함수(대조 손실)는 DPR과 동일하고, <strong>데이터 구성 방법만</strong> 다르다.
+  </div>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "LLM 사전학습에서 본 것처럼, 자기지도 학습은 인적 비용 없이 <strong>확장 가능(scalable)</strong>하다. 지도 방식보다 노이즈는 많지만 규모로 보완한다. 참고로 2026년 현재 최신은 <strong>LLM이 합성 문서를 생성하는 LLM-based retriever</strong> 쪽이다 (슬라이드엔 없음)."
+  </div>
+
+  <h3>3.3 어떤 검색기가 최고인가? — 정답 없음</h3>
+  <p>SuRe (Kim et al., ICLR 2024)의 비교 실험이 보여주듯 <strong>"최선의 검색 방법"에 대한 단일 정답은 없다</strong>. 학습 기반(DPR/Contriever)은 <strong>테스트 분포가 학습 분포와 가까울 때</strong> 잘 작동한다.</p>
+  <ul>
+    <li>DPR은 NQ·WebQ로 학습 → 해당 데이터셋에선 BM25를 크게 능가하지만, <strong>분포 밖(out-of-distribution) 데이터셋에선 오히려 BM25가 DPR을 능가</strong>.</li>
+    <li>Contriever는 비지도지만 분포 변화(distribution shift)에 <strong>더 강건(robust)</strong> → 전반적으로 가장 무난.</li>
+    <li>실무 조언: 회사 전용 시스템(질의 분포를 앎) → 자체 데이터로 학습한 검색기 / 전 세계 사용자 대상 → BM25 같은 일반적·저렴한 방법.</li>
+  </ul>
+
+  <h3>3.4 비교표: BM25 vs DPR vs Contriever</h3>
+  <table>
+    <tr><th>구분</th><th>BM25</th><th>DPR</th><th>Contriever</th></tr>
+    <tr><td><strong>분류</strong></td><td>Sparse retriever (텍스트 기반)</td><td>Dense retriever (임베딩 기반)</td><td>Dense retriever (임베딩 기반)</td></tr>
+    <tr><td><strong>유사도</strong></td><td>단어 겹침 + IDF/TF 계산</td><td>내적 \(E_Q(q)^\top E_P(p)\)</td><td>내적 (대조 학습된 인코더)</td></tr>
+    <tr><td><strong>학습</strong></td><td>학습 없음 (unsupervised)</td><td>지도 대조 학습 (labeled \(p^+/p^-\) + in-batch negatives)</td><td><strong>자기지도</strong> 대조 학습 (같은 문서 crop = 긍정)</td></tr>
+    <tr><td><strong>레이블 필요</strong></td><td>불필요</td><td><strong>필요 (수작업, 고비용)</strong></td><td>불필요 (자동 구성)</td></tr>
+    <tr><td><strong>맥락 의미 포착</strong></td><td>불가</td><td>가능</td><td>가능</td></tr>
+    <tr><td><strong>분포 변화 강건성</strong></td><td>강함 (학습 無)</td><td><strong>약함</strong> (in-dist.에서만 최강)</td><td>비교적 강함 (일반화 우수)</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① DPR의 두 인코더 + dot-product + contrastive loss + <strong>in-batch negatives</strong>. ② Contriever와 DPR의 차이는 <strong>오직 데이터 구성</strong>(same-document crop = positive)이며 손실은 동일. ③ "best retriever는 없다 — 학습 기반은 test distribution이 성패를 가른다"는 결론.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"DPR uses a single shared encoder for both queries and passages." → <strong>False</strong>. DPR uses <em>two</em> sentence encoders (one for queries, one for passages), trained jointly.</li>
+      <li>"Contriever modifies the contrastive loss function of DPR to remove the need for labels." → <strong>False</strong>. The objective is the same contrastive loss; only the <em>data construction</em> changes (positives are crops from the same document, not human labels).</li>
+      <li>"Dense retrievers like DPR always outperform BM25." → <strong>False</strong>. On out-of-distribution datasets, BM25 can significantly outperform DPR; there is no single best retrieval method.</li>
+      <li>"In-batch negatives in DPR refer to passages retrieved from the bottom of the ranking." → <strong>False</strong>. They are passages paired with <em>other queries</em> in the same mini-batch, reused as negatives (bottom-K negatives는 RetRobust의 데이터 구성 이야기 — 혼동 주의).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 4. REPLUG ============ -->
+<section id="s4">
+  <h2><span class="num">4</span> REPLUG — 블랙박스 LM의 검색 증강 <span class="en">(Retrieve and Plug, Shi et al., NAACL 2023)</span></h2>
+
+  <h3>4.1 설정과 핵심 아이디어</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>REPLUG</strong>: 대상 LM(reader)이 <strong>블랙박스(black-box)</strong> — 파라미터에 접근·업데이트 불가 — 라고 가정하고, 검색 문서를 입력 앞에 <strong>단순 prepend</strong>하는 RAG. 검색기는 기존 방법(예: Contriever) 사용. 두 가지 기여: ① <strong>입력 재구성(input reformulation) + 출력 앙상블</strong>로 컨텍스트 윈도우 한계 극복, ② 블랙박스 LM에 맞춰 <strong>검색기를 fine-tuning</strong>하는 LSR.
+  </div>
+
+  <h3>4.2 아이디어 ①: 입력 재구성과 앙상블 (Inference with Input Reformulation)</h3>
+  <ul>
+    <li><strong>문제</strong>: 컨텍스트 윈도우(context window) 제한 → 검색 문서를 전부 이어붙이면(concatenation) 한계 초과 시 성능 급락. 무한 길이 RAG는 불가능.</li>
+    <li><strong>해법 (divide-and-conquer)</strong>: 모든 문서를 한꺼번에 prepend하지 않고, <strong>각 문서를 따로(separately) prepend → 독립적으로 예측 → 출력 확률 공간에서 앙상블</strong>.</li>
+  </ul>
+  <div class="formula"><div class="fname">REPLUG 출력 앙상블 (입력 \(x\), top-K 문서 \(\mathcal{D}'\), 다음 토큰 \(y\))</div>
+    $$ p(y \mid x, \mathcal{D}') = \sum_{d \in \mathcal{D}'} p(y \mid d \circ x)\cdot \lambda(d, x), \qquad \lambda(d, x) = \frac{e^{s(d,\,x)}}{\sum_{d' \in \mathcal{D}'} e^{s(d',\,x)}} $$
+    <p style="font-size:14px;margin:6px 0 0;">\( d \circ x \): 문서 \(d\)와 입력 \(x\)의 <strong>연결(concatenation)</strong>. \( \lambda(d,x) \): 검색기의 <strong>유사도 점수 \(s(d,x)\)에 softmax</strong>를 취한 가중치(합=1) — 더 관련성 높은 문서의 출력 확률에 더 큰 계수를 주는 <strong>가중 선형 결합(weighted linear combination)</strong>.</p>
+  </div>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "추론 비용 증가를 걱정할 수 있지만, Transformer의 <strong>이차적(quadratic)</strong> 비용 때문에 K번의 짧은 추론은 한 번의 긴 추론과 비용이 거의 같거나 <strong>오히려 더 싸다</strong> (길이 3L 한 번 = 9L², 길이 L 세 번 = 3L²). 즉 계산 비용을 늘리지 않으면서 컨텍스트 한계를 피한다."
+  </div>
+
+  <h3>4.3 아이디어 ②: LSR — LM-Supervised Retrieval</h3>
+  <ul>
+    <li><strong>문제</strong>: LM이 블랙박스라 <strong>학습 가능한(trainable) 모듈이 없음</strong> → 성능 제한.</li>
+    <li><strong>해법</strong>: 학습 가능한 유일한 부분인 <strong>검색기(dense retriever)를 LM의 출력 확률에 정렬(align)되도록 업데이트</strong> = <strong>LM-Supervised signal for fine-tuning Retriever (LSR)</strong>.</li>
+    <li><strong>직관</strong>: 검색기와 LLM은 따로 사전학습되어 관점이 다르다 — 검색기는 D2가 최고라 해도, LLM의 답 확률 기준으론 D3가 가장 유용할 수 있다(<strong>mismatch</strong>). 이 불일치를 검색기 업데이트로 교정.</li>
+  </ul>
+  <ol class="steps">
+    <li><strong>검색 가능도(retrieval likelihood)</strong> — K개 문서에 대한 K-way 범주형 분포:
+      $$ P_R(d \mid x) = \frac{e^{\,s(d,\,x)/\gamma}}{\sum_{d' \in \mathcal{D}'} e^{\,s(d',\,x)/\gamma}} $$</li>
+    <li><strong>LM 가능도</strong> — 정답 출력 \(y\)에 대해 각 문서가 얼마나 도움이 되는지의 K-way 분포:
+      $$ Q_{\text{LM}}(d \mid x, y) = \frac{e^{\,P_{LM}(y \mid d,\,x)/\beta}}{\sum_{d' \in \mathcal{D}'} e^{\,P_{LM}(y \mid d',\,x)/\beta}} $$</li>
+    <li><strong>KL 발산 최소화</strong>로 검색기 업데이트 (두 분포의 일관성 부과):
+      $$ \mathcal{L} = \frac{1}{|\mathcal{B}|}\sum_{x \in \mathcal{B}} KL\big( P_R(d \mid x) \,\|\, Q_{\text{LM}}(d \mid x, y) \big) $$
+      → 학습 후엔 "검색 점수가 높다 = 정답 생성 가능성이 높다"가 성립. <strong>LM은 동결(frozen), 검색기만 업데이트</strong>.</li>
+  </ol>
+
+  <h3>4.4 실험 결과</h3>
+  <ul>
+    <li><strong>언어 모델링 (Pile, 지표 BPB)</strong>: LM 능력과 무관하게 REPLUG가 성능 개선(약 5%), <strong>LSR로 검색기까지 fine-tuning하면 개선 폭이 유의미하게 더 커짐</strong>(+2~3%).</li>
+    <li><strong>MMLU &amp; QA (NQ, TriviaQA)</strong>: 두 과제 모두에서 REPLUG가 대상 LM을 개선(약 3%), LSR이 소폭 추가 개선.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언) — gray-box 주의</div>
+    "핵심 가정은 블랙박스 모델의 <strong>출력 확률에 접근할 수 있다</strong>는 것이다. 요즘 기준으로는 이를 <strong>gray-box</strong>라 부르는 게 더 정확하다 — 진짜 black-box는 파라미터도 확률도 못 보는 경우(예: Anthropic API). 최신 SOTA 모델은 완전한 블랙박스라 <strong>이 접근이 요즘은 적용 불가능할 수도 있다</strong>."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 앙상블 수식: 문서별 독립 추론 → 검색 점수 softmax 가중합, quadratic 비용 논리. ② LSR: <strong>retrieval likelihood와 LM likelihood 간 KL을 최소화하며 "검색기만" 업데이트</strong> (LM은 frozen). ③ "출력 확률 접근 가정 = 사실상 gray-box"라는 교수의 비판적 코멘트.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"REPLUG fine-tunes the black-box LM so that it can better use retrieved documents." → <strong>False</strong>. The LM is frozen (black-box); only the <em>retriever</em> is fine-tuned, using the LM's output probabilities as supervision (LSR).</li>
+      <li>"REPLUG's ensembling significantly increases inference cost compared to concatenating all documents." → <strong>False</strong>. Due to the quadratic cost of Transformers, prepending each document separately costs roughly the same or even less than one long concatenated input.</li>
+      <li>"In LSR, the retriever is updated to maximize the KL divergence between retrieval likelihood and LM likelihood." → <strong>False</strong>. It <em>minimizes</em> the KL divergence (consistency between the two distributions).</li>
+      <li>"REPLUG ensembles outputs with uniform weights over the K retrieved documents." → <strong>False</strong>. Weights are softmax-normalized retriever similarity scores \( \lambda(d,x) \) — more relevant documents get higher coefficients.</li>
+      <li>"REPLUG can be applied to any commercial LLM API today." → <strong>False</strong> (함정). It assumes access to output probabilities, which recent fully black-box APIs do not provide (professor: this is really a gray-box setting).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 5. IRCoT ============ -->
+<section id="s5">
+  <h2><span class="num">5</span> IRCoT — CoT와 검색의 교차 반복 <span class="en">(Interleaved Retrieval guided by Chain-of-Thought, Trivedi et al., ACL 2023)</span></h2>
+
+  <h3>5.1 동기: 반복 검색 (Iterative Retrieval)</h3>
+  <p>기존 RAG는 <strong>1회 검색 → 1회 답변</strong>의 정적(static) 구조. 그러나 (Retrieval → Generating answer) × K처럼 <strong>반복 검색이 효과적</strong>임이 알려졌다 (Shao et al., arXiv:23.05) — 반복할수록 <strong>질의 관련 컨텍스트가 누적(accumulated)</strong>되기 때문. 증거를 모으면 상태가 갱신되고, 갱신된 상태로 다시 검색하는 동적(dynamic) 과정이 더 현실적이다.</p>
+
+  <h3>5.2 IRCoT의 두 가지 핵심 아이디어</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>IRCoT</strong>: ① <strong>CoT 한 스텝 확장</strong>과 ② <strong>새 검색 추가</strong>를 교차(interleave) 반복하는 방법. 추론 한 스텝을 생성한 뒤 새 지식을 장착하는 것이 자연스럽다는 직관. CoT(답변 전 step-by-step reasoning, Wei et al., NeurIPS 2022)를 RAG에 결합.
+  </div>
+  <ol class="steps">
+    <li><strong>Retrieval-guided reasoning</strong> — 입력 = (1) few-shot examples + (2) 검색된 구절들 + (3) 질의 + (4) 지금까지의 CoT. 매 iteration마다 <strong>CoT를 정확히 한 스텝만 생성</strong>(더 생성되면 나머지는 버림 discard). 지금까지 검색된 <strong>모든 구절은 누적</strong>해 입력에 포함.</li>
+    <li><strong>CoT-guided retrieval</strong> — <strong>마지막으로 생성된 CoT 한 스텝만을 질의로</strong> 사용해 기존 검색기(예: BM25)로 새 구절을 검색. (누적 CoT 전체를 질의로 쓰는 것보다 마지막 스텝만 쓰는 게 더 낫다는 것을 경험적으로 입증한 휴리스틱 설계.)</li>
+    <li><strong>종료 조건(2가지)</strong> — (1) <strong>"answer is"가 생성</strong>되기 시작하거나, (2) 총 스텝 수가 <strong>임계값(threshold)을 초과</strong>할 때.</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "테스트 시점에는 반복 중 누적된 CoT를 그대로 쓰지 않고, <strong>누적된 모든 검색 구절을 가지고 CoT를 처음부터(from scratch) 다시 생성</strong>해 답을 만든다. 이것도 누적 CoT를 그냥 쓰는 것보다 낫다고 저자들이 보인 또 하나의 휴리스틱이다."
+  </div>
+
+  <h3>5.3 실험 설정: Multi-hop QA와 평가지표</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Single-hop QA</strong>: <strong>문서 하나</strong>(golden passage)만 검색하면 답할 수 있는 질문 (예: NQ). ↔ <strong>Multi-hop QA</strong>: 답하기 위해 <strong>둘 이상의 문서</strong>에 흩어진 증거를 결합해야 하는 질문 — 대표 벤치마크 <strong>HotpotQA</strong> (Yang et al., EMNLP 2018). 예: "Apple 발매 직전 사망한 Mother Love Bone 멤버의 이전 밴드는?" → 멤버 정보 + 발매일 정보를 각각 검색해 결합해야 함. 교차형 접근에 자연스럽게 유리.
+  </div>
+  <table>
+    <tr><th>지표</th><th>정의</th><th>비고</th></tr>
+    <tr><td><strong>Exact Match (EM)</strong></td><td>참조 문자열과 <strong>정확히 같으면 1, 아니면 0</strong> (한 글자만 달라도 0)</td><td>의도가 맞아도 표현이 다르면 0 → 과도하게 엄격</td></tr>
+    <tr><td><strong>F1 (answer F1)</strong></td><td>파싱 후 <strong>단어 수준(word-level)</strong> precision·recall 기반</td><td>"water bodies" ⊂ 정답이면 EM=0이어도 F1≈0.8 가능</td></tr>
+    <tr><td><strong>Recall@K</strong></td><td>K개 검색 문서 안에 포함된 <strong>정답(ground-truth) 문서</strong>의 비율</td><td><strong>검색기 자체</strong>의 성능 지표</td></tr>
+  </table>
+
+  <h3>5.4 결과</h3>
+  <ul>
+    <li><strong>검색 성능(Recall@K)</strong>: IRCoT가 <strong>one-step retrieval(OneR)</strong>보다 우수 — 질의 원문 대신 내부 생성 CoT를 검색 질의로 쓰면 추가 정보가 들어가 검색이 좋아진다.</li>
+    <li><strong>답변 성능(Answer F1)</strong>: IRCoT QA가 (1) 검색 없는 QA와 (2) OneR QA를 모두 능가 — 4개 벤치마크 × 2개 LLM에서 일관됨.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 한 iteration = CoT <strong>한 스텝</strong> 생성 + <strong>마지막 스텝</strong>을 질의로 새 검색, 구절은 <strong>누적</strong>. ② 종료 조건 2가지("answer is" / step threshold). ③ single-hop vs multi-hop 구분과 HotpotQA. ④ EM vs F1 vs Recall@K의 정확한 정의 구분.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In IRCoT, the entire accumulated chain-of-thought is used as the retrieval query at each step." → <strong>False</strong>. Only the <em>last generated CoT step</em> is used as the query (shown empirically better than using the full CoT).</li>
+      <li>"IRCoT discards previously retrieved passages and keeps only the most recent retrieval." → <strong>False</strong>. All passages retrieved up to the current iteration are <em>accumulated</em>.</li>
+      <li>"IRCoT generates multiple CoT steps per iteration to speed up reasoning." → <strong>False</strong>. Exactly one step per iteration; if more are generated, the rest are discarded.</li>
+      <li>"Exact Match gives partial credit when the prediction is contained in the reference answer." → <strong>False</strong>. EM is all-or-nothing (1 only for exact string match); word-level partial overlap is captured by F1.</li>
+      <li>"HotpotQA is a single-hop QA benchmark." → <strong>False</strong>. HotpotQA is the representative <em>multi-hop</em> QA benchmark requiring more than one document.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 6. RetRobust ============ -->
+<section id="s6">
+  <h2><span class="num">6</span> RetRobust — 노이즈-강건 RAG <span class="en">(Yoran et al., ICLR 2024)</span></h2>
+
+  <h3>6.1 동기: Noisy retrieval은 성능을 해친다</h3>
+  <p><strong>노이즈 검색(noisy retrieval)은 LLM 성능에 부정적 영향</strong>을 줄 수 있다 (Petroni et al., AKBC 2020; Li et al., ACL 2023). 검색 없이 직접 답하면 맞힐 질문도, 노이즈 문서가 컨텍스트로 들어오면 틀리게 된다 — 즉 <strong>RAG가 검색 없는 direct answering보다 오히려 나쁠 수도 있다</strong>. 실제로 RetRobust 실험에서 RAG는 NQ·2WikiMQA에선 성능을 올렸지만 <strong>StrategyQA·Fermi에선 성능을 떨어뜨렸다</strong>.</p>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Retrieval-robust LLM의 목표 (2조건)</strong>: ① 검색 결과가 <strong>관련 있으면(relevant)</strong> 모델 성능을 <strong>향상</strong>시켜야 하고, ② <strong>무관하면(irrelevant)</strong> 성능을 <strong>해치지 않아야</strong> 한다 (일반 LLM 성능 회복).
+  </div>
+
+  <h3>6.2 방법 ①: Training-Free — NLI 모델 필터링</h3>
+  <ul>
+    <li><strong>NLI(Natural Language Inference)</strong>: 전제(premise)-가설(hypothesis) 두 문장의 관계를 함의(entailment)/중립(neutral)/모순(contradiction)으로 분류하는 과제 (또는 entailment vs not-entailment 이진 분류 — not-entailment에 중립·모순 모두 포함). SOTA NLI 모델은 비교적 작은 모델로도 <strong>&gt;92% 강한 성능</strong>.</li>
+    <li><strong>RAG를 NLI로 해석</strong>: <strong>검색된 구절 → premise</strong>, <strong>질문+답변 쌍 → hypothesis</strong>. 올바른 검색이라면 둘은 entailment여야 한다.</li>
+    <li><strong>절차</strong>: RAG 예측을 얻고 → NLI 모델에 통과 → <strong>entailed면 RAG 답을 채택</strong>, <strong>not entailed면 검색 없는 direct answering(바닐라 LLM 답)으로 대체</strong>.</li>
+  </ul>
+
+  <h3>6.3 방법 ②: Small Training — 무시하는 법을 학습</h3>
+  <ul>
+    <li><strong>동기</strong>: NLI 필터링은 <strong>너무 엄격(too strict)해서 관련 있는 구절까지 버릴 수 있다</strong> → 소량 데이터로 LLM을 직접 학습시켜 무관한 컨텍스트를 무시하게 만든다.</li>
+    <li><strong>데이터 구성</strong>: 질의별로
+      <ul>
+        <li><strong>관련(relevant) 구절</strong> = 주어진 검색기의 <strong>Top-1</strong> 구절.</li>
+        <li><strong>무관(irrelevant) 구절</strong> = (1) 같은 질의의 <strong>Bottom-K</strong> 구절, 또는 (2) <strong>다른 질의의 Top-K</strong> 구절 (두 방식 모두 사용).</li>
+      </ul></li>
+    <li><strong>학습</strong>: 어떤 구절이 주어지든 <strong>정답의 가능도(likelihood)를 최대화</strong>하도록 fine-tuning — 무관 구절 하에서도 정답을 내야 하므로, 모델은 무관한 컨텍스트를 <strong>무시하고 내재 지식(intrinsic knowledge)으로 답하는 행동</strong>을 단 하나의 MLE 손실로 학습.</li>
+  </ul>
+
+  <h3>6.4 실험 설정과 결과</h3>
+  <table>
+    <tr><th>항목</th><th>내용</th></tr>
+    <tr><td><strong>과제 (3유형 QA)</strong></td><td>① Single-hop: <strong>NQ</strong> ② Multi-hop(explicit reasoning): <strong>2WikiMQA, Bamboogle</strong> ③ Multi-hop(commonsense): <strong>StrategyQA, Fermi</strong></td></tr>
+    <tr><td><strong>학습 데이터</strong></td><td>NQ 1k, 나머지 각 500 (소량!)</td></tr>
+    <tr><td><strong>모델/학습법</strong></td><td>LLaMA2-13B + <strong>QLoRA</strong> (full fine-tuning 대신; Dettmers et al., NeurIPS 2023)</td></tr>
+    <tr><td><strong>NLI 모델</strong></td><td><strong>BART-large fine-tuned on MNLI</strong> (수십억 규모 LLM 아님)</td></tr>
+    <tr><td><strong>추론</strong></td><td>검색기 = <strong>Google search</strong>, 4~6개 few-shot 예시</td></tr>
+  </table>
+  <ul>
+    <li><strong>Top-1 검색 QA</strong>: NLI 결합만으로 성능 하락을 성공적으로 방지, <strong>추가 학습은 개선 폭을 더 확대</strong> — 특히 NLI가 RAG를 살리지 못했던 StrategyQA에서 학습 기반의 향상이 가장 큼.</li>
+    <li><strong>저순위(low-rank) 검색 / 무작위(random) 검색</strong>(노이즈를 의도적으로 키운 어려운 시나리오): 두 경우 모두 RetRobust가 검색 리스크를 효과적으로 완화.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "학습이 만능은 아니다 — 항상 <strong>in-distribution 데이터로 학습</strong>하므로 일반화(generalization)가 문제될 수 있다. 그리고 NLI 필터링·학습·IRCoT 같은 능력들이 각각 <strong>분리된 수동 설계</strong>라는 게 더 근본적인 한계다. 언제 검색할지/언제 답을 기각할지를 <strong>하나의 모델 안에 통합(holistic)</strong>하려면 학습 기반 방법이 필요하다 → Self-RAG(SFT)와 Search-R1(RL)로 이어진다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① NLI 매핑 방향: <strong>passage=premise, question+answer=hypothesis</strong> (반대로 내면 오답). ② not-entailed → <strong>direct answering으로 폴백</strong>. ③ irrelevant 구절 수집 2법: bottom-K(같은 질의) / top-K(다른 질의). ④ 세부 셋업: LLaMA2-13B+QLoRA, BART-large(MNLI), Google search, NQ 1k/기타 500.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Retrieval augmentation always improves LLM performance." → <strong>False</strong>. With noisy retrieval, RAG can be even worse than direct answering without retrieval (e.g., StrategyQA, Fermi).</li>
+      <li>"In RetRobust's NLI formulation, the question is the premise and the retrieved passage is the hypothesis." → <strong>False</strong>. The retrieved passage is the <em>premise</em>; the question-answer pair is the <em>hypothesis</em>.</li>
+      <li>"When the NLI model predicts not-entailment, RetRobust re-runs retrieval to find better passages." → <strong>False</strong>. It falls back to <em>direct answering without retrieval</em> (vanilla LLM answer).</li>
+      <li>"RetRobust's small-training method uses GPT-4 to annotate relevant and irrelevant passages." → <strong>False</strong>. No LLM annotation: relevant = top-1 from the retriever; irrelevant = bottom-K for the query or top-K for <em>other</em> queries. (GPT-4 annotation은 Self-RAG의 이야기.)</li>
+      <li>"RetRobust fully fine-tunes LLaMA2-13B on millions of examples." → <strong>False</strong>. It uses QLoRA with only 1k (NQ) / 500 (others) training examples.</li>
+      <li>"The NLI-based filtering can be too strict and may discard relevant passages too." → <strong>True</strong>. This is exactly the motivation for the additional small-training method.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 7. Self-RAG ============ -->
+<section id="s7">
+  <h2><span class="num">7</span> Self-RAG — Reflection 토큰으로 적응적 RAG 학습 <span class="en">(Asai et al., ICLR 2024 Oral)</span></h2>
+
+  <h3>7.1 동기와 개요</h3>
+  <p>앞서 본 RAG의 두 가지 이슈: ① RAG는 <strong>질의에 따라 적응적으로(adaptively)</strong> 적용되어야 한다 (검색이 불필요한 질의도 있음), ② RAG를 써도 출력이 <strong>검색 문서에 근거(grounded)하지 않을 수 있다</strong>. 딥러닝에서 문제를 푸는 가장 직접적인 방법은 학습이므로, <strong>추가 학습으로 직접 해결</strong>하자는 것.</p>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Self-RAG</strong>: <strong>자기 성찰(self-reflection)</strong> — 과거 생성에 기반해 미래 행동을 자동으로 조정 (cf. Reflexion, Shinn et al., NeurIPS 2023) — 을 통해 <strong>검색하고(retrieve), 생성하고(generate), 비평하는(critique)</strong> 법을 <strong>SFT(supervised fine-tuning)</strong>로 학습하는 프레임워크. 핵심 장치는 새로 도입되는 <strong>4종의 reflection 특수 토큰</strong>.
+  </div>
+
+  <h3>7.2 4가지 Reflection 특수 토큰</h3>
+  <table>
+    <tr><th>토큰</th><th>판단 내용</th><th>값</th></tr>
+    <tr><td><strong>Retrieve</strong></td><td>지금 <strong>검색이 필요한가?</strong> (프롬프트·직전 생성 기반)</td><td>yes / no (/ continue)</td></tr>
+    <tr><td><strong>IsREL</strong> (relevance)</td><td>검색된 구절이 질의와 <strong>관련 있는가?</strong> — 외부 검색기와 LLM의 관점 mismatch를 다루는 제어 장치</td><td>relevant / irrelevant</td></tr>
+    <tr><td><strong>IsSUP</strong> (support)</td><td>생성이 그 구절에 의해 <strong>뒷받침되는가?</strong> — 내재 지식이 아닌 검색 정보를 썼는지 검증</td><td>fully supported / partially supported / no support</td></tr>
+    <tr><td><strong>IsUSE</strong> (usefulness)</td><td>최종 답이 <strong>유용한가?</strong> — 최종 출력 결정에 사용</td><td>5점 척도 (예: 1~5)</td></tr>
+  </table>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "중요한 것은 이 특수 토큰들이 전부 <strong>통상적인 next-token 생성과 똑같이 LLM이 자동으로 생성</strong>한다는 점이다. 언제 검색할지·언제 기각할지를 모델 스스로 판단한다 — 이것이 우리가 LLM에 심고 싶은 행동이다."
+  </div>
+
+  <h3>7.3 추론 (Inference) 절차</h3>
+  <p>출력을 문장 단위로 분해: \( y = [y_1, \ldots, y_T] \), \( y_t \)는 t번째 <strong>출력 문장(sentence)</strong>.</p>
+  <ol class="steps">
+    <li>문장 생성 후 <strong>Retrieve 토큰</strong> 생성. <code>no</code>면 검색 없이 다음 문장 계속 생성.</li>
+    <li><code>yes</code>면 외부 검색기(BM25/DPR 등)로 K개 구절 검색 → REPLUG처럼 <strong>각 구절을 개별 prepend하여 병렬로</strong> 후보 생성.</li>
+    <li>각 후보마다 생성 전에 <strong>IsREL</strong>, 생성 후에 <strong>IsSUP</strong>(+IsUSE)를 생성.</li>
+    <li>특수 토큰 값 조합으로 후보를 채점 — 예: "relevant + fully supported"인 후보가 "irrelevant + partially supported"보다 우수 → <strong>최고 후보만 채택</strong>하고 다음 세그먼트로 진행.</li>
+  </ol>
+  <ul>
+    <li>검색이 불필요한 프롬프트면: <code>no-retrieval</code> 토큰 → 검색 없이 생성 → 마지막에 IsUSE=5처럼 자기 평가. <strong>통상 RAG와 달리 무조건 검색하지 않는다(adaptive)</strong>.</li>
+  </ul>
+
+  <h3>7.4 학습 (Training) — 3단계 파이프라인</h3>
+  <ol class="steps">
+    <li><strong>데이터 수집 (GPT-4 = 인간 주석자의 proxy)</strong> — reflection 토큰 주석은 비용이 크므로, 강한 LLM(GPT-4)으로 토큰 유형별 <strong>4k~20k</strong>개의 레이블 데이터를 수집 (few-shot 프롬프트 사용). 한 프롬프트에 10~20개 이상의 개별 주석이 필요해 full scale-up은 비용상 불가.</li>
+    <li><strong>Critic 모델 학습</strong> — 수집 데이터로 별도의 LLM을 fine-tuning하여 GPT-4의 레이블링 행동을 모방하는 <strong>비평(critic) 모델</strong>을 만듦. <strong>GPT-4와 90% 이상 일치(agreement)</strong>. ※ LLaMA3의 모델 기반 데이터 필터링(큰 모델 레이블 → 작은 분류기 학습 → 대규모 배치)과 매우 유사한 전략. Critic은 <strong>특수 토큰만</strong> 생성하도록 특화.</li>
+    <li><strong>Generator 모델 학습</strong> — Critic으로 학습 데이터에 특수 토큰을 삽입(augment)한 뒤, generator LLM을 <strong>표준 가능도 최대화(standard likelihood maximization)</strong>로 fine-tuning → 특수 토큰과 일반 토큰을 <strong>동시에</strong> 생성할 수 있게 됨.</li>
+  </ol>
+  <div class="formula"><div class="fname">Generator 학습 손실 — 검색 청크 마스킹</div>
+    $$ \max_{\mathcal{M}} \; \mathbb{E}_{(x,\,y,\,r)\sim \mathcal{D}_{gen}} \big[ \log p_{\mathcal{M}}(y, r \mid x) \big] $$
+    <p style="font-size:14px;margin:6px 0 0;">\( r \): reflection 특수 토큰, \( y \): 출력 토큰. <strong>검색된 텍스트 청크(&lt;p&gt;…&lt;/p&gt;로 둘러싸인 부분)는 손실 계산에서 제외(masked)</strong> — LLM이 생성한 것이 아니라 외부 검색기에서 온 것이기 때문. 가능도는 특수 토큰 \(r\)과 출력 \(y\)에 대해서만 최대화.</p>
+  </div>
+
+  <h3>7.5 실험</h3>
+  <ul>
+    <li><strong>Self-RAG 13B(LLaMA2 기반)</strong>가 더 적은 파라미터로 당시 강력한 시스템들을 능가 — <strong>같은 검색기를 쓴 ChatGPT + RAG에도 필적/능가</strong>.</li>
+    <li>교수 코멘트: "완전히 공정한 비교는 아니다(한쪽만 학습). 그러나 핵심 메시지는 <strong>좋은 학습 패러다임 설계가 작은 모델의 한계를 극복</strong>하게 한다는 것."</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 4토큰 이름·역할·값 (Retrieve / IsREL / IsSUP[fully·partially·no support] / IsUSE[5점]) — 어떤 토큰이 무엇을 판단하는지 매칭 문제 가능. ② 학습 순서: GPT-4 주석(4k~20k) → critic(특수 토큰 전용, 90% agreement) → generator(특수+일반 토큰). ③ <strong>검색 청크는 loss에서 제외</strong> — Search-R1의 retrieved token masking과 같은 원리. ④ Self-RAG는 <strong>SFT 기반</strong>(RL 아님).
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Self-RAG always retrieves documents before generating, like conventional RAG." → <strong>False</strong>. The Retrieve token makes retrieval <em>adaptive</em>; if the prompt does not need external knowledge, the model generates a no-retrieval token and answers directly.</li>
+      <li>"Self-RAG is trained with reinforcement learning using the reflection tokens as rewards." → <strong>False</strong>. Self-RAG uses supervised fine-tuning (standard likelihood maximization); the RL-based counterpart is Search-R1.</li>
+      <li>"The reflection tokens are produced by an external critic model at inference time." → <strong>False</strong>. At inference, the <em>generator itself</em> produces special tokens just like ordinary next tokens; the critic model is only used during training-data construction.</li>
+      <li>"All reflection-token annotations are made by human annotators." → <strong>False</strong>. GPT-4 is used as a proxy of the human annotator (4k–20k), then a smaller critic model imitates GPT-4 (&gt;90% agreement).</li>
+      <li>"During generator training, retrieved text chunks are included in the loss to teach grounding." → <strong>False</strong>. Retrieved chunks (surrounded by &lt;p&gt;…&lt;/p&gt;) are <em>excluded</em> from loss calculation because they are not generated by the LLM.</li>
+      <li>"IsSUP determines whether the retrieved passage is relevant to the query." → <strong>False</strong>. IsSUP checks whether the <em>generation is supported by</em> the passage; relevance of the passage is IsREL.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 8. Search-R1 ============ -->
+<section id="s8">
+  <h2><span class="num">8</span> Search-R1 — RL로 검색을 배우는 LLM <span class="en">(Jin et al., arXiv:25.03)</span></h2>
+
+  <h3>8.1 동기: SFT → RL</h3>
+  <p>Self-RAG는 효과적이지만 <strong>복잡한 레이블링 + 복잡한 학습 파이프라인</strong>이 필요하다. RLHF처럼 <strong>강화학습으로 적응적 RAG를 학습</strong>할 수 있을까? → Yes. Search-R1은 <strong>DeepSeek-R1 프레임워크(DeepSeek-AI, arXiv:25.01)를 따르는 오픈소스</strong> 구현이며, DeepSeek 같은 기업들도 유사 접근을 채택한 것으로 추정된다 (교수: "검색 켠 DeepSeek-R1이 당시 ChatGPT보다 나아서 놀랐는데, 몇 달 뒤 RL 기반 RAG 논문들이 나오며 추측이 확인됐다").</p>
+  <p><span class="en">Recap (DeepSeek-R1)</span>: 추론은 <code>&lt;think&gt;</code>, 답변은 <code>&lt;answer&gt;</code> 토큰 사이에 생성하는 구조화 생성 + <strong>accuracy reward & format reward</strong>로 RL 사후학습.</p>
+
+  <h3>8.2 핵심 아이디어: RAG를 특수 토큰이 있는 출력 텍스트로 통합</h3>
+  <table>
+    <tr><th>특수 토큰</th><th>내용</th><th>생성 주체</th></tr>
+    <tr><td><code>&lt;think&gt;</code> … <code>&lt;/think&gt;</code></td><td>내부 추론 (reasoning)</td><td>LLM</td></tr>
+    <tr><td><code>&lt;search&gt;</code> … <code>&lt;/search&gt;</code></td><td><strong>검색 질의</strong> (search call) — 파싱되어 검색 엔진 호출</td><td>LLM</td></tr>
+    <tr><td><code>&lt;information&gt;</code> … <code>&lt;/information&gt;</code></td><td><strong>검색 결과 문서</strong> 삽입 (search results)</td><td><strong>외부 검색기 \(R\) (LLM이 생성하지 않음!)</strong></td></tr>
+    <tr><td><code>&lt;answer&gt;</code> … <code>&lt;/answer&gt;</code></td><td>최종 답변</td><td>LLM</td></tr>
+  </table>
+  <ol class="steps">
+    <li>생성 중 <code>&lt;search&gt;</code> 토큰 감지 → 토큰 사이의 질의 추출 → 검색기 호출.</li>
+    <li>검색된 구절을 <code>&lt;information&gt;</code> 토큰으로 감싸 생성열에 다시 삽입.</li>
+    <li>추론 재개; 필요하면 또 검색(반복 가능). <code>&lt;answer&gt;</code> 감지 시 생성 종료.</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "<strong>Interleaved CoT &amp; retrieval이 RL 중에 자동으로 창발(emerge)했다!</strong> IRCoT에서 수동 설계했던 행동이, 설계 없이 보상 최대화만으로 나타난다는 것이 핵심 포인트다."
+  </div>
+
+  <h3>8.3 보상과 학습 목적함수</h3>
+  <ul>
+    <li><strong>보상</strong>: 정답 기반 <strong>단순 결과 보상(simple outcome reward)</strong>만 사용 — 예측과 정답의 <strong>exact match</strong>. <strong>format reward는 없음</strong>(원 버전) — 최근 LLM은 이미 강한 구조 준수(structural adherence)/지시 따르기 능력을 보이기 때문. (교수: 2번째 버전에서는 format reward도 도입됨.)</li>
+    <li><strong>학습</strong>: 목적함수만 정하면 <strong>PPO든 GRPO든 기존 RL 알고리즘</strong>을 그대로 사용 가능.</li>
+  </ul>
+  <div class="formula"><div class="fname">Search-R1 학습 목적함수 (+ retrieved token masking)</div>
+    $$ \max_{\pi_\theta}\; \mathbb{E}_{x \sim \mathcal{D},\; y \sim \pi_\theta(\cdot \mid x;\, R)} \big[ r_\phi(x, y) \big] \;-\; \beta\, \mathbb{D}_{KL}\big[ \pi_\theta(y \mid x;\, R)\, \|\, \pi_{ref}(y \mid x;\, R) \big] $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \pi_\theta \): 학습 정책, \( \pi_{ref} \): 참조 정책(과최적화 방지용 KL 정규화), \( R \): 검색기. <strong>출력 \(y\)는 LLM 생성분과 검색 \(R\)에서 온 부분의 혼합</strong>이다. 핵심: <strong>retrieved token masking</strong> — <code>&lt;information&gt;</code> 내 검색 토큰들은 LLM이 생성한 것이 아니므로 <strong>손실 계산(보상 최대화·KL 모두)에서 제거</strong>하고, LLM-generated 부분만 업데이트한다.</p>
+  </div>
+
+  <h3>8.4 실험</h3>
+  <ul>
+    <li><strong>셋업</strong>: 모델 = Qwen2.5 (3B·7B), LLaMA3.2 (3B) / 지식 소스 = <strong>Wikipedia</strong> + 검색기 <strong>E5</strong> / 학습 = <strong>NQ(single-hop) + HotpotQA(multi-hop)</strong> 학습셋 병합 / 평가 = in-domain(NQ, HotpotQA) + out-of-domain QA(TriviaQA, 2WikiMQA, Bamboogle 등).</li>
+    <li><strong>베이스라인</strong>: 검색 없는 direct inference, CoT, RAG, <strong>IRCoT</strong>, SFT 기반 방법 등.</li>
+    <li><strong>주요 결과</strong>: 기존 RAG 시스템 대비 <strong>약 20~30% 향상</strong>. 더 큰 백본일수록 향상 폭이 더 큼.</li>
+  </ul>
+  <h4>Ablation ①: PPO vs GRPO</h4>
+  <ul>
+    <li>효과는 <strong>모델에 따라 다름</strong> — Qwen2.5에선 GRPO 우세, LLaMA3.2(특히 instruct)에선 <strong>PPO가 훨씬 우세</strong>. 어느 RL 알고리즘이 더 나은지는 <strong>학계 미해결</strong>(하이퍼파라미터·과제 의존). 연구자 입장에선 GRPO가 더 단순하고 튜닝 친화적.</li>
+  </ul>
+  <h4>Ablation ②: 학습 동역학 (training dynamics)</h4>
+  <ul>
+    <li><strong>응답 길이</strong>: DeepSeek-R1(길이 단조 증가, "aha moment")과 달리, Search-R1은 <strong>초반에 길이가 감소했다가 이후 증가</strong>. 2단계 해석 — Stage 1: 검색 도구 사용법(언제·어떻게 호출)을 익히면 생성을 검색으로 대체하므로 길이 ↓ / Stage 2: 도구를 이해한 후 추론 중 적응적으로 여러 번 검색하며 길이 ↑ (이때 보상 증가가 가장 가파름). <strong>학습 보상 자체는 내내 증가</strong>.</li>
+    <li><strong>Masking ablation</strong>: 검색 구절을 손실에 포함(standard loss) vs 제외 — <strong>제외(masking)가 학습 보상 관점에서 훨씬 우수</strong>.</li>
+    <li><strong>Base vs Instruct</strong>: instruct가 출발점은 높지만 <strong>충분한 스텝 후엔 성능이 같아짐</strong> → 선택이 결정적이지 않음.</li>
+  </ul>
+
+  <h3>8.5 총비교: REPLUG vs Self-RAG vs Search-R1</h3>
+  <table>
+    <tr><th>구분</th><th>REPLUG</th><th>Self-RAG</th><th>Search-R1</th></tr>
+    <tr><td><strong>패러다임</strong></td><td>추론 기반 (+검색기만 학습)</td><td>학습 기반 — <strong>SFT</strong></td><td>학습 기반 — <strong>RL</strong> (PPO/GRPO)</td></tr>
+    <tr><td><strong>LM 업데이트</strong></td><td>❌ (black/gray-box, frozen)</td><td>⭕ generator fine-tuning</td><td>⭕ policy RL 학습</td></tr>
+    <tr><td><strong>검색기 업데이트</strong></td><td>⭕ LSR (KL 최소화)</td><td>❌ (외부 검색기 사용)</td><td>❌ (외부 검색 엔진 호출)</td></tr>
+    <tr><td><strong>핵심 장치</strong></td><td>문서별 독립 추론 + 출력 확률 앙상블</td><td>4종 reflection 토큰 (Retrieve/IsREL/IsSUP/IsUSE)</td><td>&lt;think&gt;/&lt;search&gt;/&lt;information&gt;/&lt;answer&gt; 토큰</td></tr>
+    <tr><td><strong>감독 신호</strong></td><td>LM 출력 확률 (LSR)</td><td>GPT-4 proxy 주석 → critic → SFT</td><td><strong>outcome reward (EM)만</strong> — 주석 불필요</td></tr>
+    <tr><td><strong>적응적 검색</strong></td><td>❌ 항상 K개 검색</td><td>⭕ Retrieve 토큰으로 결정</td><td>⭕ RL로 창발 (interleaved CoT&amp;retrieval)</td></tr>
+    <tr><td><strong>검색분 손실 처리</strong></td><td>해당 없음</td><td>&lt;p&gt;…&lt;/p&gt; 청크 loss 제외</td><td>retrieved token masking (loss 제외)</td></tr>
+    <tr><td><strong>한계</strong></td><td>출력 확률 접근 필요(사실상 gray-box)</td><td>복잡한 주석·학습 파이프라인</td><td>RL 알고리즘 선택이 모델 의존적</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 4개 토큰 중 <strong>&lt;information&gt;만 LLM이 생성하지 않는다</strong>. ② 보상 = outcome reward(EM)만, format reward 없음(이유: 구조 준수 능력 충분). ③ <strong>retrieved token masking</strong> — Self-RAG와 공통 원리, ablation에서 masking이 더 우수. ④ 길이 동역학: 감소→증가 2단계 (DeepSeek-R1과 반대 시작). ⑤ PPO vs GRPO는 모델 의존(미해결). ⑥ interleaved retrieval이 IRCoT처럼 설계된 게 아니라 <strong>RL 중 자동 창발</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In Search-R1, the tokens inside &lt;information&gt; are generated by the LLM conditioned on the search query." → <strong>False</strong>. They come from the external retriever \(R\) and are merely inserted into the sequence; they are excluded from loss calculation.</li>
+      <li>"Search-R1 uses both an accuracy reward and a format reward, following DeepSeek-R1." → <strong>False</strong> (원 버전 기준). The original Search-R1 uses only a simple outcome reward, arguing recent LLMs already show strong structural adherence (format reward는 2번째 버전에서야 도입).</li>
+      <li>"Search-R1 requires GPT-4 annotations of when to search, similar to Self-RAG." → <strong>False</strong>. No annotation of search behavior is needed; adaptive, interleaved retrieval <em>emerges</em> automatically from RL with an outcome reward.</li>
+      <li>"During Search-R1 training, response length monotonically increases as in DeepSeek-R1." → <strong>False</strong>. Length first <em>decreases</em> (learning to replace generation with retrieval) and then increases (multi-turn adaptive search), while training reward keeps increasing.</li>
+      <li>"GRPO consistently outperforms PPO in Search-R1 across all models." → <strong>False</strong>. GRPO is better for Qwen2.5, but PPO is much better for LLaMA3.2(-instruct); the answer is model/hyperparameter-dependent and remains open.</li>
+      <li>"Including retrieved tokens in the loss improves training because the model learns from more tokens." → <strong>False</strong>. The masking ablation shows that <em>excluding</em> retrieved tokens from the loss is much better in terms of training reward.</li>
+      <li>"Search-R1 trains a custom retriever jointly with the LLM." → <strong>False</strong>. It uses a fixed external retriever (Wikipedia + E5); only the LLM policy is trained.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Q. 예상문제 ============ -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 중간고사 이후 범위)</span></h2>
+  <p style="font-size:14px;color:var(--muted);">2025 중간 기출과 동일한 형식·문체로 구성. T/F: 정답 3점 / 오답 0점 / 무응답 1점. Pick-all: "any wrong answer will lead to 0 points".</p>
+
+  <h3>Part A. True / False (10문항)</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Fine-tuning an LLM on data containing new knowledge is known to be an effective way to keep the model up-to-date without any side effects.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Fitting on new (unknown) knowledge can decrease overall accuracy: performance on known data drops after several epochs while unknown data is still not fully learned. This limitation is a key motivation for RAG.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the PageRank formulation, \(1-d\) corresponds to the probability of jumping to a random page rather than following a link.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> \(d\) is the damping factor weighting the neighbor-based (link-following) term, and \(1-d\) models a random page visit. With uniform initialization, power iteration converges to a unique solution.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In BM25, the inverse document frequency of a keyword is computed using only the target document, independent of the rest of the corpus.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> IDF is computed from corpus-level statistics (\(N\) total documents and \(n(q_i)\) documents containing the keyword) and is not related to the target document itself; the within-document part is the term frequency.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Contriever uses the same contrastive training objective as DPR, but constructs positive pairs automatically by taking two crops from the same document instead of using human-labeled data.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The objective is unchanged; only the data construction differs — positives are crops within the same (Wikipedia) document, negatives are crops from other documents, enabling self-supervised training without human cost.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>REPLUG fine-tunes the retriever by minimizing the KL divergence between the retrieval likelihood and the LM likelihood, while keeping the target LM frozen.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> This is LSR (LM-Supervised Retrieval): the retriever distribution over the K documents is aligned with the LM's answer-likelihood distribution via KL minimization; the black-box LM is never updated.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In IRCoT, the full accumulated chain-of-thought generated so far is used as the query for the next retrieval step.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Only the <em>last generated CoT step</em> is used as the retrieval query; the authors showed this works better than using the entire accumulated CoT. (Note: retrieved <em>passages</em> are accumulated, but the query is not.)</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In RetRobust's training-free method, the retrieved passage is treated as the premise and the question-answer pair as the hypothesis of an NLI task; if entailment is not predicted, the system falls back to direct answering without retrieval.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Correct retrieval should entail the question-answer pair. When the NLI model (BART-large fine-tuned on MNLI) predicts not-entailment, the vanilla LLM answer without retrieval is used instead.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Self-RAG's reflection tokens are generated by a separate critic model at inference time, since the generator can only produce ordinary tokens.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> After training, the generator itself produces both special (reflection) tokens and ordinary tokens via standard next-token generation. The critic model is only used during training to annotate data (imitating GPT-4 with &gt;90% agreement).</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In both Self-RAG and Search-R1, tokens that come from the external retriever are excluded from the loss calculation because they are not generated by the LLM.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Self-RAG masks retrieved text chunks (surrounded by &lt;p&gt; and &lt;/p&gt;), and Search-R1 applies retrieved token masking to the &lt;information&gt; spans for both reward maximization and KL terms. The Search-R1 ablation shows masking is clearly better.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>During Search-R1 training, the response length increases monotonically from the beginning, similar to the behavior observed in DeepSeek-R1.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Unlike DeepSeek-R1, the response length first <em>decreases</em> (Stage 1: the model learns to use the search tool and replaces generation with retrieval) and then increases (Stage 2: adaptive multi-step search during reasoning), while the training reward increases throughout.</div>
+    </details>
+  </div>
+
+  <h3>Part B. Pick all that are correct (7문항)</h3>
+  <p style="font-size:14px;color:var(--muted);">Pick all the correct answers; any wrong answer will lead to 0 points.</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about the motivation and basic structure of RAG?</p>
+      <ol type="a">
+        <li>The knowledge cutoff of an LLM refers to the time point up to which its pre-training data covers, e.g., 2023-10 for GPT-4o.</li>
+        <li>Abstaining from answering is preferred over RAG because it preserves user utility.</li>
+        <li>RAG replaces only the generator part of the classical retrieve-and-read system with an LLM, while the retriever part remains the same.</li>
+        <li>Inference-based RAG appends retrieved information as additional input without training the LLM.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Knowledge cutoffs are released with the models (GPT-4o & mini: 2023-10, LLaMA3: 2023-12).</li>
+          <li class="wrong">(b) Incorrect. Abstaining <em>decreases</em> utility from the user's perspective, which is why it is not a helpful solution.</li>
+          <li>(c) Correct. The retriever is unchanged; only the reader/generator became an LLM.</li>
+          <li>(d) Correct. That is the definition of inference-based RAG (vs. training-based).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about retrieval methods (BM25, DPR, Contriever)?</p>
+      <ol type="a">
+        <li>BM25 is called a sparse retriever because it is based on discrete word-level matching.</li>
+        <li>DPR computes the similarity between a query and a passage as the dot product of features from two separate encoders.</li>
+        <li>DPR uses in-batch negatives, i.e., passages paired with other queries in the same batch, as negative passages.</li>
+        <li>Since dense retrievers are trained, DPR consistently outperforms BM25 even on out-of-distribution datasets.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. Text-based retrieval = sparse; embedding-based = dense.</li>
+          <li>(b) Correct. \( \text{sim}(q,p) = E_Q(q)^\top E_P(p) \) with separate query/passage encoders.</li>
+          <li>(c) Correct. Negatives = labeled hard negatives + in-batch negatives.</li>
+          <li class="wrong">(d) Incorrect. On out-of-distribution datasets, BM25 can significantly outperform DPR; test distribution is critical for training-based retrievers, and there is no single best method.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about REPLUG?</p>
+      <ol type="a">
+        <li>It assumes the target LM is black-box, i.e., its parameters cannot be accessed or updated.</li>
+        <li>To overcome the limited context window, it prepends each retrieved document separately and ensembles the output probabilities with weights proportional to retriever similarity scores.</li>
+        <li>The separate-prepending strategy does not substantially increase computational cost due to the quadratic nature of Transformers.</li>
+        <li>LSR updates both the retriever and the LM jointly to minimize the KL divergence between their distributions.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. That is REPLUG's core assumption (though the professor noted it is really a gray-box setting since output probabilities are still needed).</li>
+          <li>(b) Correct. \( p(y|x,\mathcal{D}') = \sum_d p(y|d \circ x)\lambda(d,x) \) with softmax-normalized similarity scores.</li>
+          <li>(c) Correct. K short forward passes cost about the same as (or less than) one long concatenated pass.</li>
+          <li class="wrong">(d) Incorrect. Only the <em>retriever</em> is updated; the LM is frozen (black-box). LSR = LM-Supervised signal for fine-tuning the Retriever.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q14. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about IRCoT and multi-hop QA?</p>
+      <ol type="a">
+        <li>IRCoT alternates between extending the CoT by exactly one step and retrieving new passages using that step as the query.</li>
+        <li>Multi-hop QA, e.g., HotpotQA, requires combining evidence from more than one document to answer a question.</li>
+        <li>The iteration terminates when the model starts generating "answer is" or when the number of steps exceeds a threshold.</li>
+        <li>Recall@K measures the word-level overlap between the predicted answer and the reference answer.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. One CoT step per iteration (extra steps are discarded), and the last step is used as the new retrieval query.</li>
+          <li>(b) Correct. That is the definition of multi-hop QA; single-hop QA can be answered with one (golden) passage.</li>
+          <li>(c) Correct. These are the two stopping conditions.</li>
+          <li class="wrong">(d) Incorrect. Recall@K is a <em>retrieval</em> metric: the proportion of ground-truth documents included among the K retrieved ones. Word-level overlap of answers is the F1 score.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q15. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about RetRobust?</p>
+      <ol type="a">
+        <li>The goal is that relevant retrieved context should improve performance while irrelevant context should not hurt performance.</li>
+        <li>For the small-training method, irrelevant passages are collected as bottom-K passages for the given query or top-K passages for other queries.</li>
+        <li>The LLM is trained to output a special "irrelevant" token when noisy passages are given, instead of answering.</li>
+        <li>LLaMA2-13B is fine-tuned with QLoRA on a small dataset (1k for NQ and 500 for the others).</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. These are the two conditions of retrieval-robust LLMs.</li>
+          <li>(b) Correct. Relevant = top-1 of the retriever; irrelevant = bottom-K (same query) or top-K (other queries).</li>
+          <li class="wrong">(c) Incorrect. No special token is involved (that is Self-RAG). RetRobust simply maximizes the likelihood of the correct answer even under irrelevant passages, so the model learns to ignore them and answer from intrinsic knowledge.</li>
+          <li>(d) Correct. Plus BART-large (MNLI) as the NLI model and Google search as the retriever at inference.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q16. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about Self-RAG?</p>
+      <ol type="a">
+        <li>Four types of reflection tokens are introduced: Retrieve, IsREL, IsSUP, and IsUSE.</li>
+        <li>IsREL judges whether the retrieved passage is relevant, while IsSUP judges whether the generation is supported by the passage.</li>
+        <li>Training data for reflection tokens is collected using GPT-4 as a proxy of the human annotator, and a critic model is trained to imitate it with higher than 90% agreement.</li>
+        <li>Self-RAG is trained with PPO using the IsUSE token value as the reward.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. Retrieve (when to retrieve), IsREL (relevance), IsSUP (support: fully/partially/no support), IsUSE (usefulness).</li>
+          <li>(b) Correct. This distinction is a classic trap — do not swap them.</li>
+          <li>(c) Correct. 4k–20k annotations from GPT-4 → critic model → generator training (a strategy also similar to LLaMA3's data filtering).</li>
+          <li class="wrong">(d) Incorrect. Self-RAG uses <em>supervised fine-tuning</em> (standard likelihood maximization), not RL. RL-based adaptive RAG is Search-R1.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q17. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about Search-R1?</p>
+      <ol type="a">
+        <li>It incorporates RAG into the output text using special tokens: &lt;think&gt;, &lt;search&gt;, &lt;information&gt;, and &lt;answer&gt;.</li>
+        <li>The original version uses only a simple outcome reward based on the ground-truth answer, without a format reward.</li>
+        <li>Interleaved chain-of-thought and retrieval is manually designed into the inference algorithm, following IRCoT.</li>
+        <li>The choice between PPO and GRPO matters differently per model: GRPO is better for Qwen2.5 while PPO is better for LLaMA3.2.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. The query inside &lt;search&gt; is parsed and sent to the search engine; results are inserted inside &lt;information&gt;.</li>
+          <li>(b) Correct. The rationale is that recent LLMs already demonstrate strong structural adherence (a format reward was only added in a later version).</li>
+          <li class="wrong">(c) Incorrect. Interleaved CoT &amp; retrieval <em>automatically emerges</em> during RL training — it is not manually designed, which is a key selling point over IRCoT.</li>
+          <li>(d) Correct. The effectiveness of RL algorithms is model- and hyperparameter-dependent; this question remains open in academia.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 3분 요약 ============ -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>RAG 동기</strong></td><td>정적 데이터셋 → knowledge cutoff·hallucination; fine-tuning은 새 지식 주입에 한계 → retrieve-and-read의 generator만 LLM으로</td></tr>
+    <tr><td><strong>PageRank</strong></td><td>중요도 = 이웃 중요도의 평균; \(1-d\)=random jump 확률; power iteration이 유일해로 수렴; 의미 정보는 안 씀</td></tr>
+    <tr><td><strong>BM25</strong></td><td>Sparse retriever; IDF(corpus 전체) × TF(대상 문서); 학습 無; 맥락 의미 포착 불가</td></tr>
+    <tr><td><strong>DPR</strong></td><td>두 인코더 + dot-product + contrastive loss; labeled \(p^+/p^-\) + in-batch negatives; OOD에 약함</td></tr>
+    <tr><td><strong>Contriever</strong></td><td>같은 문서 crop = positive인 자기지도 대조 학습; 손실은 DPR과 동일; 분포 변화에 강건</td></tr>
+    <tr><td><strong>REPLUG</strong></td><td>블랙박스 LM에 문서별 독립 prepend → 출력 확률 가중 앙상블; LSR = retrieval↔LM likelihood KL 최소화로 검색기만 학습</td></tr>
+    <tr><td><strong>IRCoT</strong></td><td>CoT 1스텝 ↔ 검색 교차 반복(마지막 스텝=질의, 구절 누적); multi-hop QA(HotpotQA)에서 OneR보다 Recall@K·F1 모두 우수</td></tr>
+    <tr><td><strong>RetRobust</strong></td><td>① NLI 필터(passage=premise, Q+A=hypothesis; not-entailed→direct answering) ② 소량 학습(top-1 vs bottom-K/타 질의 top-K)으로 무관 컨텍스트 무시 학습</td></tr>
+    <tr><td><strong>Self-RAG</strong></td><td>SFT로 4 reflection 토큰(Retrieve/IsREL/IsSUP/IsUSE) 학습; GPT-4 주석→critic(90% agreement)→generator; 검색 청크는 loss 제외</td></tr>
+    <tr><td><strong>Search-R1</strong></td><td>RL(outcome reward만)로 &lt;think&gt;/&lt;search&gt;/&lt;information&gt;/&lt;answer&gt; 학습; retrieved token masking; interleaved 검색이 자동 창발; 길이 감소→증가 2단계</td></tr>
+    <tr><td><strong>평가지표</strong></td><td>EM(완전 일치 0/1) / F1(단어 수준) / Recall@K(K개 중 정답 문서 비율 — 검색기 지표)</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="4. Tool Use 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

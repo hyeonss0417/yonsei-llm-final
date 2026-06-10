@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12장. LLM과 강화학습</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="7. Jailbreak 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #12</div>
+  <h1>12장. LLM과 강화학습 <span style="font-weight:400;font-size:20px;">(Reinforcement Learning with LLMs)</span></h1>
+  <div class="subtitle">RL 기초 개념 → Policy Gradient 유도 → Reward-to-go·Baseline·Advantage → PPO(-Clip) → TRL 구현 → GRPO → 2026 Post-training(GLM-5, On-policy Distillation)</div>
+  <div class="meta">
+    <span>📅 강의일: 2026-06-01(도입) · 2026-06-08(본강의)</span><span>📊 예상 비중: 높음 (수식 최다 챕터)</span><span>⏱ 분량: 본문 8섹션 + 문제 17</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">RL의 핵심 개념 — Agent, Environment, State, Action, Reward</a></li>
+    <li><a href="#s2">RL 문제의 수학적 정식화 — Trajectory, Return, J(θ)</a></li>
+    <li><a href="#s3">기본 Policy Gradient의 유도 — Log-derivative Trick</a></li>
+    <li><a href="#s4">Vanilla Policy Gradient — Reward-to-go, Baseline, Advantage</a></li>
+    <li><a href="#s5">PPO — Clipped Surrogate Objective</a></li>
+    <li><a href="#s6">PPO in RLHF — TRL 구현 (Value Head, torch.no_grad)</a></li>
+    <li><a href="#s7">GRPO — Group Relative Policy Optimization</a></li>
+    <li><a href="#s8">2026년 LLM Post-training — GLM-5, On-policy Distillation</a></li>
+    <li><a href="#compare">총정리 비교표: REINFORCE vs PPO vs GRPO</a></li>
+    <li><a href="#quiz">예상문제 (T/F 9 + Pick-all 8)</a></li>
+  </ol>
+</div>
+
+<!-- ============ S1 ============ -->
+<section id="s1">
+  <h2><span class="num">1</span> RL의 핵심 개념 <span class="en">(Key Concepts of Reinforcement Learning)</span></h2>
+
+  <p>RL은 이제 LLM <strong>post-training의 표준 패러다임</strong>이다. 대표 사례: <strong>RLHF</strong> (Ouyang et al., NeurIPS 2022 — OpenAI, 알고리즘은 <strong>PPO</strong>)와 <strong>DeepSeek-R1</strong> (DeepSeek-AI, arXiv 2025.01 — 알고리즘은 <strong>GRPO</strong>). 지금까지 수업에서는 목적함수(objective function)를 어떻게 만드는지만 다뤘고, 이번 장에서는 <strong>구체적인 RL 알고리즘이 LLM과 어떻게 작동하는지</strong>를 다룬다.</p>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "이 수업은 RL 수업이 아니므로 LLM 맥락 이해에 필요한 <strong>최소한의 기본 개념만</strong> 간략히 다룬다. RL을 더 깊이 배우고 싶으면 이(Lee) 교수님의 강화학습 수업을 들어라. 이번 강의는 RL 분류 체계(model-free vs model-based 등) 전체가 아니라 <strong>policy optimization</strong>에만 초점을 맞춘다 — LLM을 RL로 학습시키는 가장 직관적인 방법이기 때문."
+  </div>
+
+  <h3>두 등장인물: Agent & Environment</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Environment</strong>: agent가 살아가며 상호작용하는 세계(world that agent lives in and interacts with). <strong>Agent</strong>는 매 step마다 환경의 <strong>state</strong>를 관찰(observe)하고 <strong>action</strong>을 결정한다. 환경은 agent의 행동에 의해 변하며(<em>may also change on its own</em> — 스스로 변할 수도 있음), agent는 환경으로부터 <strong>reward signal</strong>을 받는다.
+  </div>
+  <ul>
+    <li>매 step의 상호작용: 상태 \( s_t \)에서 agent가 행동 \( a_t \)를 취함 → 상태가 \( s_{t+1} \)로 전이 → 환경이 보상 \( r_t \)를 줌.</li>
+    <li>Agent의 목표 = <strong>누적 보상(cumulative reward)의 최대화</strong>. 이 누적 보상을 <strong>return</strong>이라 부른다.</li>
+    <li><strong>RL의 목표</strong>: agent가 목표를 달성하는 행동을 학습할 수 있는 방법(알고리즘)을 찾는 것.</li>
+    <li>예: 게임 = environment, 플레이어/캐릭터 = agent, 버튼 누르기 = action, 화면/캐릭터 위치 변화 = state 변화, 레벨 클리어 = goal.</li>
+  </ul>
+
+  <h3>Policy (정책)</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Policy</strong>: agent가 어떤 행동을 취할지 결정하는 데 쓰는 <strong>규칙 또는 함수</strong>(rule or function used by agent to decide what actions to take). <strong>deterministic</strong>(결정론적: \( a_t = \mu(s_t) \), 예: rule-based)일 수도, <strong>stochastic</strong>(확률적: \( a_t \sim \pi(\cdot \mid s_t) \), 행동을 샘플링)일 수도 있다.
+  </div>
+  <ul>
+    <li>Deep RL에서는 보통 <strong>parameterized policy</strong> \( \pi_\theta \)를 사용 — 즉 DNN으로 정책을 학습.</li>
+    <li><strong>LLM과의 대응 (시험 단골 매핑)</strong>:
+      <ol>
+        <li><strong>Policy = LLM</strong></li>
+        <li><strong>State = input tokens</strong> (초기 상태 = input prompt; 출력 토큰이 프롬프트에 concatenate되며 상태가 갱신됨)</li>
+        <li><strong>Action = generation of next token</strong> (다음 토큰 분포에서 디코딩 알고리즘으로 행동 생성)</li>
+      </ol>
+    </li>
+  </ul>
+
+  <h3>Trajectory (궤적) & State Transition</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Trajectory</strong> \( \tau \): 상태와 행동의 연속(sequence of states and actions), \( \tau = (s_0, a_0, s_1, a_1, \dots) \). 상태 전이 규칙 \( (s_t, a_t) \to s_{t+1} \)이 존재한다고 가정한다 (예: 게임에서 왼쪽 버튼 → 화면 속 캐릭터 이동).
+  </div>
+
+  <h3>Reward & Return</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Reward</strong>: agent의 바람직한 행동을 촉진하는 신호(signal to promote desired behavior). 수학적으로 \( r_t = R(s_t, a_t, s_{t+1}) \) — 상태 \( s_t \)에서 행동 \( a_t \)로 \( s_{t+1} \)이 됐을 때 그 변화가 목표 달성에 얼마나 유익한지.
+  </div>
+  <div class="formula"><div class="fname">Return (누적 보상) — finite-horizon vs infinite-horizon</div>
+    $$ R(\tau) = \sum_{t=0}^{T} r_t \qquad \text{(finite-horizon undiscounted return)} $$
+    $$ R(\tau) = \sum_{t=0}^{\infty} \gamma^t r_t, \quad \gamma \in (0,1) \qquad \text{(infinite-horizon discounted return)} $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \gamma \)는 <strong>discount factor</strong>. 무한 horizon에서 \( \gamma \)를 도입하지 않으면 합이 <strong>무한대로 발산</strong>하므로, 스칼라 값으로 만들기 위해 반드시 필요하다.</p>
+  </div>
+
+  <h3>Value Function & Q Function (조건부 보상 함수)</h3>
+  <div class="formula"><div class="fname">Conditional reward functions (정책 \( \pi \) 하에서)</div>
+    $$ V^{\pi}(s) = \mathbb{E}_{\tau \sim \pi}\big[ R(\tau) \mid s_0 = s \big] \qquad \text{(Value function: 특정 state에 조건부)} $$
+    $$ Q^{\pi}(s,a) = \mathbb{E}_{\tau \sim \pi}\big[ R(\tau) \mid s_0 = s,\; a_0 = a \big] \qquad \text{(Q function: state \& action에 조건부)} $$
+    $$ V^{\pi}(s) = \mathbb{E}_{a \sim \pi}\big[ Q^{\pi}(s,a) \big] \qquad \text{(Natural relationship)} $$
+    <p style="font-size:14px;margin:6px 0 0;">Value function = 상태 \( s \)에서 시작해 정책 \( \pi \)대로 행동했을 때의 <strong>기대 return</strong>. Q function은 거기에 첫 행동 \( a \)까지 고정한 것. 정책 하에서 가능한 행동들에 대해 Q의 기댓값을 취하면 V가 된다.</p>
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① return = <strong>cumulative</strong> reward (단일 step reward가 아님). ② LLM 매핑: policy=LLM / state=input tokens / action=next-token generation. ③ V는 state에만, Q는 state+action에 조건부. ④ \( V^\pi(s)=\mathbb{E}_{a\sim\pi}[Q^\pi(s,a)] \). ⑤ discount factor는 infinite-horizon에서 발산을 막기 위한 것.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"The goal of an RL agent is to maximize the immediate reward at each step." → <strong>False</strong>. The goal is to maximize the <em>cumulative</em> reward over a trajectory (the return), not the per-step reward.</li>
+      <li>"In the LLM-as-RL framing, the state corresponds to the LLM's parameters." → <strong>False</strong>. The state is the <em>input tokens</em> (prompt + generated tokens so far); the policy is the LLM itself, and the action is generating the next token.</li>
+      <li>"A policy must be stochastic." → <strong>False</strong>. A policy can be deterministic (e.g., rule-based) or stochastic; deep RL typically uses a parameterized (often stochastic) policy \( \pi_\theta \).</li>
+      <li>"The discount factor \( \gamma \) is required in the finite-horizon return." → <strong>False</strong>. It is introduced for the <em>infinite</em>-horizon case to keep the return finite.</li>
+      <li>"The Q function is conditioned only on the initial state." → <strong>False</strong>. That is the value function; Q is conditioned on both the initial state <em>and</em> the initial action.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S2 ============ -->
+<section id="s2">
+  <h2><span class="num">2</span> RL 문제의 수학적 정식화 <span class="en">(Mathematical Formulation & Policy Optimization)</span></h2>
+
+  <h3>Trajectory의 확률</h3>
+  <div class="formula"><div class="fname">Probability of trajectory (Markov assumption 하)</div>
+    $$ P(\tau \mid \theta) = \rho_0(s_0) \prod_{t=0}^{T} P(s_{t+1} \mid s_t, a_t)\, \pi_\theta(a_t \mid s_t) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \rho_0(s_0) \) = 초기 상태 분포, \( P(s_{t+1}\mid s_t,a_t) \) = 환경의 상태 전이 확률, \( \pi_\theta(a_t \mid s_t) \) = 정책의 행동 확률. <strong>Markov assumption</strong>: 현재 상태는 바로 직전 상태(와 행동)에만 조건부.</p>
+  </div>
+
+  <h3>Expected Return과 최적화 문제</h3>
+  <div class="formula"><div class="fname">Expected return & RL 최적화 문제</div>
+    $$ J(\pi_\theta) = \int_\tau P(\tau \mid \theta) R(\tau) = \mathbb{E}_{\tau \sim \pi_\theta}\big[ R(\tau) \big] $$
+    $$ \pi^* = \arg\max_{\pi} J(\pi) \qquad \text{(Optimal policy)} $$
+    <p style="font-size:14px;margin:6px 0 0;">기댓값은 <strong>정책 \( \pi_\theta \)로 샘플링된 궤적</strong>에 대해 취한다 — 즉 \( J \)는 그 정책 자체에 대한 평가다. 누적 보상이 높으면 그 정책이 목표 달성에 좋은 정책.</p>
+  </div>
+
+  <h3>Policy Gradient에 의한 최적화</h3>
+  <div class="formula"><div class="fname">Gradient ascent (정책 경사 상승)</div>
+    $$ \theta_{k+1} = \theta_k + \alpha \, \nabla_\theta J(\pi_\theta) \big|_{\theta_k} $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \nabla_\theta J(\pi_\theta) \)가 <strong>policy gradient</strong>. 손실 최소화(gradient descent)와 달리 return을 <strong>최대화</strong>하므로 gradient <strong>ascent</strong>(+부호). policy gradient로 정책을 최적화하는 알고리즘 = <strong>policy gradient algorithms</strong> (예: <strong>PPO, GRPO</strong>).</p>
+  </div>
+
+  <p>그러나 policy gradient 계산은 간단하지 않다 — \( J \) 자체가 기댓값이므로 <strong>기댓값의 gradient</strong>를 구해야 하기 때문. 따라서 두 단계가 필요하다:</p>
+  <ol class="steps">
+    <li><strong>해석적 gradient 유도</strong> <span class="en">(deriving analytical gradient of policy performance)</span> — 기댓값 형태의 \( J(\pi_\theta)=\mathbb{E}_{\tau\sim\pi_\theta}[R(\tau)] \)의 gradient를 닫힌 식으로 유도.</li>
+    <li><strong>표본 추정</strong> <span class="en">(forming sample estimate from finite # of interactions)</span> — 복잡한 분포에선 기댓값을 수학적으로 계산할 수 없으므로, 유한 개의 상호작용으로 <strong>empirical sample mean</strong>으로 추정.</li>
+  </ol>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 궤적 확률 = 초기분포 × ∏(전이확률 × 정책확률). ② \( J(\pi_\theta) \)는 <strong>그 정책으로 샘플링한 궤적</strong>에 대한 기대 return. ③ 정책 갱신은 gradient <strong>ascent</strong>. ④ PPO·GRPO는 둘 다 policy gradient 계열 알고리즘.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Policy gradient methods update the policy via gradient descent on the expected return." → <strong>False</strong>. They use gradient <em>ascent</em> because the goal is to <em>maximize</em> expected return (equivalently, descent on the negative return — but the slide formulation is ascent).</li>
+      <li>"The trajectory probability depends only on the policy \( \pi_\theta \)." → <strong>False</strong>. It also depends on the initial state distribution \( \rho_0 \) and the environment transition probabilities \( P(s_{t+1}\mid s_t,a_t) \).</li>
+      <li>"GRPO is not a policy gradient algorithm because it has no value model." → <strong>False</strong>. Both PPO and GRPO are policy-gradient(policy optimization) algorithms; the difference is only in how the advantage is estimated.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S3 ============ -->
+<section id="s3">
+  <h2><span class="num">3</span> 기본 Policy Gradient의 유도 <span class="en">(Derivation of Basic Policy Gradient)</span></h2>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "이 부분(유도 과정 자체)을 요구하는 시험 문제는 내지 않겠다 — 흥미와 이해를 위한 것이다." → 유도 <strong>과정의 재현</strong>은 출제 안 되지만, <strong>최종 결과식과 각 트릭의 이름·역할</strong>(log-derivative trick, 환경 함수의 gradient=0, Monte Carlo 추정)은 T/F로 충분히 나올 수 있다.
+  </div>
+
+  <h3>유도에 필요한 세 가지 사실</h3>
+  <h4>① Log-probability of trajectory (곱 → 합)</h4>
+  <div class="formula"><div class="fname">궤적의 로그 확률</div>
+    $$ \log P(\tau \mid \theta) = \log \rho_0(s_0) + \sum_{t=0}^{T}\Big( \log P(s_{t+1} \mid s_t, a_t) + \log \pi_\theta(a_t \mid s_t) \Big) $$
+  </div>
+
+  <h4>② Log-derivative trick</h4>
+  <div class="formula"><div class="fname">Log-derivative trick</div>
+    $$ \nabla_\theta P(\tau \mid \theta) = P(\tau \mid \theta)\, \nabla_\theta \log P(\tau \mid \theta) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \nabla \log f = \nabla f / f \)에서 바로 나온다. 확률의 gradient를 "확률 × 로그확률의 gradient"로 바꿔, 기댓값 안으로 gradient를 넣을 수 있게 해주는 핵심 트릭.</p>
+  </div>
+
+  <h4>③ 환경 함수의 gradient는 0</h4>
+  <div class="formula"><div class="fname">Gradients of environment functions are zero</div>
+    $$ \nabla_\theta \log P(\tau \mid \theta) = \underbrace{\nabla_\theta \log \rho_0(s_0)}_{=\,0} + \sum_{t=0}^{T}\Big( \underbrace{\nabla_\theta \log P(s_{t+1} \mid s_t, a_t)}_{=\,0} + \nabla_\theta \log \pi_\theta(a_t \mid s_t) \Big) = \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) $$
+    <p style="font-size:14px;margin:6px 0 0;">매개변수 \( \theta \)는 <strong>정책에만</strong> 들어있다. \( \rho_0 \)와 상태 전이 확률은 환경의 함수로 \( \theta \)를 포함하지 않으므로 \( \theta \)에 대한 gradient가 0 → 궤적 로그확률의 gradient는 <strong>정책 항들의 합으로 환원</strong>된다.</p>
+  </div>
+
+  <h3>기본 Policy Gradient (결과식 — 암기 필수)</h3>
+  <div class="formula"><div class="fname">Basic Policy Gradient</div>
+    $$ \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t)\; R(\tau) \right] $$
+    <p style="font-size:14px;margin:6px 0 0;">직관: 어떤 행동이 <strong>높은 보상</strong>을 받았다면 그 행동의 로그확률 gradient에 큰 가중치가 곱해져 그 행동이 더 장려되고, 낮은 보상이면 덜 장려된다.</p>
+  </div>
+
+  <h3>Monte Carlo 추정 (sample estimate)</h3>
+  <div class="formula"><div class="fname">Estimated policy gradient (표본 평균)</div>
+    $$ \hat{g} = \frac{1}{|\mathcal{D}|} \sum_{\tau \in \mathcal{D}} \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t)\; R(\tau), \qquad \mathcal{D} = \{\tau_i\},\ \tau_i \sim \pi_\theta $$
+    <p style="font-size:14px;margin:6px 0 0;">기댓값을 닫힌 형식으로 계산할 수 없으므로 <strong>Monte Carlo estimation</strong>: 현재 정책 \( \pi_\theta \)로 유한 개의 궤적을 샘플링해 표본 평균으로 대체. 궤적이 <strong>현재 정책에서</strong> 샘플링된다는 점이 on-policy의 핵심.</p>
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① 결과식 \( \nabla J = \mathbb{E}[\sum_t \nabla\log\pi_\theta(a_t|s_t) R(\tau)] \). ② log-derivative trick의 역할. ③ 환경 항(\( \rho_0 \), transition)은 \( \theta \)를 포함하지 않아 gradient 0. ④ 기댓값 → 샘플 평균(Monte Carlo)으로 추정.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Computing the basic policy gradient requires differentiating the environment's transition probabilities." → <strong>False</strong>. The gradients of environment functions (\( \rho_0 \), transition dynamics) w.r.t. \( \theta \) are zero, since \( \theta \) parameterizes only the policy.</li>
+      <li>"The expectation in the policy gradient can be computed in closed form." → <strong>False</strong>. It is approximated by a sample mean over trajectories sampled from the current policy (Monte Carlo estimation).</li>
+      <li>"In the basic policy gradient, trajectories may be sampled from any policy." → <strong>False</strong>. The derivation assumes \( \tau \sim \pi_\theta \) — the <em>current</em> policy (on-policy). Reusing samples from an old policy requires an importance-sampling ratio (as in PPO).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S4 ============ -->
+<section id="s4">
+  <h2><span class="num">4</span> Vanilla Policy Gradient — Reward-to-go, Baseline, Advantage</h2>
+
+  <h3>① Reward-to-go: 시간 단계 문제 해결</h3>
+  <p>기본 유도는 \( R(\tau) \)(궤적 <strong>전체</strong>의 누적 보상)를 모든 시간 단계 \( t \)의 행동에 곱한다. 그러나 시점 \( t \)의 행동은 <strong>그 이전의 보상</strong>에 영향을 줄 수 없다 → 행동 이전의 보상까지 반영하는 것은 부정확. 따라서 행동 <strong>이후</strong>의 보상만 합산:</p>
+  <div class="formula"><div class="fname">Reward-to-go policy gradient (more accurate)</div>
+    $$ \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \sum_{t'=t}^{T} R(s_{t'}, a_{t'}, s_{t'+1}) \right] $$
+    <p style="font-size:14px;margin:6px 0 0;">\( \sum_{t'=t}^{T} r_{t'} \) = <strong>reward-to-go</strong>: 시점 \( t \) <strong>이후부터</strong>의 누적 보상만 고려. \( t \) 이전의 보상은 반영하지 않는다.</p>
+  </div>
+
+  <h3>② Baseline: 기댓값 불변 + 분산 감소</h3>
+  <div class="formula"><div class="fname">Baseline의 수학적 근거 — 임의의 \( b(s_t) \)에 대해</div>
+    $$ \mathbb{E}_{a_t \sim \pi_\theta}\big[ \nabla_\theta \log \pi_\theta(a_t \mid s_t)\, b(s_t) \big] = 0 $$
+    $$ \Rightarrow\;\; \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \left( \sum_{t'=t}^{T} r_{t'} - b(s_t) \right) \right] $$
+    <p style="font-size:14px;margin:6px 0 0;"><strong>state만의 함수</strong> \( b(s_t) \)(= <strong>baseline</strong>)는 기댓값이 0이므로 더하거나 빼도 <strong>policy gradient의 기댓값은 불변</strong>. 그러나 좋은 baseline은 추정의 <strong>분산(variance)을 감소</strong>시킨다 (empirically 확인됨). 가장 일반적인 선택 = <strong>on-policy value function \( V^\pi(s_t) \)</strong> — 누적 보상의 절대값이 아니라 평균 대비 <strong>상대적 차이</strong>에 집중하게 해 준다.</p>
+  </div>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "이 등식(\( \mathbb{E}[\nabla\log\pi_\theta\, b(s_t)]=0 \))의 유도 역시 시험에서 요구하지 않는다. 중요한 건 <strong>baseline을 넣어도 기댓값은 그대로이고, 분산만 줄어든다</strong>는 사실이다."
+  </div>
+
+  <h3>③ Q function 치환과 Advantage</h3>
+  <div class="formula"><div class="fname">Q function 형태 → Advantage 형태</div>
+    $$ \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t)\; Q^{\pi}(s_t, a_t) \right] $$
+    $$ \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t)\; A^{\pi}(s_t, a_t) \right], \qquad A^{\pi}(s_t,a_t) = Q^{\pi}(s_t,a_t) - V^{\pi}(s_t) $$
+    <p style="font-size:14px;margin:6px 0 0;">① 기대 return \( R(\tau) \)를 <strong>Q function으로 대체해도 동일한 policy gradient</strong>가 됨이 증명 가능. ② 여기에 value function을 baseline으로 빼면 <strong>advantage function</strong> \( A = Q - V \) 형태가 된다.</p>
+  </div>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Advantage function</strong> \( A^\pi(s_t,a_t) = Q^\pi(s_t,a_t) - V^\pi(s_t) \): 행동 \( a_t \)가 그 상태에서의 <strong>평균적 행동보다 얼마나 더 나은지</strong>(how much better it is than average)를 포착. 평균보다 좋으면 \( A>0 \), 나쁘면 \( A<0 \). 누적 보상과 달리 미래 상태 전체를 직접 계산할 필요 없이 현재 시간 단계 안에서 행동의 품질을 추정할 수 있다.
+  </div>
+
+  <h3>④ \( \Phi_t \)의 선택에 따른 알고리즘 이름</h3>
+  <p>policy gradient를 \( \nabla_\theta J = \mathbb{E}[\sum_t \nabla\log\pi_\theta(a_t|s_t)\, \Phi_t] \)로 쓸 때, <strong>\( \Phi_t \)의 선택</strong>에 따라 알고리즘 이름이 달라진다:</p>
+  <table>
+    <tr><th>\( \Phi_t \) 선택</th><th>알고리즘 이름</th></tr>
+    <tr><td>\( R(\tau) \) — (할인 없는) 전체 누적 보상</td><td><strong>REINFORCE</strong></td></tr>
+    <tr><td>\( \sum_{t'=t}^T r_{t'} - b(s_t) \) — baseline 삽입</td><td><strong>REINFORCE with baseline</strong></td></tr>
+    <tr><td>\( A^\pi(s_t,a_t) = Q - V \) — advantage 사용</td><td><strong>Advantage Actor-Critic</strong> 계열</td></tr>
+  </table>
+
+  <h3>⑤ Value function의 근사와 VPG 알고리즘</h3>
+  <p>value function의 기댓값도 닫힌 형식으로 계산 불가 → <strong>별도의 신경망(value model \( \hat{V}_\phi \))으로 근사</strong>하여 학습한다. Vanilla Policy Gradient(VPG) 알고리즘의 전체 흐름:</p>
+  <ol class="steps">
+    <li><strong>궤적 샘플링</strong> — 현재 정책 \( \pi_{\theta_k} \)로 trajectory 집합 \( \mathcal{D}_k \) 수집</li>
+    <li><strong>Reward-to-go 계산</strong> — 보상 함수로 \( \hat{R}_t \) 계산</li>
+    <li><strong>Advantage 계산</strong> — 현재 value 모델 \( \hat{V}_{\phi_k} \) 기반으로 \( \hat{A}_t \) 추정</li>
+    <li><strong>Policy gradient 계산 & 정책 갱신</strong> — 누적 보상 대신 advantage 사용, gradient ascent로 \( \theta \) 갱신</li>
+    <li><strong>Value model 갱신</strong> — 계산된 reward-to-go에 대한 회귀(MSE)로 \( \phi \) 갱신</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "정책에만 관심이 있어도 <strong>별도의 value model을 추가로 학습</strong>해야 한다. 이것이 <strong>PPO의 주요 병목(bottleneck)</strong>이 된다 — PPO도 value function을 필요로 하는 알고리즘이기 때문이다." → GRPO의 동기로 이어지는 복선.
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① reward-to-go = 시점 \( t \) <strong>이후</strong> 보상만 (이전 보상 제외). ② baseline은 기댓값 <strong>불변</strong> + 분산 <strong>감소</strong> (state만의 함수여야 함). ③ 가장 흔한 baseline = on-policy value function. ④ \( A = Q - V \), 평균 행동 대비 우수성. ⑤ \( \Phi_t \) 선택 → REINFORCE / REINFORCE w. baseline / Advantage Actor-Critic. ⑥ value function은 별도 신경망으로 근사.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Adding a baseline \( b(s_t) \) changes the expected value of the policy gradient." → <strong>False</strong>. \( \mathbb{E}[\nabla\log\pi_\theta\, b(s_t)] = 0 \), so the expectation is unchanged; only the <em>variance</em> of the estimate is reduced.</li>
+      <li>"A baseline can be an arbitrary function of both state and action." → <strong>False</strong>. The zero-expectation identity holds for functions of the <em>state</em> \( b(s_t) \) only; an action-dependent baseline would bias the gradient.</li>
+      <li>"Reward-to-go includes rewards obtained before time step \( t \)." → <strong>False</strong>. It sums rewards from \( t \) onward only — actions cannot affect rewards already received.</li>
+      <li>"The advantage \( A^\pi = V^\pi - Q^\pi \)." → <strong>False</strong>. \( A^\pi = Q^\pi - V^\pi \) (방향 주의!). Positive advantage = better than the average action at that state.</li>
+      <li>"Using the advantage instead of \( R(\tau) \) yields a biased estimate of the policy gradient." → <strong>False</strong>. Replacing \( R(\tau) \) with \( Q^\pi \) and subtracting \( V^\pi \) as a baseline can be proven to give exactly the same expected policy gradient.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S5 ============ -->
+<section id="s5">
+  <h2><span class="num">5</span> PPO <span class="en">(Proximal Policy Optimization — 슬라이드 표기: "Proximal Point Optimization")</span></h2>
+
+  <div class="box-warn"><div class="label">⚠️ 표기 주의</div>
+    <ul>
+      <li>강의 슬라이드와 교수 발언 모두 PPO를 "<strong>Proximal Point Optimization</strong>"으로 표기/발음했다. 일반적으로(원논문 Schulman et al., OpenAI) PPO는 "<strong>Proximal Policy Optimization</strong>"이다. 시험에서 어느 쪽 표기가 나와도 같은 알고리즘으로 인식할 것. 둘 다 정답으로 처리될 가능성이 높지만, 본 수업 기준 표기는 슬라이드를 따른다.</li>
+    </ul>
+  </div>
+
+  <h3>동기 (Motivation)</h3>
+  <p>RL 학습의 최대 난제 중 하나는 <strong>불안정성(instability)</strong>. PPO의 질문: <em>"현재 정책에서 너무 멀리 벗어나 붕괴(collapse)하지 않으면서, 가능한 가장 큰 개선 step을 밟을 수 없을까?"</em> (take biggest possible improvement step without stepping too far from current policy)</p>
+  <ul>
+    <li><strong>Note #1</strong>: 같은 질문에 먼저 답한 선행 연구 = <strong>TRPO</strong> (Trust Region Policy Optimization, Schulman et al., ICML 2015). 그러나 너무 복잡하고 계산 비용이 3~4배 이상 비싸 적용이 어려움.</li>
+    <li><strong>Note #2</strong>: PPO 개발자 = <strong>John Schulman</strong> (OpenAI). 두 변형 존재: <strong>PPO-Penalty</strong>(이전 정책으로부터의 급격한 갱신을 막는 KL penalty 추가, TRPO에 가까움) & <strong>PPO-Clip</strong>(배포가 더 쉬움). 수업은 <strong>PPO-Clip</strong>에 집중.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "직관: gradient가 100으로 계산되더라도 10만큼의 갱신만 허용한다 — <strong>단일 step 안에서의 갱신량을 제한</strong>함으로써 갑작스러운 갱신과 그로 인한 문제를 방지한다."
+  </div>
+
+  <h3>PPO-Clip Objective</h3>
+  <div class="formula"><div class="fname">PPO-Clip 정책 갱신</div>
+    $$ \theta_{k+1} = \arg\max_\theta \; \mathbb{E}_{s,a \sim \pi_{\theta_k}} \Big[ L(s, a, \theta_k, \theta) \Big] $$
+    $$ L(s,a,\theta_k,\theta) = \min\!\Big( \underbrace{\frac{\pi_\theta(a \mid s)}{\pi_{\theta_k}(a \mid s)}}_{r_t(\theta):\ \text{ratio}} A^{\pi_{\theta_k}}(s,a),\;\; \mathrm{clip}\Big( \frac{\pi_\theta(a \mid s)}{\pi_{\theta_k}(a \mid s)},\, 1-\epsilon,\, 1+\epsilon \Big) A^{\pi_{\theta_k}}(s,a) \Big) $$
+    <p style="font-size:14px;margin:6px 0 0;">\( r_t(\theta) = \pi_\theta(a|s) / \pi_{\theta_k}(a|s) \) = <strong>이전 정책 대비 현재 정책의 확률 비율</strong>(importance sampling ratio). \( \epsilon \) = clip 폭 하이퍼파라미터. 어드밴티지는 <strong>이전 정책 \( \pi_{\theta_k} \) 기준</strong>으로 계산.</p>
+  </div>
+  <div class="formula"><div class="fname">단순화된 동치 표현 (g 함수)</div>
+    $$ L(s,a,\theta_k,\theta) = \min\!\Big( \frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)} A^{\pi_{\theta_k}}(s,a),\;\; g(\epsilon, A^{\pi_{\theta_k}}(s,a)) \Big), \qquad g(\epsilon, A) = \begin{cases} (1+\epsilon)A & A \ge 0 \\ (1-\epsilon)A & A < 0 \end{cases} $$
+  </div>
+
+  <h3>경우 분석 — clip이 작동하는 방식 (출제 1순위)</h3>
+  <table>
+    <tr><th>경우</th><th>Objective</th><th>정책이 하려는 것</th><th>clip의 역할</th></tr>
+    <tr>
+      <td><strong>Advantage > 0</strong><br>(평균보다 좋은 행동)</td>
+      <td>\( \min\!\big( \frac{\pi_\theta}{\pi_{\theta_k}},\, 1+\epsilon \big) A \)</td>
+      <td>\( \pi_\theta(a|s) \)를 <strong>증가</strong>시키려 함 (좋은 행동을 더 장려)</td>
+      <td><strong>min</strong>이 objective가 증가할 수 있는 양에 <strong>상한</strong>을 둠 → ratio를 \( 1+\epsilon \) 이상 키워도 이득 없음 → 새 정책이 이전 정책에서 멀리 가도 이득이 없다</td>
+    </tr>
+    <tr>
+      <td><strong>Advantage < 0</strong><br>(평균보다 나쁜 행동)</td>
+      <td>\( \max\!\big( \frac{\pi_\theta}{\pi_{\theta_k}},\, 1-\epsilon \big) A \)</td>
+      <td>\( \pi_\theta(a|s) \)를 <strong>감소</strong>시키려 함 (나쁜 행동 억제)</td>
+      <td><strong>max</strong>가 objective가 감소할 수 있는 양에 <strong>하한</strong>을 둠 → ratio가 \( 1-\epsilon \)보다 작아져도 이득 없음 → 역시 이전 정책에서 멀어질 유인이 없다</td>
+    </tr>
+  </table>
+  <p>두 경우 모두 결론은 동일: <strong>새 정책 \( \theta \)는 이전 정책 \( \theta_k \)에서 멀리 가는 것으로부터 이득을 얻지 못한다</strong> (new policy does not benefit by going far away from old policy).</p>
+
+  <h3>PPO 알고리즘 & 한계</h3>
+  <ul>
+    <li>Pseudo-code는 VPG와 구조가 거의 동일 — 궤적 샘플링, reward-to-go, advantage 계산은 같고 <strong>유일한 차이는 PPO-Clip objective</strong>로 정책을 갱신하는 부분.</li>
+    <li>여전히 advantage가 필요하므로 <strong>별도의 value model 학습 필요</strong> (value model 갱신 단계 존재).</li>
+    <li><strong>주의</strong>: clip을 써도 <strong>새 정책이 이전 정책에서 너무 멀어지는 것이 여전히 가능</strong>(it is still possible to end up with new policy too far from old policy) → 실무에서는 추가 트릭(additional tricks)이 널리 채택됨.</li>
+  </ul>
+
+  <h3>LLM에서의 관례: Clip + KL penalty 병용</h3>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "PPO-Clip은 collapse 방지를 위해 설계됐지만, <strong>LLM에서는 망각(forgetting)을 막기에 충분하지 않은 것으로 알려져 있다</strong>. 따라서 LLM 맥락에서는 PPO-Clip을 쓰더라도 <strong>reference policy로부터의 KL penalty도 함께</strong> 고려한다 — 즉 PPO-Clip 항과 PPO-Penalty 항을 함께 쓰는 것이 LLM에서의 관례다." (GRPO objective의 KL 정규화 항이 바로 그 형태)
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① TRPO(복잡·고비용) → PPO(간단화, John Schulman, OpenAI). ② 변형 2개: PPO-Penalty(KL), PPO-Clip(수업 초점). ③ clipped objective: \( \min(rA,\ \mathrm{clip}(r,1-\epsilon,1+\epsilon)A) \). ④ \( A>0 \)이면 min이 상한, \( A<0 \)이면 max가 하한 — 양쪽 모두 "멀리 갈 유인 제거". ⑤ PPO는 value model 필요. ⑥ clip만으로 너무 먼 정책 방지가 보장되지 않음 → 추가 트릭 / LLM에선 KL penalty 병용.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"PPO's clipping guarantees that the new policy never moves far from the old policy." → <strong>False</strong>. The slides explicitly note it is <em>still possible</em> to end up with a policy too far from the old one; additional tricks are adopted in practice.</li>
+      <li>"When the advantage is positive, the clip term puts a lower bound on how much the objective can increase." → <strong>False</strong>. The <em>min</em> puts an <em>upper limit</em> (ceiling) on the increase. The lower-bound (max) case applies when the advantage is <em>negative</em>.</li>
+      <li>"PPO removes the need for a value function." → <strong>False</strong>. PPO still computes advantages with a learned value model — that is its main bottleneck and the motivation for GRPO.</li>
+      <li>"TRPO was abandoned because it was unstable." → <strong>False</strong>. TRPO answers the same stability question; its problem is <em>complexity and computational cost</em> (3–4× more expensive), which PPO simplifies.</li>
+      <li>"In the PPO ratio \( \pi_\theta / \pi_{\theta_k} \), the denominator is the reference (SFT) policy." → <strong>False</strong>. The denominator is the <em>old policy</em> \( \pi_{\theta_k} \) from the previous iteration. The reference policy appears in the (separate) KL-penalty term used in RLHF/GRPO.</li>
+      <li>"PPO-Clip alone is sufficient to prevent forgetting in LLM training." → <strong>False</strong>. For LLMs, a KL penalty w.r.t. the reference policy is additionally used because clipping alone is not enough.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S6 ============ -->
+<section id="s6">
+  <h2><span class="num">6</span> PPO in RLHF — TRL 구현 <span class="en">(Implementation in Practice)</span></h2>
+
+  <h3>TRL (Transformer Reinforcement Learning)</h3>
+  <ul>
+    <li><strong>TRL</strong>: <strong>Hugging Face</strong>가 직접 공개한, transformers 라이브러리 위의 <strong>full-stack LLM 학습 라이브러리</strong>. DPO·PPO 등 검증된 학습 알고리즘들이 구현되어 있음.</li>
+    <li>사용법: <strong>config와 trainer 함수만 바꾸면</strong> 알고리즘 교체 가능 (예: <code>DPOConfig</code> + <code>DPOTrainer</code>).</li>
+    <li>단, 계산 면에서 최적은 아닐 수 있음 — 최근 연구자들은 <strong>veRL</strong>을 많이 사용 (TRL보다 훨씬 빠른 것으로 알려짐). 교육·학습 목적으로는 TRL이 잘 구성되어 있음.</li>
+  </ul>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "LLM에게 PPO 코드를 짜게 하면 되지 않냐고 물을 수 있다. 하지만 최신 LLM조차 <strong>세상에 없는 연구 코드(out-of-domain)</strong>는 종종 잘못 구현한다. 동료 교수의 학생도 코드 오류 때문에 아이디어가 실패한 줄 알았다가, 코드를 고치자 잘 작동했다. <strong>어떤 코드든 이해하고 비판·검토할 수 있어야 한다</strong> — LLM에게 골격을 짜게 하더라도 검토는 너희가 해야 한다." (이 TRL 코드 부분 자체는 "시험에 나오지 않는다, 학습과 이해를 위한 것"이라고 명시함)
+  </div>
+
+  <h3>TRL PPOTrainer의 train 함수 (lines 346–684) — 단계별 구조</h3>
+  <ol class="steps">
+    <li><strong>Step 0 (413–432). Rollout</strong> — 주어진 query마다 현재 정책으로 <strong>여러 응답(multiple responses) 생성</strong>(local rollout). <code>torch.no_grad</code> 하에서 수행 → gradient를 만들지 않음, 순수 샘플링.</li>
+    <li><strong>Step 1 (433–460).</strong> 응답 후처리 + <strong>target policy와 reference policy의 logits</strong> 계산.</li>
+    <li><strong>Step 2 (460–490).</strong> <strong>rewards</strong>(line 469, reward model로) & <strong>values</strong>(line 465, value model로) 계산.</li>
+    <li><strong>Step 3 (491–505).</strong> 손실 계산을 위한 후처리.</li>
+    <li><strong>Step 4 & 5 (506–520). RLHF objective 계산</strong> — log-ratio(비율)를 계산하고 <strong>KL 정규화를 보상에 더함</strong> (Ouyang et al., NeurIPS 2022의 RLHF 목적과 정확히 일치).</li>
+    <li><strong>Step 6 (521–535).</strong> 계산된 value들로 <strong>advantages & returns</strong> 계산 (\( A^\pi = Q^\pi - V^\pi \)).</li>
+    <li><strong>Step 7 (537–562).</strong> 갱신을 위한 target policy의 forward pass.</li>
+    <li><strong>Step 8 (563–576).</strong> <strong>value head를 갱신하는 손실</strong> 계산 (LM head와 별도).</li>
+    <li><strong>Step 9 (577–606).</strong> PPO objective에 따라 <strong>policy model을 갱신하는 손실</strong> 계산.</li>
+  </ol>
+
+  <h3>핵심 트릭: 별도 value model 대신 Value Head</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>LM head</strong>: hidden state(로짓)를 <strong>vocabulary에 대한 확률</strong>로 변환하는 부분. <strong>Value head</strong>: hidden state를 <strong>value(스칼라 가치)</strong>로 변환하는 부분. LLM RLHF에서는 별도의 value model을 두는 대신 <strong>LLM 위에 value head만 추가</strong>한다.
+  </div>
+  <p><strong>왜?</strong> RLHF-PPO를 그대로 하려면 ① policy model ② reference model(정규화용) ③ value model ④ reward model — <strong>최대 4개의 모델</strong>을 적재해야 한다. 별도 value model까지 두면 메모리·계산 부담이 너무 크므로, value head 추가로 근사한다. (단, 그만큼 value model의 capacity가 전체 모델 대비 크게 줄어든다는 한계 → GRPO 동기 중 하나)</p>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① TRL = Hugging Face의 RL 학습 라이브러리, trainer/config 교체만으로 알고리즘 변경. ② veRL = TRL보다 빠른 대안. ③ rollout(샘플링)은 <code>torch.no_grad</code> 하에서 — gradient 생성 없음. ④ RLHF-PPO는 policy + reference + value + reward 모델이 관여. ⑤ 별도 value model 대신 <strong>value head</strong>를 LLM 위에 추가 (LM head는 vocab 확률, value head는 가치).
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In TRL's PPO implementation, the rollout (response generation) step also backpropagates gradients through the policy." → <strong>False</strong>. Rollout is performed under <code>torch.no_grad</code> — it is pure sampling and produces no gradients.</li>
+      <li>"In LLM RLHF, the value function is typically implemented as a fully separate model of the same size as the policy." → <strong>False</strong>. To avoid loading yet another full model, a small <em>value head</em> is added on top of the LLM (alongside the LM head).</li>
+      <li>"The LM head converts hidden states into scalar values for advantage estimation." → <strong>False</strong>. The <em>LM head</em> maps to a probability distribution over the vocabulary; the <em>value head</em> maps to values.</li>
+      <li>"TRL is developed by OpenAI." → <strong>False</strong>. TRL is released by Hugging Face. (PPO 알고리즘 자체가 OpenAI/John Schulman.)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S7 ============ -->
+<section id="s7">
+  <h2><span class="num">7</span> GRPO <span class="en">(Group Relative Policy Optimization)</span></h2>
+
+  <h3>동기: value estimation 제거</h3>
+  <p><strong>GRPO</strong>는 DeepSeek이 제안한 RL 알고리즘 (<strong>DeepSeekMath</strong>, Shao et al., arXiv 2024.04에서 제안 → <strong>DeepSeek-R1</strong>, Guo et al., arXiv 2025.01에서 핵심 알고리즘으로 사용). PPO의 동기(급격한 갱신 방지)와 달리, GRPO의 동기는 <strong>value estimation에 대한 의존성 제거</strong>다.</p>
+  <p><strong>왜 value estimation이 문제인가? (두 가지 이유 — 출제 포인트)</strong></p>
+  <ol>
+    <li><strong>상당한 메모리·계산 부담</strong> (substantial memory and computational burden) — LLM RL은 이미 여러 모델(policy/reference/reward)을 적재해야 하는데 value model까지 추가됨. value head로 근사하면 부담은 줄지만 <strong>capacity가 크게 줄어드는</strong> 문제.</li>
+    <li><strong>reward는 보통 마지막 토큰에서 계산되지만, value는 각 토큰마다 계산</strong>되어야 함 (while reward is usually calculated using last token, value is calculated on each token) → 정확한 value 추정이 복잡해짐. 자연어에서는 단일 토큰 생성이 지금은 좋아 보여도 몇 단계 뒤 나쁜 것으로(혹은 그 반대로) 판명될 수 있어 토큰 단위 value 추정이 매우 비직관적이다.</li>
+  </ol>
+
+  <h3>핵심 아이디어: 그룹 평균을 baseline으로</h3>
+  <div class="definition"><div class="label">📖 정의</div>
+    GRPO는 PPO의 value function 추정을 제거하고, 대신 <strong>여러 샘플 출력(roll-out)의 평균 보상을 baseline으로 사용</strong>한다. 논리: advantage의 본질은 <strong>현재 행동(생성)의 상대적 품질 추정</strong>이므로, 평균과 비교할 다른 방법(=그룹 평균)이 있으면 value function의 역할을 대체할 수 있다. "Group Relative"라는 이름은 <strong>그룹 내부에서의 상대 비교</strong>로 advantage를 추정하기 때문.
+  </div>
+  <ul>
+    <li>단일 궤적 대신 <strong>한 query당 여러 출력을 생성</strong> → 평균 보상 계산 → 평균보다 좋은 출력엔 보너스, 나쁜 출력엔 페널티.</li>
+  </ul>
+
+  <h3>GRPO Objective (수식)</h3>
+  <div class="formula"><div class="fname">GRPO objective — query \( q \)마다 old policy \( \pi_{\theta_\text{old}} \)에서 그룹 \( \{o_1,\dots,o_G\} \) 샘플링</div>
+    $$ \mathcal{J}_{GRPO}(\theta) = \mathbb{E}_{q,\, \{o_i\} \sim \pi_{\theta_{\text{old}}}} \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|o_i|} \sum_{t=1}^{|o_i|} \left\{ \min\!\left[ \frac{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,&lt;t})} \hat{A}_{i,t},\; \mathrm{clip}\!\left( \frac{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,&lt;t})},\, 1-\epsilon,\, 1+\epsilon \right) \hat{A}_{i,t} \right] - \beta\, \mathbb{D}_{KL}\big[ \pi_\theta \,\|\, \pi_{\text{ref}} \big] \right\} $$
+    <p style="font-size:14px;margin:6px 0 0;">왼쪽 min/clip 부분은 <strong>PPO와 동일한 구조</strong>. 차이는 ① advantage \( \hat{A}_{i,t} \)를 value model 없이 <strong>그룹 내 상대 보상</strong>으로 계산, ② <strong>reference policy에 대한 KL 정규화 항</strong>(계수 \( \beta \))이 objective에 직접 포함된다는 점.</p>
+  </div>
+  <div class="formula"><div class="fname">Group-relative advantage (그룹 평균·표준편차 정규화)</div>
+    $$ \hat{A}_{i,t} = \frac{r_i - \mathrm{mean}(\{r_1, \dots, r_G\})}{\mathrm{std}(\{r_1, \dots, r_G\})} $$
+    <p style="font-size:14px;margin:6px 0 0;">각 출력 \( o_i \)의 보상 \( r_i \)에서 그룹 평균을 빼고 그룹 표준편차로 나눠 정규화. <strong>그룹 내부에서만</strong>(inside each group only) 상대적으로 계산된다.</p>
+  </div>
+  <div class="formula"><div class="fname">GRPO의 KL divergence 추정 (다른 estimator 사용)</div>
+    $$ \mathbb{D}_{KL}\big[\pi_\theta \,\|\, \pi_{\text{ref}}\big] = \frac{\pi_{\text{ref}}(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})} - \log \frac{\pi_{\text{ref}}(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})} - 1 $$
+    <p style="font-size:14px;margin:6px 0 0;">바닐라 KL 대신 위의 <strong>unbiased estimator</strong>를 사용 (교수: "그다지 중요하지 않다"고 언급 — 다른 추정 방식을 쓴다는 사실만 알면 됨).</p>
+  </div>
+
+  <h3>GRPO 알고리즘 흐름</h3>
+  <ol class="steps">
+    <li>이전 iteration의 매개변수를 \( \pi_{\theta_\text{old}} \)로 초기화</li>
+    <li>\( \pi_{\theta_\text{old}} \)가 query당 <strong>\( G \)개의 출력</strong>을 샘플링</li>
+    <li>각 출력에 대해 <strong>reward model로 보상 계산</strong></li>
+    <li>보상들로 <strong>group-relative advantage</strong> \( \hat{A}_{i,t} \) 계산 (value model 불필요!)</li>
+    <li>GRPO objective(PPO와 유사 + KL 정규화)를 최대화하여 정책 갱신</li>
+  </ol>
+
+  <h3>장단점과 변형</h3>
+  <table>
+    <tr><th>장점</th><th>단점</th></tr>
+    <tr>
+      <td>value model 학습·추론 제거 → 메모리·계산 절감, <strong>구현이 훨씬 쉽고 PPO보다 안정적</strong>으로 알려짐</td>
+      <td>단일 query 갱신을 위해 <strong>여러 출력을 샘플링</strong>해야 함 → value model 비용 대신 <strong>생성(generation) 시간</strong>을 소비</td>
+    </tr>
+  </table>
+  <ul>
+    <li><strong>효과는 여전히 논쟁 중</strong>(still arguable point) — 새 RL 알고리즘이 계속 제안됨:
+      <ul>
+        <li><strong>Dr. GRPO</strong> (Liu et al., "Understanding R1-Zero-Like Training: A Critical Perspective", arXiv 2025.05): advantage에서 <strong>표준편차로 나누는 것(division by std.)을 제거</strong> — 이 나눗셈이 정책에 나쁜 행동을 유발함을 보임.</li>
+        <li><strong>REINFORCE++</strong> (Hu et al., arXiv 2025.01): 출력 단위 advantage뿐 아니라 <strong>query-wise advantage</strong>를 활용.</li>
+      </ul>
+    </li>
+    <li>그럼에도 구현이 쉬워 <strong>PPO의 대안으로 널리 채택</strong>: Llama-Nemotron(NVIDIA), Search-R1, Vision-R1(멀티모달), Robot-R1(로보틱스) 등 — reasoning 모델 학습에도 적용.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① GRPO 동기 = <strong>value estimation 제거</strong> (PPO 동기인 "급격한 갱신 방지"와 다름!). ② value가 문제인 2가지 이유(메모리·계산 / reward는 last token vs value는 every token). ③ advantage = (개별 보상 − 그룹 평균) / 그룹 std — <strong>그룹 내부에서만</strong>. ④ objective의 clip 구조는 PPO와 동일 + KL(ref) 정규화 포함. ⑤ value model 0개, 대신 G개 출력 샘플링 비용. ⑥ DeepSeekMath에서 제안, DeepSeek-R1에서 사용. ⑦ Dr. GRPO = std 나눗셈 제거, REINFORCE++ = query-wise advantage.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"GRPO trains a value model with reduced capacity to estimate advantages." → <strong>False</strong>. GRPO <em>removes</em> value estimation entirely; the baseline is the average reward of multiple sampled outputs in the group.</li>
+      <li>"GRPO's motivation is the same as PPO's: preventing abrupt policy updates." → <strong>False</strong>. PPO's motivation is stability (limiting update size); GRPO's motivation is removing the dependency on value estimation. (GRPO는 PPO의 clip은 그대로 물려받는다.)</li>
+      <li>"In GRPO, the advantage of an output is computed relative to rewards across the entire training dataset." → <strong>False</strong>. The advantage is computed using mean/std of rewards <em>inside each group only</em> (outputs sampled for the same query).</li>
+      <li>"GRPO is computationally free compared to PPO." → <strong>False</strong>. It trades value-model cost for <em>generation cost</em>: multiple outputs (rollouts) must be sampled per query.</li>
+      <li>"GRPO was first proposed in the DeepSeek-R1 paper." → <strong>False</strong>. It was proposed in <em>DeepSeekMath</em> (Shao et al., 2024.04); DeepSeek-R1 (2025.01) adopted it as its core RL algorithm.</li>
+      <li>"Dr. GRPO adds a standard-deviation normalization to GRPO." → <strong>False</strong>. Dr. GRPO <em>removes</em> the division by the standard deviation, which was shown to induce undesirable policy behavior.</li>
+      <li>"GRPO drops the clipping mechanism of PPO." → <strong>False</strong>. The clipped-ratio term is identical in structure to PPO; GRPO only changes the advantage estimation and adds KL regularization w.r.t. the reference policy.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ S8 ============ -->
+<section id="s8">
+  <h2><span class="num">8</span> 2026년의 LLM Post-training <span class="en">(GLM-5 & On-policy Distillation)</span></h2>
+
+  <h3>GLM-5의 3단계 RL (GLM-5 Team, arXiv 2026.02)</h3>
+  <p>RL은 LLM post-training의 핵심 패러다임. GLM-5("from Vibe Coding to Agentic Engineering")는 SFT(= RL의 <strong>cold start</strong>를 위한 기본 instruction tuning) 이후 <strong>목적이 다른 3개의 RL 단계</strong>를 순차 수행:</p>
+  <ol class="steps">
+    <li><strong>Reasoning RL</strong> — 수학(math), 과학(science), 코드(code), 기본 도구 사용(basic tool use)</li>
+    <li><strong>Agentic RL</strong> — 코딩(coding) & 검색(search) 에이전트</li>
+    <li><strong>General RL</strong> — 일반 RL + 정렬(alignment: RLHF/RLAIF), instruction following</li>
+  </ol>
+  <p>→ 먼저 추론·에이전트 능력을 강화하고, <strong>마지막 단계에서 alignment</strong>를 수행. 핵심 RL 알고리즘은 <strong>여전히 GRPO</strong>(일부 문제 해결을 위한 수정 포함).</p>
+
+  <h3>Inference / Training 분리와 vLLM</h3>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "GRPO는 두 메커니즘이 필요하다: ① <strong>inference</strong>(advantage 계산용 출력 rollout), ② 계산된 advantage로 <strong>정책 모델 갱신(training)</strong>. inference에는 <strong>vLLM</strong> 같은 가속 툴킷이 많으므로, <strong>추론과 학습을 분리하고 서로 다른 하드웨어를 쓰면</strong> 학습을 가속할 수 있어 널리 채택된다. 그러나 이 분리(서로 다른 머신·구현)는 정책 모델과 생성 모델 사이에 <strong>편차(deviation)</strong>를 만들어 학습 불안정성을 유발할 수 있고, GLM-5는 이를 <strong>distribution matching</strong>으로 해결했다 (고급 주제)."
+  </div>
+
+  <h3>On-policy Distillation: 반복 RL의 망각 해결</h3>
+  <p><strong>문제</strong>: 여러 RL 단계를 반복하면 이전 단계에서 배운 지식이 <strong>망각(forgetting)</strong>됨 — 예: General RL을 마치면 Reasoning RL 능력이 줄어듦. <strong>해결</strong>: <strong>on-policy distillation</strong> (Agarwal et al., "On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes", ICLR 2024; Thinking Machines blog).</p>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>On-policy (cross-stage) distillation</strong>: 각 RL 단계로 튜닝된 모델을 <strong>teacher</strong>로 삼고(reasoning teacher / agentic teacher / general teacher), <strong>student 모델이 생성한 데이터</strong>에 대해 teacher가 supervision을 제공하는 knowledge distillation. 데이터가 student에서 나오므로(on-policy) <strong>forgetting에 더 강건</strong>하다. 여러 teacher의 능력을 <strong>단일 student 모델로 병합</strong>할 수 있다.
+  </div>
+  <ul>
+    <li>"특정 능력 강화용 RL 단계 도입 → 그 모델을 해당 능력의 teacher로 사용 → on-policy distillation으로 단일 모델에 병합" — 이 파이프라인은 이제 <strong>사실상의 표준(de facto standard)</strong>이며 GLM-4(2026.05 공개 버전)에서도 채택됨.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    ① GLM-5의 3단계 RL 순서: Reasoning → Agentic → General(alignment는 맨 마지막). ② 핵심 알고리즘은 여전히 GRPO. ③ inference/training 분리(vLLM 가속) → 정책-생성 모델 간 deviation → 불안정성 (distribution matching으로 해결). ④ on-policy distillation: <strong>데이터가 student에서</strong> 나옴 → forgetting에 강건, 여러 RL teacher를 한 모델로 병합.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In GLM-5's post-training, alignment (RLHF) is performed first, before reasoning RL." → <strong>False</strong>. The order is Reasoning RL → Agentic RL → General RL; alignment comes in the <em>last</em> RL stage.</li>
+      <li>"In on-policy distillation, the training data is generated by the teacher model." → <strong>False</strong>. The data comes from the <em>student</em> model (that is what "on-policy" means here); the teacher provides supervision on the student's generations, making it more robust to forgetting.</li>
+      <li>"Separating inference and training machines for GRPO has no downside." → <strong>False</strong>. It introduces a deviation between the policy model and the generation model, which can destabilize training.</li>
+      <li>"GLM-5 replaced GRPO with a fundamentally new RL algorithm." → <strong>False</strong>. The core RL algorithm is still GRPO, with modifications to resolve some issues.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section id="compare">
+  <h2><span class="num">★</span> 총정리 비교표: REINFORCE vs PPO vs GRPO</h2>
+  <table>
+    <tr><th>구분</th><th>REINFORCE (Vanilla PG)</th><th>PPO (-Clip)</th><th>GRPO</th></tr>
+    <tr><td><strong>핵심 동기</strong></td><td>policy gradient의 가장 기본형</td><td>급격한 갱신 방지 → <strong>학습 안정화</strong> (TRPO의 간단화)</td><td><strong>value estimation 제거</strong> (메모리·계산 + 토큰별 value 추정의 어려움)</td></tr>
+    <tr><td><strong>Objective</strong></td><td>\( \mathbb{E}[\sum_t \nabla\log\pi_\theta \cdot \Phi_t] \)<br>(\( \Phi_t = R(\tau) \), 변형: reward-to-go/baseline)</td><td>\( \min\big(r_t A,\ \mathrm{clip}(r_t, 1\!-\!\epsilon, 1\!+\!\epsilon) A\big) \)</td><td>PPO와 동일한 clip 구조 + <strong>\( \beta\,\mathbb{D}_{KL}[\pi_\theta\|\pi_{ref}] \) 정규화</strong> 포함</td></tr>
+    <tr><td><strong>Advantage 추정</strong></td><td>\( R(\tau) \) 또는 reward-to-go (− baseline)</td><td>학습된 <strong>value model(head)</strong>로 \( A = Q - V \)</td><td><strong>그룹 상대</strong>: \( \hat{A}_{i,t} = \frac{r_i - \text{mean}}{\text{std}} \) (그룹 내부에서만)</td></tr>
+    <tr><td><strong>필요 모델 수 (RLHF 기준)</strong></td><td>policy (+ baseline용 value 선택적)</td><td>policy + reference + <strong>value</strong> + reward (value는 보통 value head로 근사)</td><td>policy + reference + reward (<strong>value 없음</strong>)</td></tr>
+    <tr><td><strong>추가 비용</strong></td><td>높은 분산 (감소 장치 없으면)</td><td>value model 학습·추론</td><td>query당 <strong>G개 rollout 생성 시간</strong></td></tr>
+    <tr><td><strong>안정성·실무</strong></td><td>분산 커서 불안정</td><td>안정적이나 clip만으로 보장 X → LLM은 KL penalty 병용</td><td>PPO보다 <strong>구현 쉽고 더 안정적</strong>으로 알려짐; 효과는 논쟁 중</td></tr>
+    <tr><td><strong>대표 사용처</strong></td><td>(교과서적 기본형)</td><td>RLHF/InstructGPT (OpenAI)</td><td>DeepSeekMath·DeepSeek-R1, GLM-5, Llama-Nemotron, Search-R1, Vision-R1, Robot-R1</td></tr>
+    <tr><td><strong>변형</strong></td><td>REINFORCE w. baseline, Advantage Actor-Critic</td><td>PPO-Penalty / PPO-Clip</td><td>Dr. GRPO (std 나눗셈 제거), REINFORCE++ (query-wise advantage)</td></tr>
+  </table>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 중간고사 이후 범위)</span></h2>
+  <p>2025 중간 기출 형식 그대로: T/F (정답 3점·오답 0점·<strong>무응답 1점</strong>) + "Pick all that are correct; any wrong answer will lead to 0 points".</p>
+
+  <h3>Part A. True/False</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>When an LLM is trained with reinforcement learning, the LLM corresponds to the policy, the input tokens correspond to the state, and generating the next token corresponds to the action.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> This is exactly the mapping given in the lecture: (1) policy = LLM, (2) state = input tokens, (3) action = generation of the next token.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Adding a state-dependent baseline \( b(s_t) \) to the policy gradient reduces the bias of the gradient estimate.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> A baseline does not change the bias at all: since \( \mathbb{E}_{a_t\sim\pi_\theta}[\nabla_\theta \log\pi_\theta(a_t|s_t)\, b(s_t)] = 0 \), the expected gradient is unchanged. What a good baseline (most commonly the on-policy value function \( V^\pi(s_t) \)) reduces is the <em>variance</em> of the estimate.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the PPO-Clip objective, when the advantage is positive, taking the min with the clipped ratio limits how much the objective can increase, so the new policy does not benefit from moving far away from the old policy.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> With \( A > 0 \), the objective becomes \( \min(\pi_\theta/\pi_{\theta_k},\, 1+\epsilon)\,A \); the min caps the increase, removing any benefit from pushing the ratio beyond \( 1+\epsilon \). (Symmetrically, with \( A<0 \) the max with \( 1-\epsilon \) limits the decrease.)</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>GRPO estimates the advantage of each sampled output using a separate learned value model, normalized by the group standard deviation.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> GRPO removes the value model entirely. The advantage is computed purely from the rewards within the group: \( \hat{A}_{i,t} = (r_i - \mathrm{mean}\{r_j\}) / \mathrm{std}\{r_j\} \), where the group is the set of outputs sampled from the old policy for the same query. No value model is involved.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>One motivation for GRPO is that in LLMs the reward is usually computed from the last token, whereas the value must be estimated for each token, which makes accurate value estimation complicated.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> This is the second reason given in the slides (the first being the substantial memory/computational burden of a value model). A single token's generation may look good now but turn out bad several steps later, so per-token value estimation is unintuitive in text.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>The reward-to-go policy gradient at time step \( t \) sums the rewards over the entire trajectory, including rewards received before the action \( a_t \) was taken.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Reward-to-go sums rewards only from step \( t \) onward (\( \sum_{t'=t}^{T} r_{t'} \)). Rewards obtained before the action cannot be affected by it, so including them (as the basic policy gradient does with \( R(\tau) \)) is less accurate.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>PPO was developed as a simpler alternative to TRPO, which answers the same question (taking the biggest possible improvement step without moving too far from the current policy) but is much more complex and computationally expensive.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> TRPO (Schulman et al., ICML 2015) addresses the same stability question but is 3–4× more expensive and hard to apply. John Schulman (OpenAI) developed PPO with two variants: PPO-Penalty and PPO-Clip.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In GLM-5's post-training pipeline, on-policy distillation uses data generated by the teacher models so that the student can imitate the teachers' outputs directly.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> In <em>on-policy</em> distillation, the data comes from the <em>student</em> model's own generations, and the RL-tuned teachers provide supervision on those generations. This is precisely why it is more robust to the forgetting issue, and it allows merging multiple teachers' capabilities into a single student model.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Because the gradients of the environment functions (the initial state distribution and the transition probabilities) with respect to \( \theta \) are zero, the gradient of the log-probability of a trajectory reduces to the sum of the gradients of the log policy probabilities.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The parameter \( \theta \) appears only in the policy, so \( \nabla_\theta \log\rho_0(s_0) = 0 \) and \( \nabla_\theta \log P(s_{t+1}|s_t,a_t) = 0 \), leaving \( \nabla_\theta \log P(\tau|\theta) = \sum_t \nabla_\theta \log\pi_\theta(a_t|s_t) \).</div>
+    </details>
+  </div>
+
+  <h3>Part B. Pick all that are correct <span class="en">(any wrong answer → 0 points)</span></h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the key concepts of reinforcement learning?</p>
+      <ol type="a">
+        <li>The return is the cumulative reward over a trajectory, and the agent's goal is to maximize it.</li>
+        <li>The value function \( V^\pi(s) \) is conditioned on both a specific state and a specific action.</li>
+        <li>Taking the expectation of the Q function over actions sampled from the policy yields the value function.</li>
+        <li>For an infinite-horizon return, a discount factor \( \gamma \in (0,1) \) is introduced to keep the sum from diverging.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Return = cumulative reward; maximizing it is the agent's goal.</li>
+          <li class="wrong">(b) Incorrect. The <em>value</em> function is conditioned on a state only; the <em>Q</em> function is conditioned on a state and an action.</li>
+          <li>(c) Correct. \( V^\pi(s) = \mathbb{E}_{a\sim\pi}[Q^\pi(s,a)] \) — the natural relationship.</li>
+          <li>(d) Correct. Without \( \gamma \), the infinite sum may diverge to infinity.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the derivation of the basic policy gradient?</p>
+      <ol type="a">
+        <li>The log-derivative trick rewrites \( \nabla_\theta P(\tau|\theta) \) as \( P(\tau|\theta)\,\nabla_\theta \log P(\tau|\theta) \).</li>
+        <li>The resulting policy gradient is \( \nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau\sim\pi_\theta}[\sum_t \nabla_\theta \log\pi_\theta(a_t|s_t)\, R(\tau)] \).</li>
+        <li>The expectation is computed exactly in closed form during training.</li>
+        <li>The sample estimate uses trajectories collected from the current policy \( \pi_\theta \).</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. It follows from \( \nabla\log f = \nabla f / f \).</li>
+          <li>(b) Correct. This is the basic policy gradient formula.</li>
+          <li class="wrong">(c) Incorrect. The expectation cannot be computed in closed form for complex distributions; it is replaced with an empirical sample mean (Monte Carlo estimation).</li>
+          <li>(d) Correct. \( \mathcal{D} = \{\tau_i\} \) with \( \tau_i \sim \pi_\theta \) — the trajectories must come from the current policy (on-policy).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the PPO-Clip algorithm?</p>
+      <ol type="a">
+        <li>The objective takes the min between \( r_t(\theta)A \) and \( \mathrm{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)A \), where \( r_t(\theta) \) is the probability ratio between the current and the old policy.</li>
+        <li>When the advantage is negative, the max with \( (1-\epsilon) \) limits how much the objective can decrease.</li>
+        <li>PPO no longer needs a value model because clipping replaces advantage estimation.</li>
+        <li>Even with clipping, the new policy can still end up too far from the old policy, so additional tricks are widely adopted in practice.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the PPO-Clip objective with \( r_t(\theta) = \pi_\theta(a|s)/\pi_{\theta_k}(a|s) \).</li>
+          <li>(b) Correct. For \( A<0 \) the objective becomes \( \max(r_t, 1-\epsilon)\,A \), bounding the decrease.</li>
+          <li class="wrong">(c) Incorrect. Clipping constrains the update size; it does not estimate advantages. PPO still requires a learned value function to compute \( A = Q - V \), which is its main bottleneck.</li>
+          <li>(d) Correct. The slides explicitly note this limitation.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about PPO as implemented for RLHF in the TRL library?</p>
+      <ol type="a">
+        <li>TRL is a full-stack library released by Hugging Face, and algorithms can be switched by changing only the config and trainer functions.</li>
+        <li>The rollout step that generates multiple responses per query is executed under <code>torch.no_grad</code>, so it produces no gradients.</li>
+        <li>To avoid loading a fully separate value model, a value head is added on top of the LLM, analogous to the LM head.</li>
+        <li>The LM head converts hidden representations into scalar value estimates.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. E.g., switching to DPO only requires <code>DPOConfig</code> + <code>DPOTrainer</code>.</li>
+          <li>(b) Correct. Rollout is pure sampling; no model parameters are updated there.</li>
+          <li>(c) Correct. Loading policy + reference + value + reward as four separate models is too expensive, so the value model is approximated by a value head.</li>
+          <li class="wrong">(d) Incorrect. The LM head maps to a probability distribution over the <em>vocabulary</em>; it is the <em>value head</em> that maps to values.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q14. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true when comparing PPO and GRPO?</p>
+      <ol type="a">
+        <li>Both PPO and GRPO use a clipped probability-ratio objective.</li>
+        <li>GRPO replaces the value function's role with the average reward of a group of sampled outputs.</li>
+        <li>GRPO eliminates all additional computational cost relative to PPO.</li>
+        <li>GRPO's objective additionally includes a KL regularization term with respect to the reference policy.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. The inner min/clip term of GRPO is structurally identical to PPO-Clip.</li>
+          <li>(b) Correct. The essence of the advantage is estimating the <em>relative</em> quality of the current generation, so the group mean can serve as the baseline.</li>
+          <li class="wrong">(c) Incorrect. GRPO trades value-model cost for generation cost: multiple outputs must be sampled per query to update on a single query.</li>
+          <li>(d) Correct. \( -\beta\,\mathbb{D}_{KL}[\pi_\theta\|\pi_{ref}] \) is part of the GRPO objective (with a different KL estimator than the vanilla one).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q15. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about recent variants and adoption of GRPO?</p>
+      <ol type="a">
+        <li>Dr. GRPO removes the division by the standard deviation in the advantage computation.</li>
+        <li>REINFORCE++ utilizes a query-wise advantage in addition to the output-wise advantage.</li>
+        <li>The effectiveness of GRPO is firmly established and no longer debated.</li>
+        <li>GRPO has been adopted as an alternative to PPO in models such as Llama-Nemotron, Search-R1, Vision-R1, and Robot-R1.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. The std division was shown to induce undesirable policy behavior.</li>
+          <li>(b) Correct. That is REINFORCE++'s modification.</li>
+          <li class="wrong">(c) Incorrect. The slides state the effectiveness of GRPO is "still an arguable point," and new RL algorithms are continuously proposed. It is widely adopted mainly because of its easy implementation.</li>
+          <li>(d) Correct. All four are listed in the slides as adopters.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q16. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about LLM post-training in 2026 (GLM-5)?</p>
+      <ol type="a">
+        <li>GLM-5 performs three RL stages in the order: Reasoning RL → Agentic RL → General RL.</li>
+        <li>The General RL stage covers generic RL and alignment (RLHF/RLAIF).</li>
+        <li>GLM-5 abandoned GRPO in favor of vanilla PPO.</li>
+        <li>Separating the inference (rollout) machine from the training machine can introduce a deviation between the policy model and the generation model, causing training instability.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. Reasoning (math/science/code/basic tool use) → Agentic (coding & search) → General.</li>
+          <li>(b) Correct. Alignment comes last, after reasoning and agentic capabilities are strengthened.</li>
+          <li class="wrong">(c) Incorrect. The core RL algorithm in GLM-5 is still GRPO (with modifications to resolve some issues).</li>
+          <li>(d) Correct. Using different machines/implementations (e.g., vLLM for inference) speeds up training but introduces a policy–generation deviation, addressed by distribution matching.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q17. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about variance reduction in policy gradient methods?</p>
+      <ol type="a">
+        <li>For any function of the state \( b(s_t) \), \( \mathbb{E}_{a_t\sim\pi_\theta}[\nabla_\theta\log\pi_\theta(a_t|s_t)\,b(s_t)] = 0 \).</li>
+        <li>The most common choice of baseline is the on-policy value function \( V^\pi(s_t) \).</li>
+        <li>The advantage function is defined as \( A^\pi(s_t,a_t) = V^\pi(s_t) - Q^\pi(s_t,a_t) \).</li>
+        <li>Depending on the choice of \( \Phi_t \), the algorithm is called REINFORCE (cumulative reward), REINFORCE with baseline, or an advantage actor-critic algorithm.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This identity is why inserting a baseline leaves the expected gradient unchanged.</li>
+          <li>(b) Correct. Empirically known to be effective for reducing the variance of the estimate.</li>
+          <li class="wrong">(c) Incorrect. The advantage is \( A^\pi = Q^\pi - V^\pi \) — how much better the action is than the average — not \( V - Q \).</li>
+          <li>(d) Correct. The name of the algorithm varies with the choice of \( \Phi_t \).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ SUMMARY ============ -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>RL 기본 매핑</strong></td><td>policy=LLM, state=input tokens, action=next-token generation; 목표는 return(누적 보상) 최대화</td></tr>
+    <tr><td><strong>J(θ) & Policy Gradient</strong></td><td>\( J(\pi_\theta)=\mathbb{E}_{\tau\sim\pi_\theta}[R(\tau)] \)를 gradient <strong>ascent</strong>로 최대화; PPO·GRPO 모두 policy gradient 계열</td></tr>
+    <tr><td><strong>기본 PG 결과식</strong></td><td>\( \nabla J = \mathbb{E}[\sum_t \nabla\log\pi_\theta(a_t|s_t)\,R(\tau)] \) — log-derivative trick + 환경항 gradient=0 + Monte Carlo 추정</td></tr>
+    <tr><td><strong>분산 감소 3종</strong></td><td>reward-to-go(t 이후만) / baseline(기댓값 불변·분산↓, 보통 \( V^\pi \)) / advantage \( A=Q-V \)(평균 대비 우수성)</td></tr>
+    <tr><td><strong>PPO-Clip</strong></td><td>\( \min(rA,\,\text{clip}(r,1\!-\!\epsilon,1\!+\!\epsilon)A) \) — A>0이면 min이 상한, A&lt;0이면 max가 하한; value model 필요; LLM에선 KL penalty 병용</td></tr>
+    <tr><td><strong>TRL 구현</strong></td><td>HF의 TRL(빠른 대안 veRL); rollout은 torch.no_grad; 별도 value model 대신 <strong>value head</strong> (LM head=vocab 확률, value head=가치)</td></tr>
+    <tr><td><strong>GRPO</strong></td><td>value model 제거, 그룹 G개 rollout의 \( \hat{A}=(r_i-\text{mean})/\text{std} \); clip 구조는 PPO와 동일 + KL(ref); 대신 생성 비용 증가; DeepSeekMath 제안→R1 사용</td></tr>
+    <tr><td><strong>GRPO 변형</strong></td><td>Dr. GRPO=std 나눗셈 제거, REINFORCE++=query-wise advantage; 효과는 논쟁 중이나 구현 쉬워 널리 채택</td></tr>
+    <tr><td><strong>2026 Post-training</strong></td><td>GLM-5: SFT(cold start)→Reasoning RL→Agentic RL→General RL(alignment 마지막), 핵심은 여전히 GRPO; vLLM 추론/학습 분리→deviation 문제</td></tr>
+    <tr><td><strong>On-policy Distillation</strong></td><td>RL 단계별 모델을 teacher로, <strong>student가 생성한 데이터</strong>에 supervision → forgetting에 강건, 능력 병합 (de facto standard)</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="7. Jailbreak 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

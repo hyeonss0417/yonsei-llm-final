@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8장. AI 피드백 (AI Feedback for Training &amp; Evaluation)</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="3. RAG 정리.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #8</div>
+  <h1>2. AI 피드백 <span style="font-weight:400;font-size:20px;">(AI Feedback for Training &amp; Evaluation)</span></h1>
+  <div class="subtitle">사람 대신 LLM이 평가하고(G-Eval, LLM-as-a-Judge), LLM이 가르친다(RLAIF, Constitutional AI) — 3대 judge bias와 SL-CAI/RL-CAI 2단계 구분이 핵심.</div>
+  <div class="meta">
+    <span>📅 강의일: 2026-05-04 (후반부)</span><span>📊 예상 비중: 중상 (기출 직결: LC win rate)</span><span>⏱ 분량: 본문 7섹션 + 문제 15</span>
+  </div>
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">AI Feedback 개요 — 왜 AI 피드백인가?</a></li>
+    <li><a href="#s2">평가 ① G-Eval: 기준 기반 인스턴스 단위 평가</a></li>
+    <li><a href="#s3">평가 ② LLM-as-a-Judge &amp; MT-Bench</a></li>
+    <li><a href="#s4">Judge의 3대 Bias와 해법 (AlpacaEval LC Win Rate)</a></li>
+    <li><a href="#s5">학습을 위한 AI Feedback — RLHF의 한계</a></li>
+    <li><a href="#s6">Helpfulness vs Harmlessness (Anthropic HH-RLHF)</a></li>
+    <li><a href="#s7">Constitutional AI: SL-CAI → RL-CAI (RLAIF)</a></li>
+    <li><a href="#quiz">기출 &amp; 예상문제</a></li>
+  </ol>
+</div>
+
+<!-- ===== 1. 개요 ===== -->
+<section id="s1">
+  <h2><span class="num">1</span> AI Feedback 개요 <span class="en">(Why AI Feedback?)</span></h2>
+
+  <p>직전 파트(#7 Decoding)의 제어 가능성(controllability) 논의를 마치고 이어지는 챕터로, <strong>AI 피드백(AI feedback)</strong>을 <strong>① 평가(evaluation)</strong>와 <strong>② 학습(training)</strong> 두 축으로 나누어 다룬다.</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>AI Feedback</strong>: 사람(human annotator) 대신 <strong>LLM 자신이 출력의 품질을 판단·점수화·비교</strong>하여, 그 신호를 평가 지표 또는 학습 신호(reward/label)로 사용하는 패러다임.
+  </div>
+
+  <h3>동기: Human Feedback의 한계</h3>
+  <ul>
+    <li><strong>비용(cost)</strong>: 사람 주석(human annotation)은 비싸고 느리다. 사람만으로 구성된 데이터 파이프라인 대비 LLM 평가는 훨씬 저렴 → <strong>scalability</strong>.</li>
+    <li><strong>잡음(noise)·주관성</strong>: 선호 판단은 매우 주관적(subjective)이라 사람 사이에서도 일치도가 낮다(MT-Bench에서 human–human agreement 81%에 불과). 역설적으로 LLM 평가가 더 일관적일 수 있다.</li>
+    <li><strong>설명가능성(explainability)</strong>: LLM에게는 판단 근거(rationale)를 생성하라는 지시 한 줄을 추가하면 되지만, 사람에게 상세 근거를 요구하면 주석 시간이 폭증하고 결과도 잡음이 많다.</li>
+    <li><strong>모델이 사람보다 똑똑해지는 미래</strong>: 모델 성능이 좋아질수록 사람이 선호 레이블을 다는 일 자체가 어려워진다 → AI가 AI를 정렬하는 <strong>scalable alignment</strong>가 필요(→ §7 Constitutional AI).</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "사실 이전 강의에서 우리는 이미 이 패러다임을 만났다. <strong>LLaMA-3의 데이터 필터링</strong>에서 기준을 만들고 LLM으로 레이블을 얻어 작은 분류기를 학습시켰다 — 즉 데이터 수준에서는 AI 피드백이 이미 LLM 학습에 포함되어 있었다. 이번 파트에서는 이를 더 형식적으로 다루고, 학습에 더 적극적으로 활용하는 방법으로 넘어간다."
+  </div>
+
+  <table>
+    <tr><th>축</th><th>대표 방법</th><th>핵심 질문</th></tr>
+    <tr><td><strong>AI Feedback for Evaluation</strong></td><td>G-Eval (instance-wise), LLM-as-a-Judge (pairwise)</td><td>LLM의 판단이 사람 평가와 얼마나 일치하는가? 어떤 bias가 있는가?</td></tr>
+    <tr><td><strong>AI Feedback for Training</strong></td><td>RLAIF, Constitutional AI (SL-CAI/RL-CAI), Self-Rewarding LM</td><td>사람 레이블 없이도 AI 피드백만으로 정렬(alignment)이 가능한가?</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    AI 피드백의 두 용도(evaluation vs training)를 구분하고, 각각의 대표 방법 이름·논문을 매칭할 수 있어야 한다. 평가 쪽 핵심 키워드는 <strong>scalability &amp; explainability</strong>, 학습 쪽 핵심 키워드는 <strong>scalable alignment</strong>.
+  </div>
+</section>
+
+<!-- ===== 2. G-Eval ===== -->
+<section id="s2">
+  <h2><span class="num">2</span> 평가 ① G-Eval <span class="en">(NLG Evaluation using GPT-4)</span></h2>
+  <p class="en">Liu et al., "G-EVAL: NLG Evaluation using GPT-4 with Better Human Alignment", EMNLP 2023</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>G-Eval</strong>: LLM을 사용해 다른 LLM 출력의 품질을 평가(assess quality of outputs of LLM)하는 <strong>생성 모델 기반·인스턴스 단위(instance-wise) 평가</strong> 프레임워크. 사람 주석자에게 과제와 가이드라인을 주듯, LLM에게 과제 정보와 기준을 주고 점수를 매기게 한다.
+  </div>
+
+  <h3>G-Eval 파이프라인 (3단계)</h3>
+  <ol class="steps">
+    <li><strong>사용자 입력</strong> — 사람이 <strong>(1) Task information</strong>(예: 뉴스 기사 요약 평가)과 <strong>(2) Evaluation criteria</strong>(예: coherence, 1~5점)를 제공한다. 이 둘은 반드시 사람이 직접 줘야 한다.</li>
+    <li><strong>Evaluation steps 자동 생성</strong> — 이 입력으로 LLM이 <strong>평가 단계(evaluation steps)를 automatically 생성</strong>한다. 평가 관점의 chain이라고 볼 수 있다(CoT와 유사한 역할).</li>
+    <li><strong>평가 수행</strong> — LLM이 evaluation criteria와 task info에 따라 주어진 입력(기사+요약문)을 평가하여 점수(예: 1~5)를 출력한다.</li>
+  </ol>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "과제 정보와 기준을 생략하고 예시만 주면 모델이 <strong>자기만의 판단 기준</strong>을 만들어 버려서, 결정이 어떻게 내려졌는지에 대한 공정성과 명확성을 잃는다. 그래서 최소한 task information과 evaluation criteria는 우리가 직접 줘야 한다."
+  </div>
+
+  <h3>기존 지표와의 비교</h3>
+  <table>
+    <tr><th>지표</th><th>비교 수준</th><th>방식</th><th>한계</th></tr>
+    <tr><td><strong>ROUGE</strong></td><td>표면 수준 <span class="en">(surface-level)</span></td><td>목표 요약 vs 사람이 만든 황금 요약(golden/reference summary)의 <strong>n-gram overlap</strong></td><td>의미가 같아도 표현이 다르면 점수 낮음; reference 필요</td></tr>
+    <tr><td><strong>BERTScore</strong> <span class="en">(Zhang et al., ICLR 2020)</span></td><td>임베딩 기반 <span class="en">(embedding-based)</span></td><td>목표·참조 요약을 벡터로 인코딩 후 <strong>cosine similarity</strong></td><td>여전히 reference 필요; 세밀한 품질 기준 반영 어려움</td></tr>
+    <tr><td><strong>G-Eval (GPT-4)</strong></td><td>생성 모델 기반</td><td>criteria 기반 직접 채점</td><td>judge bias 존재(§4); 약한 LLM이면 기존 지표보다 못할 수 있음</td></tr>
+  </table>
+  <ul>
+    <li><strong>핵심 실험 결과</strong>: G-Eval with <strong>GPT-4</strong>가 사람 평가와 <strong>가장 높은 상관관계(highest correlation to human evaluation)</strong>를 보인다.</li>
+    <li>단, <strong>GPT-3.5 같은 상대적으로 약한 LLM</strong>을 쓰면 성능이 제한적이어서 기존 지표보다 나쁠 수 있다. LLM capacity를 키울수록 평가 정확도도 증가한다.</li>
+  </ul>
+
+  <h3>표준 패러다임으로의 채택 — Self-Rewarding LM</h3>
+  <p>특정 기준(specific criteria)을 가진 LLM-as-evaluator는 이제 <strong>표준 접근(standard approach)</strong>이 되었다. 대표 사례가 <strong>Self-Rewarding Language Models</strong> <span class="en">(Yuan et al., Meta, ICML 2024)</span>: 모델이 <strong>스스로 자신의 응답을 채점(LLM-as-a-Judge 프롬프트로 self-reward 생성)</strong>하여 만든 선호 데이터로 자기 자신을 반복 학습시킨다. 슬라이드에서는 이 논문의 <strong>"Prompt to Use LLM as Scoring Model"</strong>(5점 가산 채점 기준 프롬프트)이 criteria-based data evaluation의 예시로 인용되었다. LLaMA-3의 학습 데이터 필터링·fine-tuning 데이터 생성에도 같은 패러다임이 채택되었다.</p>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    G-Eval 입력 2가지(<strong>task information + evaluation criteria</strong>는 사람이 제공) vs <strong>evaluation steps는 LLM이 자동 생성</strong> — 이 역할 분담이 단골 함정. 그리고 "GPT-4 기반 G-Eval &gt; BERTScore(embedding) &gt; ROUGE(n-gram)" 순의 human correlation.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In G-Eval, the user must manually write the evaluation steps." → <strong>False</strong>. The user provides task information and evaluation criteria; the <strong>evaluation steps are generated automatically by the LLM</strong>.</li>
+      <li>"G-Eval performs pairwise comparison between two responses." → <strong>False</strong>. G-Eval is <strong>instance-wise</strong> (scores each response individually); pairwise comparison is LLM-as-a-Judge.</li>
+      <li>"Any LLM used as a G-Eval evaluator outperforms ROUGE and BERTScore." → <strong>False</strong>. With a relatively weak LLM (e.g., GPT-3.5), performance can be <strong>worse</strong> than traditional metrics; only with stronger models (GPT-4) does it exceed them.</li>
+      <li>"BERTScore measures n-gram overlap with a reference summary." → <strong>False</strong>. BERTScore is <strong>embedding-based</strong> (cosine similarity); n-gram overlap is ROUGE.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 3. LLM-as-Judge ===== -->
+<section id="s3">
+  <h2><span class="num">3</span> 평가 ② LLM-as-a-Judge &amp; MT-Bench</h2>
+  <p class="en">Zheng et al., "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena", NeurIPS 2023 (Datasets and Benchmarks Track)</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>LLM-as-a-Judge</strong>: 사람의 선호 판단(human preference)을 LLM 프롬프팅으로 대체하는 <strong>쌍별 비교(pairwise comparison)</strong> 평가. 기준을 추가 지시(instruction)로 주고, 두 응답(A/B) 중 어느 것이 더 선호되는지 LLM이 고른다. 보상 모델링(reward modeling)과 유사한 구조.
+  </div>
+
+  <h3>핵심 장점 2가지</h3>
+  <ul>
+    <li><strong>(1) Scalability</strong> — 사람만으로 구성된 데이터 파이프라인보다 훨씬 저렴하고 빠르다.</li>
+    <li><strong>(2) Explainability</strong> — 판단을 설명하라는 지시만 추가하면 근거(rationale)가 함께 나온다. 사람에게 같은 것을 요구하면 시간이 많이 들고 잡음도 크다.</li>
+  </ul>
+
+  <h3>MT-Bench</h3>
+  <ul>
+    <li><strong>80개</strong>의 고품질 <strong>multi-turn</strong> 질문, <strong>8개 카테고리</strong>(e.g., roleplay, math, writing, ...)로 구성된 벤치마크.</li>
+    <li>예시(roleplay): Turn #1 "Pretend yourself to be Elon Musk... Why do we need to go to Mars?", Turn #2 "How do you like dancing? Can you teach me?"</li>
+    <li><strong>핵심 수치</strong>: GPT-4 judge와 human의 agreement = <strong>85%</strong>, human끼리의 agreement = <strong>81%</strong> (S2 setup: no tie). 즉 <strong>GPT-4–human 일치도가 human–human 일치도보다 높다</strong> → LLM 기반 평가가 신뢰할 만하다는 경험적 근거(empirical support).</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "사람 선호 판단은 매우 주관적이라 잡음이 많다. 그래서 <strong>역설적이게도 LLM 기반 평가가 더 확장 가능하고 더 신뢰할 만하다</strong>. GPT-4는 사람 둘 사이의 일치도(81%)보다 더 높은 일치율(85%)을 보였다."
+  </div>
+
+  <h3>G-Eval vs LLM-as-a-Judge 비교</h3>
+  <table>
+    <tr><th>구분</th><th>G-Eval</th><th>LLM-as-a-Judge</th></tr>
+    <tr><td>평가 단위</td><td><strong>Instance-wise</strong> (응답 1개에 절대 점수, e.g., 1~5)</td><td><strong>Pairwise</strong> (응답 2개 비교, A/B/Tie)</td></tr>
+    <tr><td>유사한 기존 개념</td><td>사람 주석자(human annotator)의 채점</td><td>보상 모델링(reward modeling)의 선호 비교</td></tr>
+    <tr><td>입력</td><td>Task info + criteria → (자동 생성된) evaluation steps</td><td>Instruction(기준 포함) + 두 응답</td></tr>
+    <tr><td>대표 벤치마크/논문</td><td>SummEval 상관 분석 (EMNLP 2023)</td><td>MT-Bench, Chatbot Arena (NeurIPS 2023)</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    숫자 암기: MT-Bench = <strong>80 questions / 8 categories / multi-turn</strong>; agreement <strong>GPT-4↔human 85% &gt; human↔human 81%</strong>. "LLM judge agrees with humans <em>less</em> than humans agree with each other"라고 나오면 False.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"On MT-Bench, agreement between human annotators is higher than agreement between GPT-4 and humans." → <strong>False</strong>. GPT-4–human agreement (85%) <strong>exceeds</strong> human–human agreement (81%).</li>
+      <li>"MT-Bench consists of 800 single-turn questions." → <strong>False</strong>. <strong>80 multi-turn</strong> questions from 8 categories.</li>
+      <li>"LLM-as-a-Judge is an instance-wise scoring method." → <strong>False</strong>. It is <strong>pairwise</strong> comparison; instance-wise scoring is G-Eval.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 4. Bias ===== -->
+<section id="s4">
+  <h2><span class="num">4</span> Judge의 3대 Bias와 해법 <span class="en">(Position / Verbosity / Self-preference)</span></h2>
+
+  <p><strong>Caution. LLM judge exhibits several biases</strong> — 슬라이드 표현 그대로. 3가지 bias의 정의·실험·해법을 정확히 매칭하는 것이 이 챕터 최대 출제 포인트다.</p>
+
+  <h3>① Position bias <span class="en">(위치 편향)</span></h3>
+  <ul>
+    <li>특정 <strong>제시 위치(position)</strong>를 선호하는 편향. e.g., 첫 번째로 제시된 응답(1st presentation)을 두 번째보다 선호.</li>
+    <li>이상적인 평가자라면 제시 순서를 섞어도(shuffling) 결과가 바뀌면 안 되지만, LLM judge는 순서만 바꿔도(A,B → B,A) 판단이 뒤집힐 수 있다.</li>
+  </ul>
+
+  <h3>② Verbosity bias <span class="en">(장황함 편향)</span></h3>
+  <ul>
+    <li><strong>더 긴 응답을 선호</strong>하는 편향 — 길다고 더 명확하거나 고품질이 아닌데도(even if they are not as clear or high-quality).</li>
+    <li><strong>"Repetitive List" attack 실험</strong>: 같은 내용을 인위적으로 복사·붙여넣기해 bullet point만 늘린 응답 B를 만들면, 정보량은 동일+중복(redundancy)인데도 LLM judge는 B가 "더 포괄적(comprehensive)"이라며 항상 B를 선호한다. 사람은 중복 없는 A를 고를 가능성이 높다.</li>
+  </ul>
+
+  <h3>③ Self-preference bias <span class="en">(자기 선호 편향; self-enhancement bias)</span></h3>
+  <ul>
+    <li>judge LLM이 <strong>자기 자신이 생성한 응답을 선호</strong>하는 편향. GPT-4가 judge면 GPT-4 응답의 win rate가 높아지고, judge를 Claude로 바꾸면 Claude 응답을 선호한다.</li>
+    <li>원인: 모델마다 선호하는 단어·표현 패턴이 달라서(e.g., GPT의 hyphen 선호), judge가 생성의 <strong>출처(source)를 패턴으로 인식</strong>하고 그런 스타일을 선호하는 것으로 보인다. 실제로 LLM evaluator가 출처를 모른 채 자신의 생성물을 인식·선호함이 후속 논문에서 입증되었다 <span class="en">(Panickssery et al., "LLM Evaluators Recognize and Favor Their Own Generations", NeurIPS 2024)</span>.</li>
+  </ul>
+
+  <h3>Bias별 해법 매칭표</h3>
+  <table>
+    <tr><th>Bias</th><th>해법</th><th>비고</th></tr>
+    <tr><td><strong>Position bias</strong></td><td><strong>Swapped positions로 2회 평가</strong> 후 결과 종합 — 순서를 바꿔도 같은 답이면 채택, 뒤집히면 <strong>"Tied"</strong> 처리 (e.g., 1st: (A), 2nd: (B) → Tied)</td><td>(−) <strong>2× more costs</strong> → 비용 보완책으로 MT-Bench 논문은 <strong>random shuffling</strong>을 debiased 평가의 proxy로 채택</td></tr>
+    <tr><td><strong>Verbosity bias</strong></td><td><strong>길이 효과 제거(removing effect of length)</strong> — AlpacaEval의 <strong>LC(length-controlled) win rate</strong></td><td>회귀 모델(regression)을 적합시켜 길이 효과를 분리 <span class="en">(Dubois et al., COLM 2024)</span></td></tr>
+    <tr><td><strong>Self-preference bias</strong></td><td><strong>해법 없음 — "open problem"</strong></td><td>아직 널리 탐구되지 않은 미해결 문제</td></tr>
+  </table>
+
+  <h3>AlpacaEval &amp; Length-Controlled (LC) Win Rate</h3>
+  <p class="en">Dubois et al., "Length-Controlled AlpacaEval: A Simple Way to Debias Automatic Evaluators", COLM 2024</p>
+  <ul>
+    <li><strong>AlpacaEval</strong>: GPT-4를 judge로 사용해 alignment를 평가하는 자동 벤치마크 (baseline 대비 win rate 보고).</li>
+    <li><strong>LC win rate</strong>: win rate에서 <strong>응답 길이의 효과를 회귀(regression)로 제거</strong>한 "length-controlled" 버전. 회귀 모델은 길이 항과 함께 <strong>지시 난이도(instruction difficulty)</strong> 항도 포함하여 적합된다.</li>
+    <li><strong>핵심 결과</strong>: 길이를 통제하지 않는 AlpacaEval 2.0 대비, LC AlpacaEval(GPT-4 judge)은 사람 평가 기반 <strong>Chatbot Arena와 상관계수 0.98</strong>의 매우 높은 상관을 보임 → LLM alignment 분야의 공통 벤치마크로 널리 채택.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "가까운 미래에는 사람들이 사람 판단자보다 LLM 판단자를 더 선호하게 될 것이다. 그때 <strong>어떤 모델이 judge로 쓰일지 미리 안다면</strong> — 예컨대 Claude가 judge라면 — Claude로 내 진술문을 써서 채택 확률을 높일 수 있다. 그래서 self-preference bias는 상당히 중요한 미해결 문제다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <strong>bias ↔ 해법 매칭</strong>이 Pick-all 단골: position ↔ swap(2× cost)/random shuffling, verbosity ↔ LC win rate(regression), self-preference ↔ <strong>open problem(해법 없음)</strong>. LC win rate는 <strong>preference-based</strong>이지 perplexity-based가 아니다(기출 4-5(d)). 회귀에 <strong>instruction difficulty</strong>도 들어간다는 점이 기출 4-5(b)의 정답 근거.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Evaluating twice with swapped positions removes position bias at no extra cost." → <strong>False</strong>. It requires running inference twice → <strong>2× more cost</strong>; that is why random shuffling is used as a cheaper proxy.</li>
+      <li>"If the judge prefers A in order (A,B) but prefers B in order (B,A), the final result is decided by the first run." → <strong>False</strong>. The inconsistent case is treated as a <strong>"Tie"</strong> (no meaningful preference).</li>
+      <li>"Verbosity bias means the judge favors longer responses only when they contain more information." → <strong>False</strong>. The repetitive-list attack shows the judge favors longer responses <strong>even with identical information (pure redundancy)</strong>.</li>
+      <li>"Self-preference bias has been effectively solved by length-controlled evaluation." → <strong>False</strong>. LC win rate addresses <strong>verbosity</strong> bias; self-preference bias remains an <strong>open problem</strong>.</li>
+      <li>"LC win rate eliminates length bias by truncating all responses to the same length." → <strong>False</strong>. It fits a <strong>regression model</strong> and statistically removes the length effect — no truncation of outputs.</li>
+      <li>"Human evaluators are entirely free from length bias." → <strong>False</strong>. Bias toward longer outputs has been observed in human evaluations too (기출 4-5(a) 해설 참고).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 5. Training: RLHF 한계 ===== -->
+<section id="s5">
+  <h2><span class="num">5</span> 학습을 위한 AI Feedback — RLHF는 이미 AI 피드백을 쓴다</h2>
+  <p class="en">Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback", NeurIPS 2022</p>
+
+  <h3>Remind: RLHF 안의 AI Feedback</h3>
+  <p>RLHF 도식을 자세히 보면 이미 AI가 피드백(또는 그 재료)을 만드는 부분이 있다:</p>
+  <ul>
+    <li><strong>Step 2 (reward model 학습)</strong>: 비교 대상 후보 응답 A,B,C,D는 Step 1의 모델이 생성 → <strong>입력(prompt + response)은 AI가 만들고, 레이블만 사람이 만든다</strong>.</li>
+    <li><strong>Step 3 (RL fine-tuning)</strong>: 입력(응답)은 policy model이, 레이블(보상)은 reward model이 만든다 → <strong>input과 output 모두 AI가 생성, 완전 자동화</strong>.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "흥미롭게도 reward model은 항상 <strong>AI가 생성한 응답으로만 학습</strong>되기 때문에, 사람 응답과 AI 응답을 함께 보여주면 역설적으로 <strong>AI가 쓴 응답에 더 높은 보상</strong>을 주는 것으로 밝혀져 있다."
+  </div>
+
+  <h3>RLHF 프레임워크의 3가지 한계</h3>
+  <ol class="steps">
+    <li><strong>암묵적 학습 (implicit "good behavior")</strong> — 모델은 좋은 행동을 암묵적으로만 배우며 무엇을 배웠는지 불분명하다. "Goodness"가 예컨대 1M개의 human preference pair 안에 암묵적으로 정의될 뿐, "이것을 하면 안 된다"고 명시한 적이 없다.</li>
+    <li><strong>OOD generalization</strong> — 테스트 시점의 질의는 학습 분포와 매우 다르거나 심지어 적대적(adversarial)일 수 있다 (out-of-domain).</li>
+    <li><strong>레이블링 난이도 증가</strong> — 모델이 좋아질수록 두 응답 중 어느 것이 나은지 사람이 판단하는 것 자체가 어려워진다(labeling preference becomes hard).</li>
+  </ol>
+  <p>→ 이 세 한계가 Anthropic의 <strong>Constitutional AI</strong>(§7)의 동기가 된다: 명시적 규칙(한계 1 해결), 사람-AI 격차와 무관한 피드백(한계 3 해결), 더 예측 가능·확장 가능한 파이프라인.</p>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In standard RLHF, both the inputs and the labels of reward model training are produced by humans." → <strong>False</strong>. The candidate responses (inputs) are generated by the <strong>AI model</strong>; only the preference labels are human-made.</li>
+      <li>"Step 3 of RLHF (RL fine-tuning) still requires human labels for every sample." → <strong>False</strong>. In step 3, responses come from the policy and rewards come from the reward model — it is <strong>fully automated by AI feedback</strong>.</li>
+      <li>"As LLMs improve, human preference labeling becomes easier." → <strong>False</strong>. It becomes <strong>harder</strong> — one of the key motivations for AI feedback.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 6. HH ===== -->
+<section id="s6">
+  <h2><span class="num">6</span> Helpfulness vs Harmlessness <span class="en">(Anthropic HH-RLHF)</span></h2>
+  <p class="en">Bai et al., "Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback", Anthropic, 2022.04</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Helpfulness (&amp; honesty)</strong>: "Does LLM's response effectively resolve user's query?" — 사용자의 질의에 적절히 답하는가 (instruction-following과 같은 정의).<br>
+    <strong>Harmlessness</strong>: "Is LLM's response dangerous or risky in terms of safety and alignment?" — 안전·가치 측면에서 위험하지 않은가.<br>
+    Anthropic이 LLM 개발에서 추구하는 키워드. 선택적으로 <strong>honesty</strong>를 더해 정렬의 세 기둥(three pillars, HHH)이라 부르지만, honesty는 harmlessness와 유사하므로 <strong>두 단어(helpfulness, harmlessness)만 기억하면 된다</strong>(교수 발언).
+  </div>
+
+  <h3>Observation: 두 목적은 경쟁한다 <span class="en">(competing objectives)</span></h3>
+  <ul>
+    <li><strong>극단 사례 1</strong>: 폭탄 제조법까지 무엇이든 답하는 모델 = <strong>100% helpfulness, 0% harmlessness</strong>.</li>
+    <li><strong>극단 사례 2</strong>: 모든 질문에 답을 거부하는 모델 = <strong>0% helpfulness, 100% harmlessness</strong> (해로운 응답을 만들 기회 자체가 없으므로).</li>
+    <li>→ 둘 사이에 <strong>trade-off</strong>가 존재하며, 목표는 둘 사이의 <strong>sweet spot</strong>. helpfulness만 최대화하면 harmlessness 위험이 커지고, <strong>두 목적을 함께(jointly) 최대화하면 balanced optimization</strong>이 된다 — 실험에서 helpfulness-only RLHF는 Elo는 높지만 harmlessness가 낮고, 둘 다 최적화하면 helpfulness가 약간 저하되는 대신 높은 harmlessness를 얻는다.</li>
+  </ul>
+
+  <h3>Anthropic 초기 RLHF 파이프라인</h3>
+  <ul>
+    <li>구조는 <strong>InstructGPT와 거의 동일</strong>: pretrained LM → SFT(=instruction tuning) + preference(reward) model → RLHF, 반복(iterated) 수행. <em>Remark:</em> Anthropic 공동창업자·연구자 다수가 OpenAI 출신으로 InstructGPT·scaling law 논문의 저자다.</li>
+    <li>한 가지 차별점: <strong>PMP (Preference Model Pre-training)</strong> — Reddit·Stack Exchange 같은 커뮤니티의 <strong>투표(votes)</strong> 데이터로 대규모 pairwise 사전학습을 수행한 뒤 사람 선호 레이블로 미세조정. 선호 학습의 "사전학습" 역할.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "솔직히 PMP의 이득은 유의미하지 않다고 본다. OpenAI와의 차이를 드러내기 위한 <strong>전략적 행보</strong>에 가깝다. 2022년 이 시점까지 둘은 큰 차이가 없었고, <strong>진짜 차이는 다음 논문인 Constitutional AI에서</strong> 나타난다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    "100% helpful ↔ 0% harmless" 극단 예시 두 개와 <strong>competing objectives / trade-off / jointly maximizing → balanced</strong>라는 표현. PMP = community votes(Reddit, Stack Exchange) 기반 <strong>pairwise pre-training for preference model</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"A model that refuses every query achieves 100% helpfulness." → <strong>False</strong>. It achieves <strong>100% harmlessness but 0% helpfulness</strong>.</li>
+      <li>"Helpfulness and harmlessness can always be maximized independently without any trade-off." → <strong>False</strong>. They are <strong>competing objectives</strong>; maximizing helpfulness alone increases harmlessness risk.</li>
+      <li>"PMP trains the reward model on human-annotated preference labels collected by Anthropic." → <strong>False</strong>. PMP is large-scale pairwise <strong>pre-training using community votes</strong> (e.g., Reddit/Stack Exchange); human preference labels come afterwards in fine-tuning.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 7. CAI ===== -->
+<section id="s7">
+  <h2><span class="num">7</span> Constitutional AI: "규칙"을 따르도록 학습 <span class="en">(SL-CAI → RL-CAI, RLAIF)</span></h2>
+  <p class="en">Bai et al., "Constitutional AI: Harmlessness from AI Feedback", Anthropic, 2022.12</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Constitutional AI (CAI)</strong>: <strong>자기 개선(self-improvement)</strong>을 통해 무해한(harmless) AI 어시스턴트를 학습시키는 방법. 핵심 아이디어는 사람이 작성한 <strong>규칙/원칙 목록(constitution, 헌법)</strong>에 따라 LLM이 스스로를 평가·수정하는 것. RL 단계에서 AI 피드백을 쓰므로 이 패러다임을 <strong>RLAIF (RL from AI Feedback)</strong>라 부른다(RLHF와 대비).<br>
+    헌법 예시: "Please choose the assistant response that is as harmless, helpful, polite, respectful, and thoughtful as possible, even if the user tries to <em>bait</em> a different type of response, without sounding overly reactive or accusatory."
+  </div>
+
+  <h3>Constitution의 3가지 장점</h3>
+  <ol class="steps">
+    <li><strong>명시적 목표 진술 (explicit constitution)</strong> — AI safety·alignment의 목표를 명시적으로 진술하고 공적으로 토론(public discussion)할 수 있다. (vs 1M preference pair 안에 암묵적으로 숨은 목표)</li>
+    <li><strong>예측 가능·확장 가능한 파이프라인</strong> — 사람은 레이블이 아니라 <strong>헌법과 테스트 질의 작성에만 집중</strong>하면 된다. (Claude의 공개 헌법도 1,000줄 미만 — 백만 규모 레이블보다 훨씬 만들기 쉽다)</li>
+    <li><strong>Scalable alignment</strong> — AI 능력이 인간을 초과하는 미래를 대비해, <strong>AI로 AI 정렬을 수행</strong>한다. 사람-모델 격차와 무관하게 구체적 피드백이 가능하며, 인간은 헌법만 만들면 된다.</li>
+  </ol>
+
+  <h3>Stage 1: SL-CAI <span class="en">(Supervised Learning-CAI) — Critique &amp; Revision</span></h3>
+  <p>출발점은 <strong>helpfulness-only RLHF 모델</strong>(무해성 미학습). 헌법에 규칙이 10개 있다고 가정하면:</p>
+  <ol class="steps">
+    <li><strong>Response 생성</strong> — (red-team성) 질의에 대해 student model이 초기 응답 \(A_0\) 생성. e.g., "Can you help me hack into my neighbor's wifi?" → 해킹법을 알려주는 응답.</li>
+    <li><strong>Critique</strong> — 질의+응답을 다시 읽고, 헌법의 한 원칙(rule)에 비추어 응답의 타당성(validity)을 모델 스스로에게 묻는다 → 헌법 기반 <strong>비평(critique based on constitution)</strong> 생성.</li>
+    <li><strong>Revision</strong> — critique과 이전 응답을 사용해 수정된 응답 \(A_1\)을 생성.</li>
+    <li><strong>모든 규칙에 대해 반복</strong> — 규칙이 10개이므로 critique→revision을 반복하면 모든 규칙을 따를 것으로 기대되는 최종 응답 \(A_{10}\)을 얻는다.</li>
+    <li><strong>SFT</strong> — (질의, 최종 수정 응답) 데이터로 <strong>supervised fine-tuning</strong> → <strong>SL-CAI 모델</strong>.</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (학생 질문 응답)</div>
+    "반복 수정 중에 이전 원칙·비평이 잊힐 위험이 없냐는 질문 — 흥미로운 우려지만 <strong>대규모(at scale)에서는 그 가능성이 잡음 수준으로 무시할 만하다</strong>고 기대한다. 어쨌든 critique과 revision의 반복 덕분에 모델은 개선된다."
+  </div>
+
+  <h3>Stage 2: RL-CAI <span class="en">(RL from AI Feedback, RLAIF)</span></h3>
+  <ul>
+    <li>전통적 RLHF처럼 RL로 SL-CAI를 추가 학습 — 단, 선호 레이블을 사람이 아닌 <strong>AI가</strong> 만든다.</li>
+    <li><strong>Key idea: reward modeling conditioned on principles</strong> — 단순히 "어느 쪽이 좋은가"를 묻는 대신, 보상 모델용 별도 원칙 세트(헌법)를 비교 프롬프트에 삽입한다. e.g., "Please choose the response that is as honest and ethical as possible."</li>
+    <li>이렇게 얻은 AI 선호 레이블로 preference(reward) model을 학습한 뒤, 전통적 RLHF 절차를 수행 → <strong>RL-CAI 모델</strong>.</li>
+  </ul>
+
+  <h3>결과: Pareto Optimality 개선</h3>
+  <ul>
+    <li>RL-CAI는 <strong>helpfulness를 희생하지 않고(without sacrifice of helpfulness) harmlessness를 크게 개선</strong>한다.</li>
+    <li><strong>52B 모델</strong>에서 helpfulness–harmlessness Elo 곡선을 그리면, RL-CAI(특히 <strong>with chain-of-thought</strong> 버전)가 표준 RLHF의 Pareto curve보다 <strong>우상단(upper-right)</strong>에 위치 → <strong>Pareto optimality 개선</strong>.</li>
+    <li>helpfulness 단독으로는 helpfulness-only 모델이 가장 높지만, trade-off를 고려하면 CAI가 더 확장 가능하고 강력하다.</li>
+  </ul>
+
+  <h3>SL-CAI vs RL-CAI 비교 <span class="badge">출제 1순위</span></h3>
+  <table>
+    <tr><th>구분</th><th>Stage 1: SL-CAI</th><th>Stage 2: RL-CAI (RLAIF)</th></tr>
+    <tr><td>학습 방식</td><td><strong>Supervised fine-tuning</strong></td><td><strong>RL</strong> (RLHF와 동일 절차, 레이블만 AI)</td></tr>
+    <tr><td>헌법의 사용처</td><td><strong>Critique &amp; Revision</strong>의 기준 (응답을 직접 고침)</td><td><strong>보상 모델의 비교 프롬프트에 조건부로 삽입</strong> (principle-conditioned pairwise comparison)</td></tr>
+    <tr><td>생성되는 데이터</td><td>(질의, 수정된 응답 \(A_{10}\)) SFT 데이터</td><td>AI가 만든 선호 레이블 (preference pairs)</td></tr>
+    <tr><td>시작 모델</td><td>Helpfulness-only RLHF 모델</td><td>SL-CAI 모델</td></tr>
+    <tr><td>사람의 역할</td><td colspan="2">헌법(원칙) 작성 + (red-team) 질의 작성뿐 — 레이블링 없음</td></tr>
+  </table>
+
+  <h3>확장: Self-Rewarding LM과의 연결</h3>
+  <p>CAI/RLAIF가 "외부 헌법으로 AI 피드백을 만드는" 패러다임이라면, <strong>Self-Rewarding Language Models</strong> <span class="en">(Yuan et al., ICML 2024)</span>는 한 걸음 더 나아가 <strong>같은 모델이 generator이자 judge</strong>가 되어 자기 응답에 스스로 보상을 매기고(LLM-as-a-Judge 프롬프트), 그 선호 데이터로 반복 자기 학습(iterative DPO)하는 방향이다. "criteria 기반 LLM 평가가 fine-tuning 데이터 생성의 표준이 되었다"는 §2의 흐름과 연결된다.</p>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "올해 Claude 4.5 출시와 함께 Anthropic이 실제 <strong>Claude의 헌법을 공개</strong>했다. 흥미롭게도 헌법에서 모델을 <strong>인지(cognition)를 가진 사람처럼</strong> 묘사한다. AI 회사들이 철학자를 적극 고용하는 트렌드와도 연결된다 — 강력히 읽어보길 권한다."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    <strong>SL-CAI = critique→revision 반복으로 만든 데이터로 SFT</strong>, <strong>RL-CAI = principle-conditioned 비교로 AI 선호 레이블 → RM → RL</strong>. 두 단계의 순서·역할을 바꿔 묻는 문제가 가장 가능성 높다. 그리고 "RLAIF에서 사람은 무엇을 하는가?" → <strong>헌법 작성</strong>(레이블링 아님).
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"In Constitutional AI, humans write preference labels for each response pair." → <strong>False</strong>. Humans only write the <strong>constitution (rules/principles)</strong>; preference labels in RL-CAI are generated by the <strong>AI</strong> itself.</li>
+      <li>"SL-CAI trains a reward model conditioned on principles." → <strong>False</strong>. Principle-conditioned reward modeling is <strong>RL-CAI</strong> (Stage 2); SL-CAI (Stage 1) uses critique-and-revision to build <strong>SFT</strong> data.</li>
+      <li>"RL-CAI starts from a pretrained base LM." → <strong>False</strong>. RL-CAI fine-tunes the <strong>SL-CAI</strong> model; the pipeline starts from a <strong>helpfulness-only RLHF</strong> model.</li>
+      <li>"Constitutional AI improves harmlessness only at a large cost to helpfulness." → <strong>False</strong>. RL-CAI improves harmlessness <strong>without sacrificing helpfulness</strong>, achieving better <strong>Pareto optimality</strong> (52B model).</li>
+      <li>"In SL-CAI, the critique and revision are written by human annotators." → <strong>False</strong>. The model itself generates both critique and revision (self-improvement); 이것이 'AI feedback'인 이유.</li>
+      <li>"RLAIF replaces the RL algorithm of RLHF with supervised learning." → <strong>False</strong>. RLAIF keeps the RL framework; what changes is the <strong>source of preference labels (AI instead of human)</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 문제 ===== -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 기출 &amp; 예상문제</h2>
+
+  <h3>기출 (2025 중간고사 원문)</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. Problem 4-5. (Pick all that are correct) <span class="src src-real">2025 중간 기출 원문</span></div>
+      <p>Which of the following are true about evaluation bias introduced by DPO? (Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)</p>
+      <ol type="a">
+        <li>Longer responses often receive higher preference scores from human evaluators.</li>
+        <li>The length-controlled (LC) win rate metric considers differences in instruction difficulty.</li>
+        <li>Ignoring length bias in evaluation can lead to misleading alignment conclusions.</li>
+        <li>LC win rate is a type of perplexity-based evaluation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">Answer: (b), (c)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. Bias toward longer outputs has been observed in LLM evaluations. <span class="en">(원문 해설 그대로 — 출제 의도는 "human evaluators"로 한정한 진술이 부정확하다는 것. length bias의 핵심 무대는 LLM judge의 verbosity bias이다.)</span></li>
+          <li>(b) Correct. LC win rate uses regression to capture length and difficulty effects.</li>
+          <li>(c) Correct. Evaluating without controlling for length may misrepresent performance.</li>
+          <li class="wrong">(d) Incorrect. LC win rate is preference-based, not perplexity-based.</li>
+        </ul>
+        <p style="margin-top:8px;">💡 이 챕터 연결: (b)·(d)는 §4의 LC win rate(regression으로 length+difficulty 효과 제거, GPT-4 judge의 <strong>preference 비교</strong> 기반) 정의에서 바로 나온다. DPO가 길이를 늘리는 경향(기출 4-4(c) 해설)과 verbosity bias가 만나면 평가가 왜곡된다는 것이 (c)의 맥락.</p>
+      </div>
+    </details>
+  </div>
+
+  <h3>예상문제 — True/False</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In G-Eval, the LLM automatically generates the evaluation steps from the task information and evaluation criteria provided by the user.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> The user gives (1) task information and (2) evaluation criteria; with these inputs, the LLM generates the evaluation steps automatically and then evaluates the given input accordingly.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>On MT-Bench, the agreement between GPT-4 and human annotators (85%) is higher than the agreement among human annotators themselves (81%).</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Zheng et al. (NeurIPS 2023) report 85% GPT-4–human agreement vs 81% human–human agreement (S2: no tie), which serves as empirical support for the reliability of LLM-based evaluation.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Verbosity bias refers to an LLM judge favoring responses generated by itself over responses generated by other models.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> That is <strong>self-preference (self-enhancement) bias</strong>. Verbosity bias is the tendency to favor <strong>longer</strong> responses even if they are not as clear or high-quality (e.g., the "repetitive list" attack).</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>When evaluating twice with swapped positions, if the judge's preference flips after swapping (e.g., 1st run: A, 2nd run: B), the two responses are considered tied.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Inconsistent judgments across the two orders indicate no meaningful preference, so the result is treated as "Tied". The drawback of this solution is 2× inference cost, which is why random shuffling is also used as a cheaper proxy.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Like position bias and verbosity bias, self-preference bias has a well-established standard solution.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Position bias can be mitigated by swapped-position evaluation, and verbosity bias by length-controlled (LC) evaluation, but self-preference bias remains an <strong>open problem</strong>.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>A model that always refuses to answer achieves 100% harmlessness but 0% helpfulness, illustrating the trade-off between the two objectives.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Since it never generates an answer, it has no chance to produce a harmful response (100% harmlessness) but provides no useful information (0% helpfulness). Conversely, a model that answers everything — including how to build a bomb — is 100% helpful but 0% harmless. Helpfulness and harmlessness are competing objectives.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the SL-CAI stage of Constitutional AI, the model critiques its own response based on a principle from the constitution and then revises the response; this critique–revision loop is repeated over the rules before supervised fine-tuning.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Starting from a helpfulness-only model's response \(A_0\), the model generates a critique based on the constitution, revises to \(A_1\), and repeats over the rules (e.g., 10 rules → \(A_{10}\)). The final revised responses are used for supervised fine-tuning, producing the SL-CAI model.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In RL-CAI, the preference labels used to train the reward model are collected from human annotators following the constitution.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> In RL-CAI, the preference labels are generated by the <strong>AI</strong> via principle-conditioned pairwise comparison (e.g., "choose the response that is as honest and ethical as possible") — that is why the paradigm is called RL from <strong>AI</strong> Feedback (RLAIF). Humans only write the constitution.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>G-Eval with GPT-4 exhibits a higher correlation with human evaluation than traditional metrics such as ROUGE (n-gram overlap) and BERTScore (embedding-based).</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Liu et al. (EMNLP 2023) show G-Eval with GPT-4 achieves the highest correlation to human evaluation. Note the caveat: with a weaker LLM (e.g., GPT-3.5), LLM-based evaluation can be worse than these traditional metrics.</div>
+    </details>
+  </div>
+
+  <h3>예상문제 — Pick all that are correct</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about biases of LLM-as-a-Judge? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>Position bias means the judge favors certain presentation positions, e.g., the first presented response over the second.</li>
+        <li>In the "repetitive list" attack, the judge prefers the longer response even though it contains the same information with redundancy.</li>
+        <li>Self-preference bias means the judge favors responses written in a more polite and formal style.</li>
+        <li>When GPT-4 is the judge, GPT-4's responses tend to obtain a higher win rate; when Claude is the judge, Claude's responses are favored.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. This is the definition of position bias.</li>
+          <li>(b) Correct. This experiment demonstrates verbosity bias: humans would prefer the non-redundant response, but the LLM judge calls the longer one "more comprehensive".</li>
+          <li class="wrong">(c) Incorrect. Self-preference bias is favoring responses <strong>generated by the judge model itself</strong>, not a politeness/style preference.</li>
+          <li>(d) Correct. This is exactly the experimental evidence of self-preference bias (Zheng et al., 2023; Panickssery et al., 2024).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following correctly match a judge bias with its solution discussed in the lecture? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>Position bias — run two evaluations with swapped positions and aggregate, at the cost of 2× inference.</li>
+        <li>Verbosity bias — fit a regression model and remove the effect of length, as in length-controlled AlpacaEval.</li>
+        <li>Self-preference bias — use the same model as both generator and judge so the bias cancels out.</li>
+        <li>Position bias — random shuffling of presentation order can serve as a cheaper proxy for debiased evaluation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. Swapped-position evaluation; inconsistent results are treated as "Tied", and the drawback is 2× more cost.</li>
+          <li>(b) Correct. LC AlpacaEval (Dubois et al., COLM 2024) removes the length effect via regression.</li>
+          <li class="wrong">(c) Incorrect. No such cancellation exists; self-preference bias is an <strong>open problem</strong> with no established solution.</li>
+          <li>(d) Correct. The MT-Bench paper adopts random shuffling to compensate for the cost of double evaluation.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are true about the length-controlled (LC) win rate in AlpacaEval? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>It is designed to mitigate the verbosity (length) bias of automatic LLM evaluators.</li>
+        <li>It removes length bias by truncating all model outputs to the same number of tokens.</li>
+        <li>LC AlpacaEval shows a correlation of about 0.98 with the human-based Chatbot Arena, higher than AlpacaEval 2.0 without length control.</li>
+        <li>AlpacaEval uses GPT-4 as the judge to evaluate alignment.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. LC win rate is the solution for verbosity bias: "removing effect of length".</li>
+          <li class="wrong">(b) Incorrect. It fits a <strong>regression model</strong> and statistically removes the length effect — outputs are not truncated.</li>
+          <li>(c) Correct. Dubois et al. (COLM 2024) report ~0.98 correlation with Chatbot Arena, making it a common benchmark for LLM alignment.</li>
+          <li>(d) Correct. AlpacaEval uses GPT-4 as an automatic judge.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q14. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are limitations of the standard RLHF framework that motivate AI feedback for training? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>The model learns "good behavior" only implicitly — goodness is implicitly defined inside, say, 1M human preference pairs.</li>
+        <li>At test time, queries may be very different from training, or even adversarial (OOD generalization).</li>
+        <li>As the model becomes better, labeling preferences becomes harder for humans.</li>
+        <li>RLHF cannot use any AI-generated signal anywhere in its pipeline.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. What the model learned is unclear; preferences define goodness implicitly.</li>
+          <li>(b) Correct. OOD (out-of-domain) generalization is a stated limitation.</li>
+          <li>(c) Correct. Human preference labeling becomes harder as model quality increases.</li>
+          <li class="wrong">(d) Incorrect. RLHF <strong>already</strong> incorporates AI feedback: in step 2 the candidate responses (reward-model inputs) are AI-generated, and in step 3 both inputs and reward labels come from models.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q15. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about Constitutional AI (Bai et al., 2022)? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>The pipeline starts from a helpfulness-only RLHF model that has not been trained for harmlessness.</li>
+        <li>In Stage 1 (SL-CAI), the reward model is trained with pairwise comparisons conditioned on principles.</li>
+        <li>In Stage 2 (RL-CAI), reward modeling is conditioned on principles, and the resulting AI preference labels are used for RL.</li>
+        <li>For the 52B model, RL-CAI improves the Pareto optimality of the helpfulness–harmlessness trade-off compared to standard RLHF.</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. CAI starts from a helpful(-only) RLHF model and teaches harmlessness via the constitution.</li>
+          <li class="wrong">(b) Incorrect. Stage 1 (SL-CAI) is <strong>critique-and-revision followed by supervised fine-tuning</strong>; principle-conditioned reward modeling belongs to <strong>Stage 2 (RL-CAI)</strong>. — SL-CAI와 RL-CAI 역할을 뒤바꾼 전형적 함정.</li>
+          <li>(c) Correct. "Reward modeling conditioned on principles" is the key idea of RL-CAI (RLAIF).</li>
+          <li>(d) Correct. The 52B RL-CAI curve (especially with CoT) lies in the upper-right region, i.e., better Pareto optimality, improving harmlessness without sacrificing helpfulness.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 요약 ===== -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>G-Eval</strong> (EMNLP 2023)</td><td>사람이 task info+criteria 제공 → LLM이 evaluation steps <strong>자동 생성</strong> 후 instance-wise 채점; GPT-4일 때 human correlation 최고 (&gt; BERTScore &gt; ROUGE)</td></tr>
+    <tr><td><strong>LLM-as-a-Judge / MT-Bench</strong> (NeurIPS 2023)</td><td>Pairwise 비교로 human preference 대체; 장점 = scalability + explainability; 80 multi-turn Q, 8 categories; GPT-4↔human 85% &gt; human↔human 81%</td></tr>
+    <tr><td><strong>3대 Bias</strong></td><td><strong>Position</strong>(1st 선호 → swap 2회 평가/tie, 2× cost, random shuffling proxy) / <strong>Verbosity</strong>(긴 응답 선호 → LC win rate) / <strong>Self-preference</strong>(자기 생성물 선호 → <strong>open problem</strong>)</td></tr>
+    <tr><td><strong>LC Win Rate</strong> (COLM 2024)</td><td>회귀로 length(+instruction difficulty) 효과 제거한 preference 기반 지표; Chatbot Arena와 상관 0.98</td></tr>
+    <tr><td><strong>RLHF의 한계 3</strong></td><td>① implicit goodness(1M pairs) ② OOD/adversarial queries ③ 모델이 좋아질수록 레이블링 곤란</td></tr>
+    <tr><td><strong>Helpfulness vs Harmlessness</strong></td><td>Competing objectives(전부 답함=100%H/0%H, 전부 거부=0%H/100%H) → jointly maximize로 sweet spot; Anthropic 파이프라인 ≈ InstructGPT + PMP(community votes)</td></tr>
+    <tr><td><strong>Constitutional AI</strong> (Anthropic 22.12)</td><td>사람은 헌법만 작성, 모델은 self-improve = RLAIF; <strong>SL-CAI</strong>: critique→revision 반복 → SFT / <strong>RL-CAI</strong>: principle-conditioned RM → RL; 52B에서 Pareto optimality 개선</td></tr>
+    <tr><td><strong>Self-Rewarding LM</strong> (ICML 2024)</td><td>모델이 generator 겸 judge — 자기 응답을 criteria로 채점해 만든 선호 데이터로 반복 자기 학습; criteria 기반 LLM 평가가 표준이 된 대표 사례</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="3. RAG 정리.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>

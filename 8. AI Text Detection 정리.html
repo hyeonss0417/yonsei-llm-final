@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8장. AI Text Detection 정리</title>
+<!-- KaTeX (수식 렌더링) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --primary: #5b6cff; --primary-dark: #3d4bd1; --accent: #ff6b9d;
+    --bg: #fafbff; --card: #ffffff; --text: #2c3e50; --muted: #7a8499;
+    --border: #e4e8f3; --soft: #f3f5fb; --green: #4caf7e; --red: #ef5b6f;
+    --warm: #ffb85c; --highlight: #fff5d6; --code: #f0f2fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; padding: 40px 20px; font-size: 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    padding: 44px 40px; border-radius: 20px; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(102,126,234,.3); }
+  .hero .label { display:inline-block; background:rgba(255,255,255,.25); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:14px; }
+  .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 16px; opacity:.92; }
+  .hero .meta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .hero .meta span { background:rgba(255,255,255,.18); border-radius:8px; padding:4px 12px; font-size:13px; }
+
+  .nav-top { display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px; }
+  .nav-top a { color: var(--primary-dark); text-decoration:none; font-weight:600;
+    background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:10px; }
+  .nav-top a:hover { background: var(--soft); }
+
+  section { background: var(--card); border-radius: 16px; padding: 30px 34px; margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04); border: 1px solid var(--border); }
+  h2 { font-size: 25px; color: var(--primary-dark); margin-bottom: 18px; padding-bottom: 11px;
+    border-bottom: 3px solid var(--primary); font-weight: 700; display:flex; align-items:center; gap:10px; }
+  h2 .num { background: var(--primary); color:#fff; min-width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
+  h3 { font-size: 20px; color: var(--primary-dark); margin: 26px 0 12px; padding-left: 13px;
+    border-left: 5px solid var(--primary); font-weight: 700; }
+  h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 700; color:var(--primary-dark); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 13px; }
+  li { margin-bottom: 7px; }
+  strong { color: var(--primary-dark); }
+  .en { color: var(--muted); font-size: .92em; }
+  code { background: var(--code); border-radius:5px; padding:1px 6px; font-size:.9em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  table { width:100%; border-collapse:collapse; margin:14px 0 18px; background:#fff;
+    border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  th { background: var(--primary); color:#fff; padding:11px 13px; text-align:left; font-weight:600; font-size:14px; }
+  td { padding:11px 13px; border-top:1px solid var(--border); font-size:15px; vertical-align:top; }
+  tr:nth-child(even) td { background: var(--soft); }
+
+  .definition { background:#eef1ff; border-left:5px solid var(--primary); border-radius:0 12px 12px 0;
+    padding:16px 20px; margin:14px 0; }
+  .definition .label { font-size:12px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:6px; }
+
+  .prof-quote { background:#fdf7ee; border-left:5px solid var(--warm); border-radius:0 12px 12px 0;
+    padding:14px 20px; margin:14px 0; font-size:15px; }
+  .prof-quote .label { font-size:12px; font-weight:800; color:#b07c2a; letter-spacing:1px; margin-bottom:5px; }
+
+  .box-key { background:linear-gradient(135deg,#eef9f2,#e7f6ee); border:1.5px solid var(--green);
+    border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-key .label { font-size:12px; font-weight:800; color:#27704f; letter-spacing:1px; margin-bottom:6px; }
+
+  .box-warn { background:#fdeef0; border:1.5px solid var(--red); border-radius:12px; padding:16px 20px; margin:16px 0; }
+  .box-warn .label { font-size:12px; font-weight:800; color:#c0392b; letter-spacing:1px; margin-bottom:6px; }
+  .box-warn ul li::marker { color: var(--red); }
+
+  .formula { background:#f7f8ff; border:1px dashed var(--primary); border-radius:12px;
+    padding:14px 18px; margin:14px 0; overflow-x:auto; }
+  .formula .fname { font-size:13px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+
+  .steps { counter-reset: step; list-style:none; padding-left:0; }
+  .steps li { counter-increment: step; position:relative; padding-left:44px; margin-bottom:12px; }
+  .steps li::before { content: counter(step); position:absolute; left:0; top:1px; width:30px; height:30px;
+    background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:14px; }
+
+  .ox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-radius:10px;
+    background:var(--soft); margin-bottom:8px; font-size:15px; }
+  .ox-item .mark-o { color:var(--green); font-weight:900; }
+  .ox-item .mark-x { color:var(--red); font-weight:900; }
+
+  .quiz { border:1.5px solid var(--border); border-radius:14px; margin:14px 0; overflow:hidden; }
+  .quiz .q { padding:16px 20px; }
+  .quiz .q .qhead { font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+  .quiz .src { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .src-real { background:#ffe9f1; color:#c2185b; }
+  .src-pred { background:#e8f0fe; color:#1a56c4; }
+  .quiz details { border-top:1px dashed var(--border); background:var(--soft); }
+  .quiz summary { cursor:pointer; padding:11px 20px; font-weight:700; color:var(--primary-dark); font-size:14px; }
+  .quiz .ans { padding:4px 22px 16px; font-size:15px; }
+  .quiz .ans .correct { color:#27704f; font-weight:700; }
+  .quiz .ans .wrong { color:#c0392b; }
+
+  .toc { background:var(--soft); border-radius:14px; padding:20px 26px; margin-bottom:22px; }
+  .toc .label { font-size:13px; font-weight:800; color:var(--primary-dark); letter-spacing:1px; margin-bottom:8px; }
+  .toc ol { margin:0; padding-left:22px; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--primary-dark); text-decoration:underline; }
+
+  .summary-card { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:16px;
+    padding:26px 30px; margin-top:8px; }
+  .summary-card h2 { color:#fff; border-bottom-color:rgba(255,255,255,.4); }
+  .summary-card table { background:transparent; box-shadow:none; }
+  .summary-card th { background:rgba(255,255,255,.16); }
+  .summary-card td { background:transparent !important; border-top-color:rgba(255,255,255,.2); color:#fff; }
+  .summary-card strong { color: #ffe9a8; }
+
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
+    background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
+
+  @media print { body{padding:0;background:#fff} section{box-shadow:none;break-inside:avoid} .hero{border-radius:0} }
+  @media (max-width:640px){ body{padding:20px 10px} section{padding:20px 16px} .hero{padding:30px 22px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="nav-top">
+  <a href="index.html">← 전체 목차</a>
+  <a href="9. 기출문제 모음.html">다음 장 →</a>
+</div>
+
+<div class="hero">
+  <div class="label">CAS4133 LLM · 기말 대비 · Chapter #14 (Special Lecture)</div>
+  <h1>8. AI Text Detection 정리 <span style="font-weight:400;font-size:20px;">(AI Generated Text Detection)</span></h1>
+  <div class="subtitle">LLM이 생성한 텍스트를 어떻게 탐지하는가 — Zero-shot 탐지(DetectGPT → Fast-DetectGPT), 학습 기반 탐지(ReMoDetect), 그리고 생성 단계에서 패턴을 심는 Watermarking(Hard Red List → Soft Method)</div>
+  <div class="meta">
+    <span>📅 강의일: Special Lecture #14</span><span>📊 예상 비중: 중상 (기말 신규 범위)</span><span>⏱ 분량: 본문 8섹션 + 문제 14</span>
+  </div>
+</div>
+
+<div class="box-warn" style="background:#fff7e8;border-color:#f3ce8a;"><div class="label" style="color:#b07c2a;">📢 출제 방식 공지 (교수 안내)</div>
+  Special Lecture 두 개(#13 Jailbreak + #14 AI Text Detection)는 <strong>하나의 챕터(Problem)로 묶여 multiple choice 문제로만 출제</strong>된다.
+  True/False가 아닌 <strong>"Pick all that are correct" 형식</strong>이므로 보기 4개를 각각 독립적으로 ○× 판정하는 연습이 핵심.
+  두 특강 개념이 한 문제 안에 섞여 나올 수 있으니(예: DetectGPT의 perturbation과 COLD-Attack의 Langevin 차이) <a href="7. Jailbreak 정리.html" style="color:#b07c2a;font-weight:700;">#13 정리</a>와 묶어서 공부할 것.
+</div>
+
+<div class="toc">
+  <div class="label">📑 목차</div>
+  <ol>
+    <li><a href="#s1">Motivation — LLM 텍스트 오용 위험과 탐지 서비스 (GPTZero)</a></li>
+    <li><a href="#s2">DetectGPT ① — Negative Curvature 가설과 Perturbation Discrepancy Score</a></li>
+    <li><a href="#s3">DetectGPT ② — Curvature 해석 (Taylor Expansion + Hutchinson's Estimator → Hessian Trace)</a></li>
+    <li><a href="#s4">DetectGPT ③ — 실험 (AUROC, Supervised 비교, Ablation)</a></li>
+    <li><a href="#s5">Fast-DetectGPT — Conditional Probability Curvature와 340배 가속</a></li>
+    <li><a href="#s6">ReMoDetect — Reward Model로 Aligned LLM 텍스트 탐지</a></li>
+    <li><a href="#s7">Watermarking — Hard Red List, One Proportion z-Test, Soft Method</a></li>
+    <li><a href="#s8">탐지 패러다임 총비교 — Zero-shot vs Trained vs Watermarking</a></li>
+    <li><a href="#quiz">예상문제 (T/F 8 + Pick-all 6)</a></li>
+  </ol>
+</div>
+
+<!-- ================= SECTION 1 ================= -->
+<section id="s1">
+  <h2><span class="num">1</span> Motivation — LLM 텍스트 오용 위험과 탐지 서비스 <span class="en">(GPTZero)</span></h2>
+
+  <p>LLM은 이제 <strong>fluent and convincing text</strong>를 생성하며, 그 품질은 <strong>human specialists에 견줄 만한(comparable to human specialists)</strong> 수준이다. 요약, 이메일 응답 등 다양한 응용에서 이득을 주지만, 생성된 텍스트가 <strong>human-written content와 구분하기 어렵다(difficult to distinguish)</strong>는 점이 문제가 된다. 이 현상은 LLM 발전(GPT-5, Claude 4 등)과 함께 더 심해질 것이고, 동시에 <strong>misuse(오용)의 잠재력</strong>도 커진다.</p>
+
+  <h3>구체 사례: LLM이 생성한 논문 리뷰</h3>
+  <ul>
+    <li>리뷰어가 시간을 아끼려고 LLM(ChatGPT)에 정해진 포맷으로 리뷰를 자동 생성시켜 그대로 제출하는 사례 — 저자가 수개월~수년을 쏟은 논문에 성의 없는 낮은 점수 리뷰가 달리는 나쁜 현상.</li>
+    <li>커뮤니티의 대응: <strong>ICLR</strong> 등 주요 ML 학회가 LLM 사용에 대한 <strong>specific guidelines</strong>를 도입. 하지만 가이드라인만으로는 불충분 — <strong>리뷰어가 실제로 LLM을 썼는지 어떻게 알 수 있는가?</strong> → <strong>quantitative한 탐지 방법(quantitative method to detect)</strong>이 필요. 이것이 AI text detection의 핵심 동기.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "This is a real example that I reviewed this year. ... Just imagine that you got this kind of very bad review with a low score while you are spending three or four months, or even years, on the paper." — 그리고 "Maybe it is a more interesting research question for me because I need to detect whether homework or assignments are generated by ChatGPT or not." (교수 본인의 과제 채점 동기 언급)
+  </div>
+
+  <h3>상용 탐지 서비스: GPTZero</h3>
+  <ul>
+    <li>AI-text detector 서비스가 활발히 개발 중이며, 대표 예가 <strong>GPTZero</strong> (gptzero.me).</li>
+    <li>교수의 데모: LLM이 생성한 리뷰를 넣으면 전체가 AI 생성임에도 <strong>일부만 높은 AI 확률로 부분 탐지</strong> → "not perfect, but not bad". 교수가 직접 쓴 리뷰를 넣으면 거의 100% human으로 판정 → 사람/AI 구분 능력도 꽤 양호.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    이 장의 큰 그림: 탐지 접근법 3갈래 — ① <strong>Zero-shot (training-free)</strong>: DetectGPT, Fast-DetectGPT — 모델 likelihood의 기하학적 성질 이용. ② <strong>Training-based</strong>: supervised classifier(RoBERTa 파인튜닝), ReMoDetect(reward model 파인튜닝). ③ <strong>Watermarking</strong>: 탐지가 아니라 <strong>생성 시점에 패턴을 심어</strong> 나중에 통계 검정으로 확인.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"GPTZero perfectly identifies every part of an LLM-generated passage as AI-written." → <strong>False</strong>. In the professor's demo, GPTZero only partially detected the fully LLM-generated review — it is "not perfect, but not bad."</li>
+      <li>"Since conferences like ICLR introduced guidelines on LLM usage, quantitative detection methods are unnecessary." → <strong>False</strong>. Guidelines alone cannot verify whether a reviewer actually used an LLM; that is exactly the motivation for quantitative detection.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 2 ================= -->
+<section id="s2">
+  <h2><span class="num">2</span> DetectGPT ① — Negative Curvature 가설과 Perturbation Discrepancy Score</h2>
+  <p class="en">Mitchell et al., "DetectGPT: Zero-Shot Machine-Generated Text Detection using Probability Curvature", ICML 2023 — 이 분야의 pioneer work.</p>
+
+  <h3>핵심 관찰 (Observation)</h3>
+  <div class="definition"><div class="label">📖 관찰</div>
+    <strong>LLM-generated texts tend to occupy negative curvature regions</strong> of the model's log probability function. 생성 입력 \(x\)를 source model \(p_\theta\)의 log likelihood 표면에 찍어보면, <strong>AI 생성 텍스트는 높은 확률로 local maxima 근처</strong>에 위치하지만, human-written text는 그렇다고 말하기 어렵다.
+  </div>
+
+  <h3>Goal · Assumption · Hypothesis</h3>
+  <ul>
+    <li><strong>Goal</strong>: passage \(x\)가 source model \(p_\theta\)(특정 LLM)에서 나왔는지 탐지.</li>
+    <li><strong>Assumption</strong>: \(\log p_\theta\)를 <strong>평가할 수 있다(could be evaluated)</strong> — 즉 <strong>not a black-box setup</strong> (white-box: 소스 모델의 log probability 접근 필요).</li>
+    <li><strong>Hypothesis</strong>: \(p_\theta\)의 샘플은 \(\log p_\theta\) 공간에서 <strong>negative curvature 영역(local maxima 근처)</strong>에 놓인다. 따라서 perturbed \(\tilde{x}\)에 대해 \(\log p_\theta(x) - \log p_\theta(\tilde{x})\)가 <strong>상대적으로 크다(relatively large)</strong>.</li>
+    <li><strong>Why?</strong> \(p_\theta\)는 <strong>log-likelihood를 maximize하도록 학습</strong>되었고 \(x\)는 \(p_\theta\)에서 샘플되었기 때문.</li>
+  </ul>
+
+  <h3>방법: Curvature-based Criterion</h3>
+  <p>Key idea는 <strong>training-free</strong>이면서 <strong>다른 LM(BERT, T5 등)을 활용해 random perturbation을 생성</strong>하는 curvature 기반 기준. 입력 문장이 주어지면 ① BERT/T5로 여러 perturbed version 생성 → ② 점수 계산 → ③ 점수 비교로 ChatGPT 산(産)인지 판정.</p>
+
+  <div class="formula"><div class="fname">Perturbation Discrepancy Score</div>
+    $$ \mathbf{d}(x, p_\theta, q) = \log p_\theta(x) - \mathbb{E}_{\tilde{x}\sim q(\cdot|x)}\left[\log p_\theta(\tilde{x})\right] $$
+    <p style="font-size:14px;margin:6px 0 0;">원본 샘플의 \(\log p_\theta(x)\)와 perturbed \(\tilde{x}\)의 기대 log probability 간의 <strong>gap</strong>. \(q(\cdot|x)\)는 <strong>perturbation function</strong> — \(x\)의 <strong>의미는 보존(preserves the meaning)</strong>하면서 표면 형태(syntax)만 약간 바꾼다. 예: <strong>mask-filling LM(BERT, T5)</strong>으로 일부 토큰을 마스킹하고 random sampling으로 채움(masked token prediction).</p>
+  </div>
+
+  <p><strong>Qualitative analysis</strong>: model-generated text와 human-written text의 perturbation discrepancy 분포를 그려보면 둘 사이에 <strong>large discrepancy</strong>가 보인다 (모델 생성 쪽이 d가 큼).</p>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    d 점수의 판정 논리: <strong>d가 크면(perturb하면 likelihood가 뚝 떨어지면) → local maximum 근처 → machine-generated</strong>. d가 0 근처면(perturb해도 비슷하면) → human-written. + 3종 세트 암기: <strong>zero-shot / training-free / not black-box(log p<sub>θ</sub> 평가 가능 가정)</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"DetectGPT requires training a classifier on labeled human/AI text pairs." → <strong>False</strong>. It is a <strong>zero-shot, training-free</strong> method based on a curvature criterion.</li>
+      <li>"DetectGPT works in a fully black-box setting where only generated text is available." → <strong>False</strong>. It assumes \(\log p_\theta\) of the source model <strong>can be evaluated</strong>, i.e., NOT a black-box setup.</li>
+      <li>"The perturbation function \(q(\cdot|x)\) is designed to change the meaning of \(x\)." → <strong>False</strong>. It <strong>preserves the meaning</strong> while altering surface form (e.g., mask-filling with T5/BERT).</li>
+      <li>"DetectGPT uses the source LLM \(p_\theta\) itself to generate perturbations." → <strong>False</strong>. Perturbations come from a <strong>separate mask-filling LM</strong> (BERT/T5); \(p_\theta\) is only used for scoring.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 3 ================= -->
+<section id="s3">
+  <h2><span class="num">3</span> DetectGPT ② — Curvature 해석 <span class="en">(Taylor Expansion + Hutchinson's Estimator → Hessian Trace)</span></h2>
+
+  <p>왜 perturbation 기반 점수 d가 "curvature"인가? 두 가지 도구를 결합해 보인다.</p>
+
+  <h3>Step 1: Directional Second Derivative — Taylor Series Expansion</h3>
+  <div class="formula"><div class="fname">Taylor expansion으로 방향 2차 미분 \( \mathbf{z}^T H_f(x)\, \mathbf{z} \) 추정</div>
+    $$ f(x + h\mathbf{z}) \approx f(x) + h\,\mathbf{z}^T \nabla f(x) + \tfrac{h^2}{2}\,\mathbf{z}^T H_f(x)\,\mathbf{z} $$
+    $$ \Rightarrow\; \mathbf{z}^T H_f(x)\,\mathbf{z} \approx \frac{f(x+h\mathbf{z}) + f(x-h\mathbf{z}) - 2f(x)}{h^2} $$
+    <p style="font-size:14px;margin:6px 0 0;">\(+h\mathbf{z}\)와 \(-h\mathbf{z}\) 두 전개를 더하면 1차 항이 소거되어, <strong>함수값의 합/차만으로</strong> Hessian \(H_f\) 방향 성분을 추정(finite difference).</p>
+  </div>
+
+  <h3>Step 2: Hutchinson's Unbiased Estimator for Trace</h3>
+  <div class="formula"><div class="fname">Hutchinson's trace estimator</div>
+    $$ \operatorname{tr}(A) = \mathbb{E}_{\mathbf{z}\sim q_z}\!\left[\mathbf{z}^T A\, \mathbf{z}\right], \quad \mathbf{z}\sim q_z \text{ with } \mathbb{E}[z_i]=0,\ \operatorname{Var}(z_i)=1 $$
+    <p style="font-size:14px;margin:6px 0 0;">평균 0, 분산 1인 랜덤 벡터 \(\mathbf{z}\)에 대한 기대값으로 행렬의 trace를 비편향 추정.</p>
+  </div>
+
+  <h3>Step 3: 결합 (h = 1) + Symmetric Noise</h3>
+  <div class="formula"><div class="fname">두 식 결합 (h = 1)</div>
+    $$ -\operatorname{tr}\!\big(H_f(x)\big) = \mathbb{E}_{\mathbf{z}}\!\left[\,2f(x) - f(x+\mathbf{z}) - f(x-\mathbf{z})\,\right] $$
+    노이즈 분포가 <strong>symmetric</strong>, 즉 \(p(\mathbf{z}) = p(-\mathbf{z})\)이면 \( \mathbb{E}[f(x+\mathbf{z})] = \mathbb{E}[f(x-\mathbf{z})] \) 이므로:
+    $$ f(x) - \mathbb{E}_{\mathbf{z}}\big[f(x+\mathbf{z})\big] = -\tfrac{1}{2}\operatorname{tr}\!\big(H_f(x)\big) $$
+    <p style="font-size:14px;margin:6px 0 0;">좌변이 정확히 DetectGPT의 perturbation discrepancy 형태(\(f = \log p_\theta\), \(x+\mathbf{z} \leftrightarrow \tilde{x}\)). <strong>Hessian의 trace는 curvature를 포착하는 측도</strong>이므로, 제안된 점수는 실제로 <strong>(negative) curvature 정보를 이용</strong>하는 것이다. local maximum에서는 Hessian이 negative definite → \(\operatorname{tr}(H_f) < 0\) → \(d = -\frac{1}{2}\operatorname{tr}(H_f) > 0\)으로 크게 나온다.</p>
+  </div>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "It is known that the trace of the Hessian is some measurement that captures the curvature of f, so we can conclude that the proposed detection score indeed utilizes the curvature information."
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"The curvature interpretation requires computing the full Hessian matrix of \(\log p_\theta\)." → <strong>False</strong>. The trace is <strong>estimated stochastically</strong> via Hutchinson's estimator using only function evaluations (no explicit Hessian).</li>
+      <li>"Hutchinson's estimator requires \(\mathbf{z}\) to be Gaussian." → <strong>False</strong>. It only requires \(\mathbb{E}[z_i]=0\) and \(\operatorname{Var}(z_i)=1\); the symmetry condition \(p(\mathbf{z})=p(-\mathbf{z})\) is the extra assumption used to drop the \(f(x-\mathbf{z})\) term.</li>
+      <li>"The perturbation discrepancy equals the (positive) trace of the Hessian." → <strong>False</strong>. It corresponds to the <strong>negative</strong> trace (up to constant): \(f(x)-\mathbb{E}[f(x+\mathbf{z})] = -\frac12\operatorname{tr}(H_f)\). Near a local maximum the trace is negative, so the score is positive/large.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 4 ================= -->
+<section id="s4">
+  <h2><span class="num">4</span> DetectGPT ③ — 실험 <span class="en">(AUROC, Supervised 비교, Ablation)</span></h2>
+
+  <h3>Setup</h3>
+  <ul>
+    <li><strong>Dataset</strong>: 6개 데이터셋 조합 — news articles, Wikipedia paragraphs, Reddit posts 등. <strong>Machine-generated text는 실제(human-written) 텍스트의 첫 30 tokens로 LLM을 prompting하여 이어쓰게(continuation)</strong> 구성.</li>
+    <li><strong>Metric</strong>: <strong>AUROC</strong> (Area Under Receiver Operating Characteristic curve) — binary classifier 평가의 표준 지표. confidence score로 샘플을 정렬하고, threshold를 움직이며 <strong>false positive rate vs true positive rate</strong> 곡선을 그려 그 아래 면적을 잰다.</li>
+    <li><strong>Details</strong>: perturbation 생성에 <strong>T5-3B</strong>(mask filling) 사용, 기대값 계산을 위해 <strong>100개의 perturbed inputs</strong> 생성.</li>
+  </ul>
+
+  <h3>결과</h3>
+  <ul>
+    <li><strong>vs zero-shot baselines</strong> (likelihood, rank, entropy 등): DetectGPT가 <strong>state-of-the-art</strong>.</li>
+    <li><strong>vs supervised detectors</strong> (RoB-base / RoB-lg = AI/human 텍스트로 fine-tuning한 <strong>RoBERTa</strong>): <strong>in-distribution에서는 on-par</strong>, <strong>새 도메인(out-of-distribution)에서는 DetectGPT가 훨씬 우수</strong> — supervised는 학습 도메인 밖에서 일반화가 약하다.</li>
+    <li><strong>Scalability</strong>: 당시 최대 LLM인 <strong>GPT-3, Jurassic-2</strong>에도 적용 가능.</li>
+  </ul>
+
+  <h3>Ablation: Perturbation의 중요성</h3>
+  <ul>
+    <li><strong>Mask-filling 모델 크기</strong>: 큰 perturbation 모델일수록 고품질 perturbation → 성능↑.</li>
+    <li><strong>Perturbation 개수</strong>: 충분한 개수가 중요하나, <strong>100개 근처에서 효과는 거의 saturate</strong>.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    숫자 암기: 첫 <strong>30 tokens</strong> prompting / <strong>T5-3B</strong>로 perturbation / <strong>100 perturbed inputs</strong> / metric은 <strong>AUROC</strong>. 비교 구도: in-distribution → supervised와 on-par, <strong>OOD(new domains) → DetectGPT 승</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"DetectGPT outperforms supervised RoBERTa detectors in every setting, including in-distribution." → <strong>False</strong>. In-distribution it is only <strong>on-par</strong>; the clear advantage is on <strong>new domains (OOD)</strong>.</li>
+      <li>"Increasing the number of perturbations always improves performance proportionally." → <strong>False</strong>. The benefit <strong>saturates around 100</strong> perturbations.</li>
+      <li>"AUROC is computed at a single fixed classification threshold." → <strong>False</strong>. It integrates the TPR-FPR curve over <strong>all thresholds</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 5 ================= -->
+<section id="s5">
+  <h2><span class="num">5</span> Fast-DetectGPT — Conditional Probability Curvature와 340배 가속</h2>
+  <p class="en">Bao et al., "Fast-DetectGPT: Efficient Zero-Shot Detection of Machine-Generated Text via Conditional Probability Curvature", ICLR 2024.</p>
+
+  <h3>DetectGPT의 한계</h3>
+  <p>입력 \(x\) 하나마다 <strong>100개의 perturbed \(\tilde{x}\)</strong>를 만들어야 함 = <strong>T5 inference 100번</strong> → perturb & evaluate의 <strong>computational cost가 매우 큼</strong>.</p>
+
+  <h3>Key Idea: Conditional Probability로 효율적 Sampling & Scoring</h3>
+  <div class="formula"><div class="fname">치환: \(p_\theta(\tilde{x})\) → \(p_\theta(\tilde{x}\,|\,x)\)</div>
+    $$ p_\theta(\tilde{x}\,|\,x) = \prod_{j} p_\theta(\tilde{x}_j \,|\, x_{&lt;j}), \qquad p_\theta(x\,|\,x) = p_\theta(x) $$
+    <p style="font-size:14px;margin:6px 0 0;">핵심 차이: 보통의 autoregressive 분해는 \(p(x_j|x_{&lt;j})\)처럼 <strong>같은 시퀀스 자신</strong>에 조건을 걸지만, 여기서는 \(\tilde{x}_j\)가 <strong>원본 \(x\)의 prefix \(x_{&lt;j}\)</strong>에 조건 — 즉 토큰 \(\tilde{x}_j\)들은 <strong>주어진 \(x\)에 대해 서로 독립적으로 예측(independently predicted given x)</strong>된다.</p>
+  </div>
+
+  <div class="formula"><div class="fname">Conditional Probability Curvature</div>
+    $$ \mathbf{d}(x, p_\theta, q_\varphi) = \frac{\log p_\theta(x\,|\,x) - \tilde{\mu}}{\tilde{\sigma}}, \quad \tilde{\mu} = \mathbb{E}_{\tilde{x}\sim q_\varphi(\cdot|x)}\big[\log p_\theta(\tilde{x}\,|\,x)\big] $$
+    <p style="font-size:14px;margin:6px 0 0;">DetectGPT 점수와 같은 구조(원본 log prob − perturbed 기대 log prob)이지만 <strong>분산 항 \(\tilde{\sigma}\)로 normalize</strong>하는 것이 새로 추가됨.</p>
+  </div>
+
+  <h3>Conditional Independent Sampling — 왜 빠른가</h3>
+  <ul>
+    <li>\(\tilde{x}_j \sim q_\varphi(\tilde{x}_j\,|\,x_{&lt;j})\): <strong>고정된 \(x\)</strong>가 주어지면, 다른 샘플된 토큰에 의존하지 않고 각 위치를 샘플.</li>
+    <li><strong>Conventional sampling</strong>: \(N\)개 샘플을 autoregressive하게 만들면 <strong>\(N \times L\)번의 LLM inference</strong> 필요.</li>
+    <li><strong>Fast-DetectGPT</strong>: 각 위치에서 원본 prefix 조건의 분포로부터 N개 토큰을 동시에 뽑으므로 <strong>L번의 inference로 충분</strong> (scoring도 동일). 한 번의 forward pass로 모든 위치의 분포를 얻고 거기서 N개씩 샘플.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "The key idea is that Fast-DetectGPT does not care about <em>what</em> is sampled from the distribution; it only focuses on calculating the log probability." — 샘플의 내용이 아니라 조건부 log prob 계산만 필요하므로 독립 샘플링이 가능.
+  </div>
+
+  <h3>Connection to Likelihood & Entropy</h3>
+  <p><strong>Sampling과 scoring에 같은 모델</strong>을 쓰면, 이 점수는 baseline 방법들의 합과 연결된다: <strong>Likelihood</strong>(\(\log p_\theta(x)\)) + <strong>Entropy</strong>(\(-\tilde{\mu}\))의 합 형태.</p>
+
+  <h3>실험</h3>
+  <ul>
+    <li>Setup은 DetectGPT와 동일(dataset, models, metric).</li>
+    <li><strong>속도</strong>: DetectGPT <strong>22 hours (A100)</strong> vs Fast-DetectGPT <strong>4 minutes</strong> ≈ <strong>×340 speedup</strong>. 성능은 보존되거나 일부 케이스에서 <strong>큰 폭으로 더 좋음</strong>.</li>
+    <li><strong>ChatGPT/GPT-4 탐지</strong>: 소스 모델의 log prob에 접근할 수 없으므로 <strong>surrogate(예: GPT-J)</strong>로 sampling/scoring을 근사 — 표기 (modelA/modelB) = sampling용 A / scoring용 B. 이렇게 해도 ChatGPT·GPT-4가 쓴 문단을 성공적으로 탐지.</li>
+  </ul>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    Fast-DetectGPT 3대 포인트: ① \(p_\theta(\tilde{x})\)를 \(p_\theta(\tilde{x}|x)\)로 치환(조건은 항상 <strong>원본 x</strong>) ② \(N\!\times\!L\) → <strong>L</strong> inferences ③ <strong>22 hours → 4 minutes (×340)</strong>, 성능은 유지~상회. + score에 <strong>분산 normalization</strong> 추가, 동일 모델 사용 시 <strong>Likelihood + Entropy</strong>와 연결.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Fast-DetectGPT speeds up DetectGPT by reducing the number of perturbation samples." → <strong>False</strong>. The speedup comes from <strong>conditional independent sampling/scoring</strong> (L inferences instead of N×L), not from using fewer samples.</li>
+      <li>"In Fast-DetectGPT, each sampled token \(\tilde{x}_j\) depends on previously sampled tokens \(\tilde{x}_{&lt;j}\)." → <strong>False</strong>. It is conditioned on the <strong>original</strong> prefix \(x_{&lt;j}\); sampled tokens are <strong>independent of each other</strong> given x.</li>
+      <li>"Fast-DetectGPT trades detection accuracy for speed." → <strong>False</strong>. It preserves DetectGPT's performance and even <strong>outperforms it by a large margin</strong> in some cases.</li>
+      <li>"Detecting ChatGPT/GPT-4 text with Fast-DetectGPT is impossible because their log-probabilities are inaccessible." → <strong>False</strong>. A <strong>surrogate model (e.g., GPT-J)</strong> is used for sampling/scoring and detection still succeeds.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 6 ================= -->
+<section id="s6">
+  <h2><span class="num">6</span> ReMoDetect — Reward Model로 Aligned LLM 텍스트 탐지</h2>
+  <p class="en">Lee et al., "ReMoDetect: Reward Models Recognize Aligned LLM's Generations", NeurIPS 2024.</p>
+
+  <h3>Motivation</h3>
+  <ul>
+    <li>최근 LLM은 <strong>RLHF</strong>로 human preference에 맞게 fine-tuning됨 (InstructGPT 그림 인용). 여기서 <strong>reward model은 human preference의 proxy</strong>.</li>
+    <li>핵심 관찰: reward model 학습 데이터는 사람이 <em>쓴</em> 글이 아니라 <strong>LLM이 생성한 응답들 중 사람이 고른(voted) 것</strong> — 즉 <strong>reward model is trained with LLM-generated texts, not human-written texts</strong>.</li>
+    <li><strong>Hypothesis</strong>: LGT(LLM-Generated Text) distribution ≠ Human-written text distribution → reward model은 <strong>LGT 쪽으로 biased</strong>되어 있을 것.</li>
+  </ul>
+
+  <h3>관찰적 검증</h3>
+  <ul>
+    <li><strong>t-SNE</strong> (reward model 마지막 hidden embedding의 2차원 매핑): human 문장과 machine 문장이 <strong>명확히 분리</strong> (특히 Reuters 데이터셋).</li>
+    <li><strong>Reward score 분포</strong>: machine-generated text가 human보다 <strong>더 높은 reward score</strong> — LLM 자체가 reward를 maximize하도록 fine-tuning되었기 때문.</li>
+  </ul>
+
+  <h3>Key Idea + 두 가지 Training Components</h3>
+  <p><strong>이 reward model을 그대로 LGT 탐지기로 사용</strong>하고, 효과를 높이기 위해 두 가지를 추가 학습:</p>
+  <ol class="steps">
+    <li><strong>Continual Preference Tuning</strong> — LGT/human text 쌍으로 reward model을 다시 fine-tuning. <strong>주의: 직관과 반대로 LGT를 preferred 쪽으로</strong> 두어 human과 LGT의 reward score 격차를 더 벌린다. 추가 fine-tuning 중 기존 reward modeling 정보를 잃는 <strong>forgetting issue</strong>는 <strong>replay buffer</strong>(중요 데이터 저장 후 regularization)로 완화.</li>
+    <li><strong>Reward Modeling with Mixed Responses</strong> — human-written text를 <strong>LLM으로 부분적으로 rephrase</strong>한 mixed text를 만들고, 이를 <strong>median preference</strong>로 사용: <strong>Preference: LLM ≻ Mixed ≻ Human</strong>. 중간 단계 문장을 넣어 탐지기가 <strong>더 나은 decision boundary</strong>를 학습.</li>
+  </ol>
+
+  <h3>실험</h3>
+  <ul>
+    <li><strong>Trained reward model</strong>: OpenAssistant의 <strong>reward-model-deberta-v3-large-v2 (700M)</strong> — DeBERTa 기반 오픈소스. 학습 데이터: <strong>HC3</strong> (Human/ChatGPT-3.5 pairs) <strong>4,400 samples</strong>.</li>
+    <li><strong>평가</strong>: MGTBench, Fast-DetectGPT Bench. <strong>Unseen domains</strong>(PubMed, XSum, WritingPrompt, Essay, Reuters)와 <strong>unseen LLMs</strong>(Llama, Gemini, GPT-4, Claude, Phi …)에 대해 평가.</li>
+    <li><strong>결과</strong>: Fast-DetectGPT benchmark·MGTBench 모두에서 <strong>모든 baseline 대비 우수</strong>. 단, <strong>ReMoDetect는 training-based, Fast-DetectGPT는 zero-shot</strong>이라는 점은 구분해야 공정한 비교. <strong>상용 detector(GPTZero 등)보다도 우수</strong> → 상용화 잠재력. <strong>DPO-trained LLM</strong>(reward model 없이 정렬된 모델)의 생성물에도 성공적으로 적용됨.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "In contrast to human intuition, the language-model-generated text will be the <em>preferred</em> one" (continual preference tuning에서) — 그리고 비교 해석 시 "We should clarify that ReMoDetect is actually a training-based approach, while Fast-DetectGPT is a zero-shot-based approach."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    논리 체인 암기: reward model은 <strong>LLM 생성문으로 학습</strong> → LGT에 biased → <strong>LGT가 human보다 높은 reward</strong> → reward score 자체가 탐지 신호. 기법 2개: <strong>Continual Preference Tuning(LGT preferred + replay buffer)</strong>, <strong>Mixed Responses(LLM ≻ Mixed ≻ Human)</strong>.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"Reward models in RLHF are trained on human-written texts." → <strong>False</strong>. They are trained on <strong>LLM-generated responses</strong> ranked/selected by human annotators.</li>
+      <li>"In continual preference tuning, human text is labeled as the preferred response." → <strong>False</strong>. Counter-intuitively, the <strong>LLM-generated text is set as preferred</strong> to widen the reward gap.</li>
+      <li>"ReMoDetect is a zero-shot detector like Fast-DetectGPT." → <strong>False</strong>. It is a <strong>training-based</strong> approach (fine-tunes a reward model).</li>
+      <li>"ReMoDetect fails on DPO-trained LLMs because they have no reward model." → <strong>False</strong>. Experiments show it is <strong>successfully applicable to DPO-trained models</strong> as well.</li>
+      <li>"Mixed responses are ranked above pure LLM generations." → <strong>False</strong>. The order is <strong>LLM ≻ Mixed ≻ Human</strong>; mixed texts serve as the <strong>median</strong> preference.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 7 ================= -->
+<section id="s7">
+  <h2><span class="num">7</span> Watermarking — Hard Red List, One Proportion z-Test, Soft Method</h2>
+  <p class="en">Kirchenbauer et al., "A Watermark for Large Language Models", ICML 2023. 실서비스 사례: SynthID by Google DeepMind.</p>
+
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>Watermark in LLM</strong>: <strong>hidden pattern in text that is imperceptible to humans, while making the text algorithmically identifiable as synthetic</strong>. — 사람 눈에는 품질 저하가 거의 없지만, 알고리즘으로는 LLM 산출물임을 판별 가능. 두 가지 key components: ① <strong>how to insert</strong> ② <strong>how to detect</strong>.
+  </div>
+
+  <p>아이디어 개관(SynthID 발표 인용): LLM의 <strong>output probability를 살짝 조정(adjusting)</strong>해 생성 텍스트의 분포를 바꾸되, <strong>원래 텍스트 품질은 최대한 보존</strong>. 직관적으로 vocabulary를 <strong>green token set / red token set</strong>으로 나누고 <strong>green set에서만 생성</strong>하면, 워터마크된 응답은 대부분 green 토큰으로 구성되고(탐지 가능), 일반 텍스트는 green/red가 반반쯤 섞인다.</p>
+
+  <h3>Algorithm 1: Generation with Hard Red List</h3>
+  <ol class="steps">
+    <li>표기: \(s^{(-N_p)}, \dots, s^{(-1)}\)는 <strong>prompt</strong>, \(s^{(0)}, \dots, s^{(T)}\)는 generated tokens. t번째 위치에서 next-token 확률분포를 얻음.</li>
+    <li><strong>직전 토큰 \(s^{(t-1)}\)에 hash function을 적용</strong>해 그 해시로 random number generator를 seed.</li>
+    <li>그 난수로 vocabulary를 <strong>green list / red list로 random partition</strong>.</li>
+    <li><strong>green list에서만 다음 토큰을 샘플</strong> (red list 토큰은 확률 0 — 절대 생성 안 됨).</li>
+  </ol>
+
+  <h3>탐지: Null Hypothesis와 One Proportion z-Test</h3>
+  <div class="definition"><div class="label">📖 Null Hypothesis</div>
+    \(H_0\): <strong>The text sequence is generated with no knowledge of the red list rule.</strong> — 직관: red list 규칙을 모르는 natural writer는 무작위로 구성된 red list를 <strong>위반할 수밖에 없다</strong>. 사람이 \(T\) 토큰을 쓰면서 red list를 한 번도 위반하지 않을 확률은 단 \(1/2^T\). 따라서 위반이 없으면 → \(H_0\) 기각 → AI-generated로 판정.
+  </div>
+
+  <div class="formula"><div class="fname">One Proportion z-Test</div>
+    \(H_0\)가 참이면 green list 토큰 수 \(|s|_G\)의 기대값은 \(T/2\), 분산은 \(T/4\). 따라서:
+    $$ z = \frac{2\left(|s|_G - T/2\right)}{\sqrt{T}} $$
+    <p style="font-size:14px;margin:6px 0 0;"><strong>\(z\)가 threshold \(\tau\)를 넘으면 \(H_0\) 기각 → watermark 탐지(= LLM 생성으로 판정)</strong>. 예: \(\tau = 4\)이면 <strong>false positive 확률 ≈ \(3\times10^{-5}\)</strong>. 또한 <strong>16 tokens 이상</strong>의 watermarked sequence는 모두 탐지 가능 — \(|s|_G = T\)일 때 \(z = 4\)가 되는 최소 \(T\)가 16이기 때문 (\(z = 2(T - T/2)/\sqrt{T} = \sqrt{T} = 4 \Rightarrow T = 16\)).</p>
+  </div>
+
+  <h3>Hard Red List의 한계 → Soft Method</h3>
+  <ul>
+    <li><strong>한계</strong>: 예측의 <strong>confidence/entropy(즉 context)를 전혀 고려하지 않음</strong>. 예: "Barack" 다음은 거의 결정적으로 "Obama"인데, "Obama"가 우연히 red list에 들어가면 생성이 금지되어 <strong>품질 저하</strong> 발생. → context/confidence에 따라 <strong>adaptive</strong>하게 적용할 수 없을까?</li>
+  </ul>
+  <div class="formula"><div class="fname">Soft Watermark — logit에 δ 더하기</div>
+    \(l^{(t)}\)를 LLM 마지막 층 출력(logit)이라 하면 \( p^{(t)}_k = \dfrac{\exp(l^{(t)}_k)}{\sum_i \exp(l^{(t)}_i)} \) (softmax). Soft method는 <strong>green list 토큰의 logit에만 상수 \(\delta\)를 더해</strong> 그 확률을 키운다:
+    $$ p^{(t)}_k = \frac{\exp(l^{(t)}_k + \delta\,\mathbb{1}[k \in G])}{\sum_i \exp(l^{(t)}_i + \delta\,\mathbb{1}[i \in G])} $$
+    <p style="font-size:14px;margin:6px 0 0;"><strong>Why it works</strong>: \(p^{(t)} \approx 1\)인 highly likely word는 \(\delta\)를 더한 후에도 <strong>여전히 가장 큰 확률로 남아</strong> 생성됨 ("Obama"는 red여도 생성 가능). Hard red list는 <strong>green에 \(\delta = \infty\)를 더한 극한</strong>으로 볼 수 있다. 알고리즘의 나머지(hash → seed → partition)는 동일, 탐지도 <strong>같은 one proportion z-test</strong>(임의의 green 비율 \(\gamma\>\)에 일반화) + 저자들은 green 토큰 수의 기대값·분산에 대한 <strong>theoretical backup</strong> 제공.</p>
+  </div>
+
+  <h3>실험: Watermark 강도 vs 품질 Trade-off</h3>
+  <ul>
+    <li>Setup: <strong>OPT-1.3B</strong>로 생성, <strong>\(\gamma = 0.5\)</strong>(green/red 동수), <strong>\(\delta = 2.0\)</strong>.</li>
+    <li>Qualitative: top row — <strong>high entropy/z-score</strong>로 쉽게 탐지되면서도 <strong>품질 저하 없음</strong>. Lower row — <strong>failure case</strong>: 텍스트의 entropy가 낮아 watermark가 너무 약해(too weak) 탐지 실패.</li>
+    <li>Trade-off 곡선(왼쪽 sampling, 오른쪽 beam search): <strong>z-score↑ = 탐지 쉬움</strong>, <strong>perplexity↓ = 품질 좋음</strong> — 둘은 trade-off. 하지만 <strong>z ≈ 2~4면 탐지에 충분</strong>하고, 이 구간에선 <strong>유의미한 품질 저하가 없다</strong> → Google DeepMind가 실서비스(SynthID)에 채택한 이유.</li>
+  </ul>
+
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "The important thing is that we should preserve the original quality of the text as much as possible while inserting this kind of watermark." — 그리고 trade-off 결론: "z values near 2 or 4 are sufficient to detect the LLM-generated text, and in these ranges there is no significant quality degradation. That's the reason why it is utilized by Google DeepMind as well."
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    절차 암기: <strong>이전 토큰 hash → RNG seed → green/red random partition → green에서 샘플(hard) 또는 green logit + δ(soft)</strong>. 탐지: \(z = 2(|s|_G - T/2)/\sqrt{T}\), \(\tau=4\)일 때 FP ≈ 3×10⁻⁵, <strong>최소 16 토큰</strong>. Hard의 한계 = low-entropy 상황("Barack→Obama") 품질 저하 → Soft가 해결.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"LLM watermarks are visible patterns that humans can spot in the text." → <strong>False</strong>. They are <strong>imperceptible to humans</strong> but algorithmically identifiable.</li>
+      <li>"The green/red partition is fixed once for the whole vocabulary across all positions." → <strong>False</strong>. It is <strong>re-randomized at every position</strong>, seeded by a hash of the previous token.</li>
+      <li>"Watermark detection requires access to the LLM's parameters or log-probabilities." → <strong>False</strong>. Detection only needs the <strong>hash/partition rule and a z-test on green token counts</strong> — no model access (DetectGPT와의 결정적 차이).</li>
+      <li>"In the soft method, red list tokens can never be generated." → <strong>False</strong>. That is the <strong>hard</strong> red list. Soft method only <strong>boosts green logits by δ</strong>; a highly likely red token (e.g., "Obama") can still be generated.</li>
+      <li>"A higher z-score threshold improves both detectability and text quality." → <strong>False</strong>. There is a <strong>trade-off</strong>: higher z → easier detection but worse (higher) perplexity. Luckily z ≈ 2–4 suffices with no significant degradation.</li>
+      <li>"Watermarking can be applied to detect text that was already generated by any LLM." → <strong>False</strong>. The watermark must be inserted <strong>at generation time</strong> by the model owner; it cannot detect pre-existing/unwatermarked text.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SECTION 8 ================= -->
+<section id="s8">
+  <h2><span class="num">8</span> 탐지 패러다임 총비교 <span class="en">(Zero-shot vs Trained vs Watermarking)</span></h2>
+
+  <table>
+    <tr><th>구분</th><th>DetectGPT (ICML'23)</th><th>Fast-DetectGPT (ICLR'24)</th><th>ReMoDetect (NeurIPS'24)</th><th>Watermarking (ICML'23)</th></tr>
+    <tr><td><strong>패러다임</strong></td><td>Zero-shot (training-free)</td><td>Zero-shot (training-free)</td><td><strong>Training-based</strong> (reward model fine-tuning)</td><td>생성 시 패턴 삽입 + 통계 검정</td></tr>
+    <tr><td><strong>핵심 신호</strong></td><td>Probability curvature — perturbation discrepancy \(\log p_\theta(x) - \mathbb{E}[\log p_\theta(\tilde{x})]\)</td><td>Conditional probability curvature (분산 normalize)</td><td>Reward score — aligned LLM 글이 높은 reward</td><td>Green token 비율의 z-statistic</td></tr>
+    <tr><td><strong>필요 자원</strong></td><td>소스 모델 \(\log p_\theta\) 접근 (not black-box) + mask-filling LM(T5-3B), 100 perturbations</td><td>(surrogate 가능한) sampling/scoring 모델, L번 inference</td><td>학습 데이터 (HC3 4,400 pairs) + 오픈소스 reward model (DeBERTa 700M)</td><td><strong>생성 시점</strong>에 모델 제어 필요; 탐지는 모델 접근 불필요</td></tr>
+    <tr><td><strong>비용</strong></td><td>매우 큼 (T5 100회/입력, 22h on A100)</td><td>4 min (×340 faster)</td><td>학습 1회 후 inference 저렴</td><td>logit에 δ 더하기만 — 거의 0</td></tr>
+    <tr><td><strong>강점</strong></td><td>OOD(new domain)에서 supervised보다 강함; GPT-3급 확장</td><td>속도 + 성능 보존/상회; ChatGPT/GPT-4도 surrogate로 탐지</td><td>벤치마크 전반 SOTA, 상용 모델보다 우수, unseen LLM/domain·DPO 모델에도 작동</td><td>품질 저하 거의 없이 통계적 보장(FP ≈ 3×10⁻⁵), 16+ 토큰이면 탐지</td></tr>
+    <tr><td><strong>약점/한계</strong></td><td>계산 비용, white-box 가정</td><td>(zero-shot 공통) 소스/대리 모델 필요</td><td>training-based라 zero-shot과 직접 비교 시 유의</td><td>모델 소유자가 미리 심어야 함; hard 방식은 low-entropy서 품질 저하</td></tr>
+  </table>
+
+  <table>
+    <tr><th></th><th>Hard Red List</th><th>Soft Watermark</th></tr>
+    <tr><td><strong>방식</strong></td><td>red list 토큰 생성 <strong>완전 금지</strong> (green에서만 샘플)</td><td>green list 토큰 <strong>logit에 +δ</strong> (확률만 상향)</td></tr>
+    <tr><td><strong>관계</strong></td><td colspan="2">Hard = Soft의 \(\delta \to \infty\) 극한</td></tr>
+    <tr><td><strong>Low-entropy 상황</strong></td><td>"Barack → Obama"가 막혀 품질 저하</td><td>고확률 토큰은 red여도 생성 → 품질 보존</td></tr>
+    <tr><td><strong>탐지</strong></td><td>one proportion z-test</td><td>동일한 z-test (임의의 γ로 일반화)</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    Pick-all 단골 구도: <strong>"어떤 방법이 training-free인가?"</strong> (DetectGPT·Fast-DetectGPT O / ReMoDetect·supervised RoBERTa X), <strong>"어떤 방법이 생성 시점 개입이 필요한가?"</strong> (Watermarking만 O), <strong>"어떤 방법이 source model의 log prob 접근을 가정하는가?"</strong> (DetectGPT O / Watermarking 탐지는 X).
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section id="quiz">
+  <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 기말 신규 범위)</span></h2>
+
+  <h3>True / False</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>DetectGPT is based on the observation that LLM-generated texts tend to lie in regions of negative curvature of the model's log probability function, i.e., near local maxima of \(\log p_\theta\).</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> This is exactly the core hypothesis: since \(p_\theta\) is trained to maximize log-likelihood and \(x\) is sampled from \(p_\theta\), machine-generated text sits near local maxima (negative curvature), so perturbing it decreases \(\log p_\theta\) noticeably.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q2. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>DetectGPT is a zero-shot detection method, and therefore it can be applied even when the log-probability of the source model cannot be evaluated.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Although DetectGPT is zero-shot (training-free), it explicitly <strong>assumes \(\log p_\theta\) can be evaluated</strong>, i.e., it is NOT a black-box setup. Zero-shot (no training) and black-box (no model access) are different notions — a classic trap.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q3. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>The perturbation discrepancy score of DetectGPT can be interpreted as an estimate of the negative trace of the Hessian of \(\log p_\theta\), using Taylor expansion and Hutchinson's trace estimator under a symmetric noise distribution.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Combining the finite-difference form of the directional second derivative (h = 1) with Hutchinson's estimator, and assuming \(p(\mathbf{z}) = p(-\mathbf{z})\), gives \(f(x) - \mathbb{E}[f(x+\mathbf{z})] = -\frac{1}{2}\mathrm{tr}(H_f(x))\) — the trace of the Hessian captures curvature.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q4. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Compared to supervised detectors such as fine-tuned RoBERTa, DetectGPT performs much better in the in-distribution setting but worse on new domains.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> It is the opposite: DetectGPT is only <strong>on-par</strong> with supervised detectors in-distribution, but <strong>much better on new domains (out-of-distribution)</strong>, where supervised detectors fail to generalize.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q5. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>Fast-DetectGPT reduces the sampling cost from \(N \times L\) LLM inferences to \(L\) inferences by sampling each perturbed token \(\tilde{x}_j\) conditioned on the original prefix \(x_{&lt;j}\), independently of other sampled tokens.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Conditional independent sampling conditions every \(\tilde{x}_j\) on the fixed original \(x\) (not on previously sampled tokens), so all N samples at all positions are obtained from L forward passes — yielding the 22 hours → 4 minutes (×340) speedup while preserving or even improving performance.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q6. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In ReMoDetect, the reward model assigns higher reward scores to LLM-generated texts than to human-written texts, because the reward model was trained on LLM-generated responses selected by human annotators rather than on human-written texts.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> This is the key observation (verified via t-SNE separation and reward score distributions): the reward model is biased toward LLM-generated text, and aligned LLMs are additionally fine-tuned to maximize that reward — so the reward score itself becomes a detection signal.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q7. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>In the hard red list watermarking scheme, the green/red partition of the vocabulary is determined by seeding a random number generator with a hash of the previously generated token, and the next token is sampled only from the green list.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Hash of the previous token → seed RNG → random green/red partition at each position → sample only from the green list. A natural writer with no knowledge of the rule produces T tokens without violating it with probability only \(1/2^T\).</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q8. (True/False) <span class="src src-pred">예상문제</span></div>
+      <p>The soft watermarking method adds a constant \(\delta\) to the logits of red list tokens to decrease their probability, which prevents tokens like "Obama" after "Barack" from ever being generated.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Two errors: \(\delta\) is added to the logits of <strong>green</strong> list tokens (red logits are unchanged), and the whole point is that a highly likely word with \(p^{(t)} \approx 1\) <strong>remains the largest</strong> even after the addition — so "Obama" CAN still be generated even if it falls in the red list. Banning red tokens entirely is the <em>hard</em> red list.</div>
+    </details>
+  </div>
+
+  <h3>Pick all that are correct <span class="badge">any wrong answer → 0 points</span></h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q9. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about DetectGPT?</p>
+      <ol type="a">
+        <li>The perturbation function \(q(\cdot|x)\) should preserve the meaning of \(x\) while changing its surface form, e.g., via mask-filling with T5.</li>
+        <li>For each input, 100 perturbed versions are generated with T5-3B to estimate the expectation in the discrepancy score.</li>
+        <li>A larger perturbation (mask-filling) model yields higher-quality perturbations and better detection performance.</li>
+        <li>The machine-generated evaluation text was produced by prompting LLMs with the first 30 tokens of real human-written text.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d) — 모두 정답</span>
+        <ul>
+          <li>(a) Correct. \(q(\cdot|x)\) is a meaning-preserving perturbation; mask-filling LMs like BERT/T5 are used.</li>
+          <li>(b) Correct. T5-3B, 100 perturbed inputs per sample — also why the method is so expensive.</li>
+          <li>(c) Correct. The ablation shows larger perturbing models matter; the number of perturbations saturates near 100.</li>
+          <li>(d) Correct. Machine text = LLM continuation of the first 30 tokens of real text from the six datasets.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q10. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about Fast-DetectGPT?</p>
+      <ol type="a">
+        <li>It replaces \(p_\theta(\tilde{x})\) in DetectGPT with the conditional probability \(p_\theta(\tilde{x}|x)\), where each \(\tilde{x}_j\) is predicted given the original prefix \(x_{&lt;j}\).</li>
+        <li>Its conditional probability curvature score is normalized by a variance term, which the original DetectGPT score does not have.</li>
+        <li>It reduces wall-clock time from 22 hours to 4 minutes on an A100, but at the cost of noticeably lower AUROC than DetectGPT.</li>
+        <li>When the same model is used for both sampling and scoring, the score is related to the sum of the Likelihood and Entropy baselines.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. Tokens \(\tilde{x}_j\) are independently predicted given the original \(x\); also \(p_\theta(x|x) = p_\theta(x)\).</li>
+          <li>(b) Correct. The variance normalization term \(\tilde{\sigma}\) is newly incorporated.</li>
+          <li class="wrong">(c) Incorrect. The ×340 speedup comes <strong>without</strong> performance loss — Fast-DetectGPT preserves DetectGPT's performance and even outperforms it by a large margin in some cases.</li>
+          <li>(d) Correct. With a shared sampling/scoring model the score relates to Likelihood (\(\log p_\theta(x)\)) + Entropy (\(-\tilde{\mu}\)).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q11. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about ReMoDetect?</p>
+      <ol type="a">
+        <li>In continual preference tuning, the LLM-generated text is treated as the preferred response, contrary to typical human intuition, in order to widen the reward gap.</li>
+        <li>A replay buffer is used to mitigate the forgetting issue during the additional fine-tuning of the reward model.</li>
+        <li>Mixed responses, created by partially rephrasing human text with an LLM, are used as the median preference: LLM ≻ Mixed ≻ Human.</li>
+        <li>ReMoDetect cannot detect generations from DPO-trained LLMs, since DPO does not use an explicit reward model.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. LGTs become the preferred one to further increase the human/LLM reward discrepancy.</li>
+          <li>(b) Correct. Important reward-modeling data is replayed to regularize the model against forgetting.</li>
+          <li>(c) Correct. The intermediate (mixed) preference level helps the detector learn a better decision boundary.</li>
+          <li class="wrong">(d) Incorrect. Experiments show ReMoDetect is <strong>successfully applicable to DPO-trained models</strong> as well, even though DPO requires no separate reward model.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q12. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about watermark detection with the one proportion z-test (hard red list, half green/half red)?</p>
+      <ol type="a">
+        <li>The null hypothesis \(H_0\) states that the text sequence was generated with no knowledge of the red list rule.</li>
+        <li>Under \(H_0\), the number of green list tokens \(|s|_G\) has expected value \(T/2\) and variance \(T/4\).</li>
+        <li>The watermark is detected by rejecting \(H_0\) when the z-statistic \(z = 2(|s|_G - T/2)/\sqrt{T}\) exceeds a threshold \(\tau\).</li>
+        <li>With \(\tau = 4\), the false positive probability is about \(3 \times 10^{-5}\), and any watermarked sequence of 16 or more tokens can be detected.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d) — 모두 정답</span>
+        <ul>
+          <li>(a) Correct. A human writer is expected to violate the randomly constructed red list rule.</li>
+          <li>(b) Correct. Each token is green with probability 1/2 → Binomial(T, 1/2): mean T/2, variance T/4.</li>
+          <li>(c) Correct. Rejecting \(H_0\) means the text is considered AI-generated.</li>
+          <li>(d) Correct. 16 is the minimum T producing z = 4 when \(|s|_G = T\) (since \(z = \sqrt{T}\) in that case).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q13. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Which of the following are correct about the soft watermarking method and its trade-offs?</p>
+      <ol type="a">
+        <li>The hard red list can be viewed as the limiting case of the soft method where \(\delta \to \infty\).</li>
+        <li>The motivation for the soft method is that the hard red list ignores the confidence/entropy of the prediction, e.g., "Barack" followed almost deterministically by "Obama".</li>
+        <li>In the experiments (OPT-1.3B, \(\gamma = 0.5\), \(\delta = 2.0\)), the failure cases occur on high-entropy text where the watermark becomes too strong.</li>
+        <li>There is a trade-off between detectability (z-score) and quality (perplexity), but z-scores around 2–4 are sufficient for detection without significant quality degradation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. Adding \(\delta = \infty\) to green logits makes red tokens impossible — exactly the hard rule.</li>
+          <li>(b) Correct. Low-entropy continuations get blocked by the hard rule, degrading quality; the soft method fixes this adaptively.</li>
+          <li class="wrong">(c) Incorrect. Failure cases are <strong>low-entropy</strong> texts where the watermark is <strong>too weak</strong> to be detected (almost no token changes occur) — the top-row success cases are the high-entropy ones.</li>
+          <li>(d) Correct. This favorable trade-off region is why Google DeepMind adopted watermarking (SynthID).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Q14. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+      <p>Comparing the detection paradigms covered in this lecture, which of the following are correct?</p>
+      <ol type="a">
+        <li>DetectGPT and Fast-DetectGPT are zero-shot (training-free) methods, while ReMoDetect is a training-based method.</li>
+        <li>Watermarking requires intervention at generation time by the model owner, whereas DetectGPT-style methods can be applied to text after it has been generated.</li>
+        <li>ReMoDetect outperforms commercial detectors such as GPTZero in the reported comparison.</li>
+        <li>Watermark detection requires evaluating the log-probability of the source model, just like DetectGPT.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
+        <ul>
+          <li>(a) Correct. This caveat was explicitly emphasized when comparing ReMoDetect against Fast-DetectGPT.</li>
+          <li>(b) Correct. The watermark is a hidden pattern inserted while generating; post-hoc methods like DetectGPT score already-written passages.</li>
+          <li>(c) Correct. ReMoDetect shows much better performance than commercial models, suggesting commercial potential.</li>
+          <li class="wrong">(d) Incorrect. Watermark detection only needs the green/red partition rule (hash) and a <strong>z-test on green token counts</strong> — no access to model log-probabilities is required, unlike DetectGPT's not-black-box assumption.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="summary-card">
+  <h2>🎯 3분 요약</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 정리</th></tr>
+    <tr><td><strong>Motivation</strong></td><td>LLM 텍스트는 사람 글과 구분 불가 수준 → 리뷰 자동생성 등 misuse → 정량적 탐지 필요 (GPTZero: not perfect, but not bad)</td></tr>
+    <tr><td><strong>DetectGPT</strong></td><td>LLM 텍스트는 log p<sub>θ</sub>의 local maxima(negative curvature)에 위치 → perturbation discrepancy \(\log p_\theta(x)-\mathbb{E}[\log p_\theta(\tilde x)]\)가 크면 machine. Zero-shot·training-free·not black-box</td></tr>
+    <tr><td><strong>Curvature 해석</strong></td><td>Taylor expansion + Hutchinson's trace estimator + symmetric noise → 점수 = \(-\frac12\mathrm{tr}(H_f)\), Hessian trace = curvature</td></tr>
+    <tr><td><strong>실험</strong></td><td>T5-3B로 100 perturbations, AUROC. zero-shot SOTA, OOD에서 supervised(RoBERTa)보다 우수, in-dist는 on-par</td></tr>
+    <tr><td><strong>Fast-DetectGPT</strong></td><td>\(p_\theta(\tilde x)\to p_\theta(\tilde x|x)\), conditional independent sampling으로 N×L → L inferences. 22h → 4min (×340), 성능 유지~상회</td></tr>
+    <tr><td><strong>ReMoDetect</strong></td><td>Reward model은 LGT로 학습되어 LGT에 biased(높은 reward) → 탐지기로 사용. Continual preference tuning(LGT preferred + replay buffer) + Mixed responses(LLM≻Mixed≻Human). Training-based, 상용 모델보다 우수, DPO 모델에도 적용</td></tr>
+    <tr><td><strong>Watermarking</strong></td><td>이전 토큰 hash → green/red partition → green만 샘플(hard) 또는 green logit+δ(soft). 사람에겐 imperceptible, 알고리즘으론 identifiable</td></tr>
+    <tr><td><strong>z-test 탐지</strong></td><td>\(z = 2(|s|_G - T/2)/\sqrt{T}\); τ=4 → FP ≈ 3×10⁻⁵, 16+ 토큰 탐지. z≈2~4면 품질 저하 없이 탐지 충분 (SynthID 채택 이유)</td></tr>
+  </table>
+</section>
+
+<div class="nav-top" style="margin-top:24px;">
+  <a href="index.html">← 전체 목차</a>
+  <a href="9. 기출문제 모음.html">다음 장 →</a>
+</div>
+
+</div>
+</body>
+</html>
