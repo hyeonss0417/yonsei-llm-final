@@ -32,6 +32,9 @@
   a.card.special .ch { color: #b07c2a; }
   .sec-label { font-size: 14px; font-weight: 800; color: var(--muted); letter-spacing: 1.5px;
     margin: 28px 0 12px 4px; text-transform: uppercase; }
+  .pdfbar { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 22px; font-size:14px; line-height:2; }
+  .pdfbar a { color: var(--primary-dark); text-decoration: none; font-weight:600; }
+  .pdfbar a:hover { text-decoration: underline; }
   .footer { margin-top: 36px; text-align: center; color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -41,18 +44,18 @@
 <div class="hero">
   <div class="label">YONSEI · CAS4133 · SPRING 2026</div>
   <h1>거대언어모델 기말고사 정리본</h1>
-  <p>기말 범위 #7~#14 (Decoding → AI Feedback → RAG → Tool Use → Agents → RL → Jailbreak → AI Text Detection)<br>
+  <p>기말 범위 Chapter 7~14 (Decoding → AI Feedback → RAG → Tool Use → Agents → RL → Jailbreak → AI Text Detection)<br>
   강의 슬라이드 + 녹음 전사 통합 · 2025 중간 기출 분석 기반 · 챕터별 예상문제 수록</p>
 </div>
 
 <div class="sec-label">⚡ 시험 직전</div>
 <div class="grid">
-  <a class="card special" href="0. 치트시트.html">
+  <a class="card special" href="00. 치트시트.html">
     <div class="ch">CHEAT SHEET</div>
     <div class="title">⚡ 치트시트 — 시험 직전 15분 최종 점검</div>
     <div class="desc">챕터별 핵심 카드 · 교차 비교 10항목 · 수식 23개 총정리 · 논문 매핑 42행 · 막판 체크리스트</div>
   </a>
-  <a class="card special" href="9. 기출문제 모음.html">
+  <a class="card special" href="기출문제 모음.html">
     <div class="ch">PAST EXAM</div>
     <div class="title">📝 기출문제 모음 + 기말 출제 예측</div>
     <div class="desc">2025 중간고사 30문항 전체 원문·해설 · 함정 7유형 분석 · 챕터별 출제 포인트 예측 · 점수 전략</div>
@@ -61,60 +64,64 @@
 
 <div class="sec-label">📚 챕터별 정리</div>
 <div class="grid">
-  <a class="card" href="1. Decoding 정리.html">
-    <div class="ch">CHAPTER #7</div>
-    <div class="title">1. Decoding of LLMs</div>
+  <a class="card" href="Chapter 07. Decoding.html">
+    <div class="ch">CHAPTER 7</div>
+    <div class="title">Decoding of LLMs</div>
     <div class="desc">Controllability · COLD Decoding · Energy-based Model · Langevin Dynamics + 중간 기출 6문항</div>
   </a>
-  <a class="card" href="2. AI Feedback 정리.html">
-    <div class="ch">CHAPTER #8</div>
-    <div class="title">2. AI Feedback</div>
+  <a class="card" href="Chapter 08. AI Feedback.html">
+    <div class="ch">CHAPTER 8</div>
+    <div class="title">AI Feedback</div>
     <div class="desc">G-Eval · LLM-as-a-Judge · 3대 Bias · LC Win Rate · RLAIF · Constitutional AI · Self-Rewarding</div>
   </a>
-  <a class="card" href="3. RAG 정리.html">
-    <div class="ch">CHAPTER #9</div>
-    <div class="title">3. Retrieval-Augmented Generation</div>
+  <a class="card" href="Chapter 09. RAG.html">
+    <div class="ch">CHAPTER 9</div>
+    <div class="title">Retrieval-Augmented Generation</div>
     <div class="desc">BM25 · DPR · Contriever · REPLUG · IRCoT · RetRobust · Self-RAG · Search-R1</div>
   </a>
-  <a class="card" href="4. Tool Use 정리.html">
-    <div class="ch">CHAPTER #10</div>
-    <div class="title">4. Tool Use with LLMs</div>
+  <a class="card" href="Chapter 10. Tool Use.html">
+    <div class="ch">CHAPTER 10</div>
+    <div class="title">Tool Use with LLMs</div>
     <div class="desc">Function Calling · Toolformer (filtering 수식) · ToolLLM (RapidAPI · DFSDT · ToolEval)</div>
   </a>
-  <a class="card" href="5. LLM Agents 정리.html">
-    <div class="ch">CHAPTER #11</div>
-    <div class="title">5. LLM Agents</div>
+  <a class="card" href="Chapter 11. LLM Agents.html">
+    <div class="ch">CHAPTER 11</div>
+    <div class="title">LLM Agents</div>
     <div class="desc">LLaVA · VLA · ReAct · Reflexion · Tree of Thoughts · MemGPT · A-Mem · MDAgents</div>
   </a>
-  <a class="card" href="6. RL with LLMs 정리.html">
-    <div class="ch">CHAPTER #12</div>
-    <div class="title">6. RL with LLMs</div>
+  <a class="card" href="Chapter 12. RL with LLMs.html">
+    <div class="ch">CHAPTER 12</div>
+    <div class="title">RL with LLMs</div>
     <div class="desc">Policy Gradient 유도 · Advantage · PPO-Clip · GRPO · TRL 구현 · GLM-5 Post-training</div>
   </a>
-  <a class="card" href="7. Jailbreak 정리.html">
-    <div class="ch">SPECIAL #13</div>
-    <div class="title">7. Jailbreak of LLMs</div>
+  <a class="card special" href="Chapter 13. Jailbreak.html">
+    <div class="ch">CHAPTER 13 · SPECIAL LECTURE</div>
+    <div class="title">Jailbreak of LLMs</div>
     <div class="desc">Competing Objectives · GCG · AutoDAN · COLD-Attack · SafeDecoding · Gradient Cuff</div>
   </a>
-  <a class="card" href="8. AI Text Detection 정리.html">
-    <div class="ch">SPECIAL #14</div>
-    <div class="title">8. AI Text Detection</div>
+  <a class="card special" href="Chapter 14. AI Text Detection.html">
+    <div class="ch">CHAPTER 14 · SPECIAL LECTURE</div>
+    <div class="title">AI-Generated Text Detection</div>
     <div class="desc">DetectGPT (Curvature) · Fast-DetectGPT · ReMoDetect · Watermarking (z-test)</div>
   </a>
 </div>
 
+<div style="background:#fff7e8;border:1.5px solid #f3ce8a;border-radius:14px;padding:14px 20px;margin-top:16px;font-size:13.5px;color:#7a5b1a;">
+  📢 <strong>Chapter 13·14 (Special Lecture)</strong>는 마지막 수업 공지에 따라 <strong>하나의 객관식 Problem으로 통합 출제</strong>됩니다. 두 챕터를 묶어서 보세요.
+</div>
+
 <div class="sec-label">📄 PDF 다운로드 (인쇄·태블릿용 — 정답·해설 펼침판)</div>
-<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;font-size:14px;line-height:2;">
-  <a href="0. 치트시트.pdf">치트시트</a> ·
-  <a href="1. Decoding 정리.pdf">1. Decoding</a> ·
-  <a href="2. AI Feedback 정리.pdf">2. AI Feedback</a> ·
-  <a href="3. RAG 정리.pdf">3. RAG</a> ·
-  <a href="4. Tool Use 정리.pdf">4. Tool Use</a> ·
-  <a href="5. LLM Agents 정리.pdf">5. Agents</a> ·
-  <a href="6. RL with LLMs 정리.pdf">6. RL</a> ·
-  <a href="7. Jailbreak 정리.pdf">7. Jailbreak</a> ·
-  <a href="8. AI Text Detection 정리.pdf">8. Detection</a> ·
-  <a href="9. 기출문제 모음.pdf">9. 기출문제</a>
+<div class="pdfbar">
+  <a href="00. 치트시트.pdf">치트시트</a> ·
+  <a href="Chapter 07. Decoding.pdf">Ch.7 Decoding</a> ·
+  <a href="Chapter 08. AI Feedback.pdf">Ch.8 AI Feedback</a> ·
+  <a href="Chapter 09. RAG.pdf">Ch.9 RAG</a> ·
+  <a href="Chapter 10. Tool Use.pdf">Ch.10 Tool Use</a> ·
+  <a href="Chapter 11. LLM Agents.pdf">Ch.11 Agents</a> ·
+  <a href="Chapter 12. RL with LLMs.pdf">Ch.12 RL</a> ·
+  <a href="Chapter 13. Jailbreak.pdf">Ch.13 Jailbreak</a> ·
+  <a href="Chapter 14. AI Text Detection.pdf">Ch.14 Detection</a> ·
+  <a href="기출문제 모음.pdf">기출문제 모음</a>
 </div>
 
 <div class="footer">
