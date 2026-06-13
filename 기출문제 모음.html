@@ -113,7 +113,6 @@
   .badge { display:inline-block; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;
     background:var(--highlight); color:#8a6d1a; margin-left:6px; vertical-align:middle; }
   .badge-ch { background:#e7f6ee; color:#27704f; }
-  .badge-mid { background:#eef1ff; color:#3d4bd1; }
   .badge-conf { background:#fdebec; color:#c0392b; border:1px solid #f5b7b1; }
   .badge-est { background:#f4f4f5; color:#6b7280; border:1px solid #d4d4d8; }
   .trap-tag { display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:8px;
@@ -134,7 +133,7 @@
 <div class="hero">
   <div class="label">CAS4133 LLM · 기말 대비 · 기출 &amp; 출제 예측</div>
   <h1>기출문제 모음 &amp; 기말 출제 예측</h1>
-  <div class="subtitle"><strong>2025 봄 기말고사 전체 원문(Problem 1~5)</strong> 신규 수록 — Problem 2(계산)·Problem 3(수식) 단계별 풀이 포함 + 2025 중간 기출(참고용) + 작년 기말 실제 구조 기반 출제 청사진</div>
+  <div class="subtitle"><strong>2025 봄 기말고사 전체 원문(Problem 1~5)</strong> 신규 수록 — Problem 2(계산)·Problem 3(수식) 단계별 풀이 포함 + 작년 기말 실제 구조 기반 출제 청사진</div>
   <div class="meta">
     <span>⭐ 작년 기말: 2025-06-17 (Jaehyung Kim)</span><span>📊 100점 / 100분</span><span>⏱ TF30 · Inference계산20 · Training수식15 · RAG15 · Safety20</span>
   </div>
@@ -146,7 +145,7 @@
     <li><a href="#s1">시험 형식 분석 & 풀이 전략 (함정 패턴 유형화)</a></li>
     <li><a href="#sf"><strong>⭐ 2025 봄 기말고사 (작년 실제 기출 — 가장 중요)</strong></a></li>
     <li><a href="#sP">기말 출제 청사진 — 작년 기말 실제 구조 기반</a></li>
-    <li><a href="#p1">2025 중간 Problem 1~5 (중간 — 참고용, 기말 범위 아님)</a></li>
+    <li><a href="#s7">기말 범위 챕터별 디테일 (#7~#14) + 특강 통합형 예상 문제</a></li>
   </ol>
 </div>
 
@@ -154,30 +153,30 @@
 <section id="s1">
   <h2><span class="num">1</span> 시험 형식 분석 & 풀이 전략</h2>
 
-  <h3>1.1 시험 구조 (2025 중간 기준)</h3>
+  <h3>1.1 시험 구조 (2025 기말 기준)</h3>
   <table>
     <tr><th>Problem</th><th>형식</th><th>문항 수</th><th>배점</th><th>채점 규칙</th></tr>
     <tr><td><strong>Problem 1</strong></td><td>True / False</td><td>10문항</td><td>30점 (각 3점)</td><td>정답 <strong>3점</strong> / 오답 <strong>0점</strong> / <strong>무응답 1점</strong></td></tr>
-    <tr><td><strong>Problem 2</strong></td><td>Pick all that are correct</td><td>5문항</td><td>15점 (각 3점)</td><td rowspan="4">"any wrong answer will lead to <strong>0 points</strong>" — 보기 (a)~(d) 중 정답 조합을 <strong>완벽히</strong> 골라야 득점. 부분점수 없음</td></tr>
-    <tr><td><strong>Problem 3</strong></td><td>Pick all that are correct</td><td>5문항</td><td>20점 (각 4점)</td></tr>
-    <tr><td><strong>Problem 4</strong></td><td>Pick all that are correct</td><td>5문항</td><td>20점 (각 4점)</td></tr>
-    <tr><td><strong>Problem 5</strong></td><td>Pick all that are correct</td><td>5문항</td><td>15점 (각 3점)</td></tr>
-    <tr><td colspan="2"><strong>합계</strong></td><td>30문항</td><td><strong>100점</strong></td><td>시험시간 100분 (문항당 평균 3분 이상 — 시간은 충분)</td></tr>
+    <tr><td><strong>Problem 2</strong></td><td>Inference 계산 (서술)</td><td>4문항</td><td>20점</td><td>행렬 곱·hamming·top-K 손계산 — 객관식 아님</td></tr>
+    <tr><td><strong>Problem 3</strong></td><td>Training 수식 작성 (서술)</td><td>3문항</td><td>15점</td><td>CE / instruction / RLHF 목적함수 직접 작성</td></tr>
+    <tr><td><strong>Problem 4</strong></td><td>Pick all that are correct</td><td>5문항</td><td>15점 (각 3점)</td><td rowspan="2">"any wrong answer will lead to <strong>0 points</strong>" — 보기 (a)~(d) 중 정답 조합을 <strong>완벽히</strong> 골라야 득점. 부분점수 없음</td></tr>
+    <tr><td><strong>Problem 5</strong></td><td>Pick all that are correct</td><td>5문항</td><td>20점 (각 4점)</td></tr>
+    <tr><td colspan="2"><strong>합계</strong></td><td>—</td><td><strong>100점</strong></td><td>시험시간 100분 (4:10~5:50 PM — 시간은 충분)</td></tr>
   </table>
 
   <div class="box-key"><div class="label">📢 마지막 수업 공지 반영 <span class="badge badge-conf">확정</span></div>
     <ul>
       <li><strong>객관식(Pick-all/multiple choice) Problem은 3~4개</strong> — 교수 직접 발언: <em>"I will make three or four multiple choice question problems"</em>. <span class="badge badge-conf">확정</span></li>
       <li><strong>그중 1개 = 특강 통합 Problem</strong>: <em>"one of them will be about the jailbreaking and AI-generated detection, all in one part"</em> — #13 Jailbreak + #14 AI Text Detection이 <strong>한 Problem에 혼합 출제</strong>. <span class="badge badge-conf">확정</span></li>
-      <li>중간 패턴상 <strong>T/F Problem(10문항)은 별도로 있을 가능성이 큼</strong> — 교수는 객관식 개수만 언급했으므로 이는 추정. <span class="badge badge-est">추정</span></li>
-      <li><strong>성적</strong>: 중간 20% / <strong>기말 30%</strong> / 과제 20% / 프로젝트 20% / 출석 10%. <strong>절대평가</strong> — A·A-는 후하게, A+는 엄격하게. <span class="badge badge-conf">확정</span></li>
+      <li>작년 기말 패턴상 <strong>T/F Problem(10문항)은 별도로 있을 가능성이 큼</strong> — 교수는 객관식 개수만 언급했으므로 이는 추정. <span class="badge badge-est">추정</span></li>
+      <li><strong>성적</strong>: <strong>기말 30%</strong> / 과제 20% / 프로젝트 20% / 출석 10% (나머지는 기말 외 평가). <strong>절대평가</strong> — A·A-는 후하게, A+는 엄격하게. <span class="badge badge-conf">확정</span></li>
     </ul>
   </div>
 
   <div class="box-key"><div class="label">⭐ 구조에서 읽히는 출제 패턴</div>
     <ul>
       <li><strong>챕터당 1개의 Problem</strong>(5문항 내외) + T/F는 전 범위에서 골고루 10문항. 기말도 같은 틀일 가능성이 높다 — 기말 범위 8개 챕터 중 <strong>4개 내외가 Problem으로 승격</strong>되고, 나머지는 T/F에서 소화될 것.</li>
-      <li>Pick-all 보기 4개 중 정답 수는 1~4개 모두 등장 (기출: 정답 1개 ×2, 2개 ×9, 3개 ×8, 4개 ×1). <strong>"정답이 보통 2개"라는 가정은 위험</strong> — 전부 정답(P3-1)이나 단 하나(P3-2, P4-4)도 나온다.</li>
+      <li>Pick-all 보기 4개 중 정답 수는 1~4개 모두 등장 (작년 기말 Problem 4·5 기준: 2개·3개가 다수, 전부 정답도 1회). <strong>"정답이 보통 2개"라는 가정은 위험</strong> — 전부 정답(P5-1 Jailbroken)이나 2개만(P4-2, P5-2~5)도 나온다.</li>
       <li>해설 문체가 정형화: "Correct. ..." / "Incorrect. ..." — 각 보기가 독립적인 T/F 명제다. 즉 <strong>Pick-all = 미니 T/F 4연발</strong>로 풀면 된다.</li>
     </ul>
   </div>
@@ -185,21 +184,21 @@
   <h3>1.2 점수 전략</h3>
   <ol class="steps">
     <li><strong>T/F 무응답 전략 (기대값 계산)</strong> — 무응답은 확정 1점. 찍기의 기대값은 \( 0.5 \times 3 = 1.5 \)점이므로 <strong>50:50이라도 찍는 게 기대값상 유리</strong>하다. 단, "확신이 40% 미만"(상대가 더 그럴듯해 보일 때)이면 기대값이 1.2점 이하로 떨어져 무응답(확정 1점)과 차이가 미미 — 이때는 <strong>리스크 없는 1점 확보</strong>가 합리적. 결론: <em>완전히 모르는 문제만 비우고, 조금이라도 기울면 답하라.</em></li>
-    <li><strong>Pick-all은 보기별 독립 판정</strong> — 각 보기를 True/False로 따로 채점한 뒤 True만 모은다. "이 중 2개가 답이겠지" 식의 조합 추론 금지. 한 보기라도 틀리면 0점이므로, <strong>확신 없는 보기는 '강한 근거가 없으면 제외'</strong>가 아니라, <strong>해당 보기의 명제가 참인지 자체를 판정</strong>해야 한다. 애매한 보기 처리: ①절대어(always/only/never/all)가 들어 있으면 False 쪽으로 기울인다(아래 함정 유형 ②). ②수치·고유명사는 강의 슬라이드의 정확한 값과 대조한다. ③"일반적으로 맞지만 예외가 있는" 서술은 출제자가 Correct 처리하는 경향(예: P2-1(a) data sparsity).</li>
-    <li><strong>시간 배분</strong> — 100분/30문항. 1회독(60분) → 애매 문항 재검토(25분) → T/F 무응답 최종 결정(5분) → 마킹 검산(10분). 50분 후 퇴실 가능하지만 만점이 목표면 끝까지 검토.</li>
+    <li><strong>Pick-all은 보기별 독립 판정</strong> — 각 보기를 True/False로 따로 채점한 뒤 True만 모은다. "이 중 2개가 답이겠지" 식의 조합 추론 금지. 한 보기라도 틀리면 0점이므로, <strong>확신 없는 보기는 '강한 근거가 없으면 제외'</strong>가 아니라, <strong>해당 보기의 명제가 참인지 자체를 판정</strong>해야 한다. 애매한 보기 처리: ①절대어(always/only/never/all)가 들어 있으면 False 쪽으로 기울인다(아래 함정 유형 ②). ②수치·고유명사는 강의 슬라이드의 정확한 값과 대조한다. ③"일반적으로 맞지만 예외가 있는" 서술은 출제자가 Correct 처리하는 경향(예: 작년 기말 P4-1(a) "dense retrieval often relies on contrastive loss").</li>
+    <li><strong>시간 배분</strong> — 100분. T/F + Pick-all 객관식 1회독(40분) → 계산·수식 서술(Problem 2·3, 30분) → 애매 문항 재검토(15분) → T/F 무응답 최종 결정·검산(15분). 서술형(P2·3, 35점)에 충분한 시간을 남겨라.</li>
   </ol>
 
-  <h3>1.3 함정 패턴 유형화 — 기출 해설의 "Incorrect" 전수 분석</h3>
-  <p>기출 30문항의 모든 오답 보기("Incorrect. ...")를 유형별로 분류하면 출제자의 함정 제조법이 보인다. <strong>기말에도 같은 틀로 함정이 만들어진다.</strong></p>
+  <h3>1.3 함정 패턴 유형화 — 작년 기말 해설의 "Incorrect" 전수 분석</h3>
+  <p>작년 기말 Pick-all(Problem 4 RAG+Tool, Problem 5 Safety)의 모든 오답 보기("Incorrect. ...")를 유형별로 분류하면 출제자의 함정 제조법이 보인다. <strong>올해 기말에도 같은 틀로 함정이 만들어진다.</strong></p>
   <table>
-    <tr><th>유형</th><th>함정 제조법</th><th>기출 실례</th><th>기말 예상 적용</th></tr>
-    <tr><td><strong>① 주체 바꿔치기</strong><br><span class="trap-tag">swap</span></td><td>A의 속성을 B에 붙인다 (encoder↔decoder, draft↔target model)</td><td>P2-4(d) "The <em>encoder</em> uses causal attention" → decoder의 속성. P2-5(c) "only applicable for encoder" → decoder에도 적용</td><td>retriever↔reader(RAG), actor↔critic, attacker↔defender(jailbreak), generator↔verifier</td></tr>
-    <tr><td><strong>② 절대어 함정</strong><br><span class="trap-tag">always/only/all</span></td><td>대체로 맞는 명제에 always·only·all·no·eliminates를 박아 False로 만든다</td><td>P1(x) DBS "<em>always</em> chooses the most probable", P2-3(b) "RNNs <em>always</em> preserve long-term dependencies", P3-3(b) "MoE activates <em>all</em> experts", P5-4(c) "<em>eliminates</em> the need for sequential generation"</td><td>"RAG always improves factuality", "Tool use eliminates hallucination", "RL requires no reward model" 류</td></tr>
-    <tr><td><strong>③ 수치 함정</strong><br><span class="trap-tag">number</span></td><td>유명한 수치를 다른 모델의 수치로 치환</td><td>P3-2(c) "GPT-3 scales up to <em>110 million</em>" → 175B (110M은 BERT-base)</td><td>파라미터 수, top-k의 k, 벤치마크 수치, 논문 연도</td></tr>
-    <tr><td><strong>④ 방법 귀속 오류</strong><br><span class="trap-tag">attribution</span></td><td>방법 X의 주장/기법을 방법 Y의 것으로 서술</td><td>P3-4(a) "model size should be prioritized" → Kaplan의 주장(Chinchilla 아님). P4-2(d) "supervised loss on preference pairs" → DPO의 방법(RLHF 아님). P4-4(a) "DPO requires a separate reward model" → RLHF의 특징</td><td>DPR↔BM25, Toolformer↔ToolLLM, ReAct↔Reflexion, PPO↔GRPO, GCG↔PAIR, DetectGPT↔watermarking</td></tr>
-    <tr><td><strong>⑤ 처리 순서/위치 함정</strong><br><span class="trap-tag">order</span></td><td>연산이 적용되는 단계를 뒤바꾼다</td><td>P5-2(d) "Temperature is applied <em>after</em> the softmax" → logits에 적용(before softmax)</td><td>"retrieval happens after generation", "KL penalty applied after reward" 류</td></tr>
-    <tr><td><strong>⑥ 범주 혼동</strong><br><span class="trap-tag">category</span></td><td>inference 기법↔training 기법, online↔offline, discrete↔continuous를 섞는다</td><td>P5-5(b) test-time compute = "fine-tuning technique" → inference 전략. P4-4(d) "DPO is inherently <em>online</em>" → offline. P2-2(a) tokenization → "<em>continuous</em> units" → discrete. P5-5(d) "increasing the number of <em>parameters</em> at test time" → 파라미터는 고정</td><td>"RAG는 학습 기법", "speculative decoding은 학습 가속", "DPO·GRPO online/offline" 구분</td></tr>
-    <tr><td><strong>⑦ 목적/동기 왜곡</strong><br><span class="trap-tag">motivation</span></td><td>방법의 진짜 동기를 그럴듯한 다른 동기로 바꾼다</td><td>P1(viii) preference learning의 main motivation = "held-out 성능 향상" → alignment가 본 동기. P4-3(c) DPO가 "minimize the difference" → 상대 log-likelihood를 maximize</td><td>"RAG의 동기는 속도", "watermark의 동기는 품질 향상" 류</td></tr>
+    <tr><th>유형</th><th>함정 제조법</th><th>작년 기말 실례</th><th>기말 예상 적용</th></tr>
+    <tr><td><strong>① 주체 바꿔치기</strong><br><span class="trap-tag">swap</span></td><td>A의 속성/역할을 B에 붙인다 (user↔automated, attacker↔defender)</td><td>P4-4(c) "user manually executes the function" → 자동 실행. P5-2(c) AutoDAN "requires human feedback" → 자동 평가(keyword/LLM-judge)</td><td>retriever↔reader(RAG), actor↔critic, attacker↔defender(jailbreak), generator↔verifier</td></tr>
+    <tr><td><strong>② 절대어 함정</strong><br><span class="trap-tag">always/only/all</span></td><td>대체로 맞는 명제에 always·only·all·fully·no를 박아 False로 만든다</td><td>P4-3(d) Search-R1 "<em>all</em> fine-tuned" → retriever는 frozen. P4-5(d) ToolLLM "<em>only</em> single-tool" → multi-tool 포함. P5-4(d) watermarking "<em>fully</em> robust to paraphrasing" → 깨질 수 있음. P5-5(b) hallucination "<em>only</em> in low-resource settings"</td><td>"RAG always improves factuality", "Tool use eliminates hallucination", "RL requires no reward model" 류</td></tr>
+    <tr><td><strong>③ 수치 함정</strong><br><span class="trap-tag">number</span></td><td>유명한 수치를 다른 모델의 수치로 치환</td><td>(작년 기말 Pick-all엔 직접 수치 함정은 없었으나, T/F·계산 Problem에서 등장 가능)</td><td>파라미터 수, top-k의 k, 벤치마크 수치, 논문 연도, ToolLLM API 수</td></tr>
+    <tr><td><strong>④ 방법 귀속 오류</strong><br><span class="trap-tag">attribution</span></td><td>방법 X의 주장/기법을 방법 Y의 것으로 서술</td><td>P4-2(a) REPLUG "full access to params" → black-box. P4-3(b) Self-RAG "via RL" → SFT(reflection data). P5-3(c) DetectGPT "fine-tuned supervised classifier" → zero-shot</td><td>DPR↔BM25, Toolformer↔ToolLLM, ReAct↔Reflexion, PPO↔GRPO, GCG↔Gradient Cuff, DetectGPT↔watermarking</td></tr>
+    <tr><td><strong>⑤ 처리 순서/위치 함정</strong><br><span class="trap-tag">order</span></td><td>연산·검색이 적용되는 단계를 뒤바꾼다</td><td>P4-2(c) IRCoT "simultaneously" → interleave(번갈아). watermarking은 생성 <em>중</em> 개입(생성 후 ×)</td><td>"retrieval happens after generation", "KL penalty applied after reward" 류</td></tr>
+    <tr><td><strong>⑥ 범주 혼동</strong><br><span class="trap-tag">category</span></td><td>inference 기법↔training 기법, online↔offline, fluent↔factual를 섞는다</td><td>P4-2(a)/(c) inference-level RAG vs training-level RAG 귀속(REPLUG·IRCoT vs Self-RAG·REALM·Search-R1). hallucination = fluent-but-false(품질↔사실 혼동)</td><td>"RAG는 학습 기법", "speculative decoding은 학습 가속", "DPO·GRPO online/offline" 구분</td></tr>
+    <tr><td><strong>⑦ 목적/동기·방향 왜곡</strong><br><span class="trap-tag">motivation</span></td><td>방법의 진짜 동기·방향을 그럴듯한 반대로 바꾼다</td><td>P5-2(a) AutoDAN "<em>minimize</em> the likelihood of proxy label" → maximize(생성 모멘텀 활용). P5-3(a) DetectGPT "high <em>positive</em> curvature" → negative curvature</td><td>"RAG의 동기는 속도", "watermark의 동기는 품질 향상" 류</td></tr>
   </table>
 
   <div class="box-warn"><div class="label">⚠️ 실전 체크리스트 (보기 읽을 때마다)</div>
@@ -208,7 +207,7 @@
       <li>주어(모델/방법 이름)와 술어(속성)가 정말 그 조합이 맞는지 — "이 속성은 원래 누구 것?"을 자문한다.</li>
       <li>수치는 외운 값과 정확히 대조 (175B, 110M, top-k의 k, Chinchilla 20 tokens/param 등).</li>
       <li>이 기법이 <strong>training-time인지 inference-time인지</strong>, online인지 offline인지 분류부터 한다.</li>
-      <li>단, 함정 같아 보여도 전부 맞는 문제(P3-1: 정답 a,b,c,d)도 있다 — 패턴 매칭이 아니라 명제 자체를 판정하라.</li>
+      <li>단, 함정 같아 보여도 전부 맞는 문제(작년 기말 P5-1 Jailbroken: 정답 a,b,c,d)도 있다 — 패턴 매칭이 아니라 명제 자체를 판정하라.</li>
     </ul>
   </div>
 </section>
@@ -671,598 +670,26 @@
 </section>
 
 <!-- ============================================================ -->
-<section id="p1">
-  <h2><span class="num">2</span> Problem 1: True / False (30 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
-  <p class="en">"Identify whether the following statements are True or False. You will get 3 points for each correct answer, 0 points for each wrong answer, and 1 point for each unanswered question."</p>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(i) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (N-gram)</span></div>
-      <p>A bigram model assumes that each token depends on all previous tokens in the sequence.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> A bigram model assume that each word only depends on the last previous word in the sentence. <span class="trap-tag">② 절대어/정의 왜곡</span></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(ii) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Tokenization)</span></div>
-      <p>Vocabulary size is a hyperparameter that can be defined by the user in Byte-Pair Encoding.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">True.</span> Unlike character-level or word-level tokenizers, BPE can control a vocabulary size.</div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(iii) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (RNN/LSTM)</span></div>
-      <p>Seq2seq with LSTM can theoretically handle sequences of any length.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">True.</span> There is no limitation in theory while it suffers issues such as GPU memory or limited performance from forgetting issues in practice. <em>주의: "theoretically"가 들어가면 True일 수 있음 — 절대어 함정의 역방향.</em></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(iv) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Transformer)</span></div>
-      <p>Positional encoding is learned via backpropagation in standard Transformers.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> As we leanred in lecture, the original Transformer paper introduces the fixed rule utilizing sign and cosine functions to generated positional encoding. <span class="trap-tag">⑥ 범주 혼동 (learned↔fixed)</span></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(v) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Pre-training data)</span></div>
-      <p>Model-based data filtering refers to a technique that uses LLM's in-context learning to filter out all the low-quality data.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> As size of pre-training data is too large to apply LLM for all data, it is applied for limited number of data to generate labeled data and the separate classifier is trained on that. <span class="trap-tag">② 절대어 ("all the low-quality data")</span></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(vi) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Emergent abilities)</span></div>
-      <p>In-context learning is an example of an emergent ability in LLMs.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">True.</span> Small LLMs do not exhibit in-context learning capability and it is not predictable with scaling law.</div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(vii) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Instruction tuning)</span></div>
-      <p>FLAN fine-tunes models to follow instructions using cross-entropy loss.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">True.</span> (해설 원문 없음 — FLAN은 instruction 데이터에 대한 supervised fine-tuning, 즉 표준 cross-entropy loss 사용.)</div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(viii) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #8 AI Feedback (alignment 동기)</span></div>
-      <p>Main motivation of preference learning is improving model performance on held-out datasets.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> Main motivation is improving alignment; it can compete with model performance like accuracy on held-out test datasets. <span class="trap-tag">⑦ 목적/동기 왜곡</span></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(ix) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #12 RL (preference optimization 계열)</span></div>
-      <p>SimPO introduces a length-normalized reward and no reference model.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">True.</span> Unlike DPO, SimPO introduces length-normalization term in implicit reward, and removes the reference model as well.</div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">(x) True/False · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #7 Decoding (DBS)</span></div>
-      <p>Diverse Beam Search (DBS) always chooses the most probable sequence (i.e., the lowest perplexity) from all beams.</p>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> As the diversity term is introduced, the selected sequence can be not optimal in the perspective of perplexity. <span class="trap-tag">② 절대어 ("always")</span></div>
-    </details>
-  </div>
-
-  <div class="box-key"><div class="label">⭐ Problem 1에서 배울 것</div>
-    T/F 10문항 중 <strong>기말 범위와 직결된 것이 3개</strong>((viii)(ix)(x)) — 기말 T/F도 직전 범위(중간 이후 #7~#14)에서 전 챕터 골고루 1~2문항씩 출제될 것. False 5개 중 4개가 절대어·동기왜곡·정의왜곡 패턴.
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="p2">
-  <h2><span class="num">3</span> Problem 2: N-gram, RNN, Transformer (15 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
-  <p class="en">"Answer the following questions about N-gram, RNN, Transformer." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
-  <p><span class="badge badge-mid">중간 범위</span> 기말에 직접 재출제될 가능성은 낮지만, <strong>Pick-all 문항 설계 방식(보기 4개 = 독립 T/F 4개)</strong>의 표본으로 정독할 가치가 있다.</p>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">2-1. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>What are the typical limitations of N-gram language models?</p>
-      <ol type="a">
-        <li>They suffer from data sparsity, especially for large N.</li>
-        <li>They can model arbitrarily long context sequences effectively.</li>
-        <li>They struggle with Out-of-Vocabulary (OOV) words.</li>
-        <li>The input space size grows exponentially with the value of N.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
-        <ul>
-          <li>(a) Correct. Data sparsity is a major issue—most word sequences don't appear often in the corpus.</li>
-          <li class="wrong">(b) Incorrect. N-gram models can only handle a fixed-length window and do not capture long contexts.</li>
-          <li>(c) Correct. OOV words are problematic since they are not in the vocabulary and hence not modeled.</li>
-          <li>(d) Correct. The number of possible N-grams grows exponentially with N and vocabulary size.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">2-2. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following statements about tokenization in language models is true?</p>
-      <ol type="a">
-        <li>Tokenization is the process of converting input text into a sequence of continuous units.</li>
-        <li>Subword tokenization typically results in smaller vocabulary compared to word-level tokenization.</li>
-        <li>Byte-Pair Encoding is not used in any state-of-the-art language models.</li>
-        <li>Character-level tokenization leads to longer input sequences compared to word-level tokenization.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b), (d)</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. Tokenization maps text into a sequence of tokens (i.e., discrete units), which are model input units. <span class="trap-tag">⑥ continuous↔discrete</span></li>
-          <li>(b) Correct. Subword-level tokenization typically reduces vocabulary size by breaking words into smaller units.</li>
-          <li class="wrong">(c) Incorrect. BPE is used in many modern LMs such as GPT and Roberta. <span class="trap-tag">② 절대어 ("not used in any")</span></li>
-          <li>(d) Correct. Character-level tokenization results in longer sequences due to finer granularity of vocabulary.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">2-3. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following are correct about the limitations of vanilla RNNs?</p>
-      <ol type="a">
-        <li>RNNs are prone to vanishing gradients during backpropagation through input time steps.</li>
-        <li>RNNs always preserve long-term dependencies thanks to their recursive structure.</li>
-        <li>Exploding gradients can occur in RNNs and can be mitigated using gradient clipping.</li>
-        <li>Vanilla RNNs require a fixed sequence length to function properly.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c)</span>
-        <ul>
-          <li>(a) Correct. Vanishing gradients are a major issue in vanilla RNNs when modeling long sequences.</li>
-          <li class="wrong">(b) Incorrect. RNNs often fail to preserve long-term dependencies due to vanishing gradients. <span class="trap-tag">② 절대어 ("always")</span></li>
-          <li>(c) Correct. Exploding gradients can occur and are commonly managed using gradient clipping.</li>
-          <li class="wrong">(d) Incorrect. RNNs do not require fixed sequence length; they are flexible with variable-length input. <span class="trap-tag">② 절대어 ("require")</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">2-4. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following are true about self-attention in Transformers?</p>
-      <ol type="a">
-        <li>Self-attention computes interactions among all tokens in the same sequence.</li>
-        <li>The query, key, and value matrices are learned during training.</li>
-        <li>The decoder attends to encoder outputs through cross-attention.</li>
-        <li>The encoder uses causal (masked) self-attention to prevent attending to future positions.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
-        <ul>
-          <li>(a) Correct. Self-attention models relationships among all tokens in the input.</li>
-          <li>(b) Correct. Query, key, and value matrices are trainable and learned during training.</li>
-          <li>(c) Correct. Cross-attention is the same attention mechanism introduced in seq2seq model.</li>
-          <li class="wrong">(d) Incorrect. The decoder uses causal attention, not the encoder. <span class="trap-tag">① 주체 바꿔치기 (encoder↔decoder)</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">2-5. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following are correct regarding multi-head attention in the Transformer?</p>
-      <ol type="a">
-        <li>Each attention head has its own set of query, key, and value weights.</li>
-        <li>Multi-head attention forces the model to capture different types of relationships in parallel.</li>
-        <li>It is only applicable for a bi-directional self-attention in the encoder.</li>
-        <li>Using multiple heads increases model capacity without significantly increasing the overall computation cost compared to a single head with larger hidden dimension.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (d)</span>
-        <ul>
-          <li>(a) Correct. Each head has separate Q/K/V projections to capture different patterns.</li>
-          <li class="wrong">(b) Incorrect. They are not forced to learn different relationship, but has an implicit tendency. <span class="trap-tag">② 강제성 과장 ("forces")</span></li>
-          <li class="wrong">(c) Incorrect. It can be also applicable to the decoder or encoder-decoder models. <span class="trap-tag">①+② 주체 한정 ("only ... encoder")</span></li>
-          <li>(d) Correct. Overall computation is almost same when the dimension of projection layer is divided into the number of multiple heads.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="p3">
-  <h2><span class="num">4</span> Problem 3: Large Language Models (20 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
-  <p class="en">"Answer the following questions about LMs, LLMs, scaling laws, and emergent abilities." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
-  <p><span class="badge badge-mid">중간 범위</span> 단, 수치 함정(GPT-3 175B)·방법 귀속 함정(Kaplan↔Chinchilla)의 교과서적 표본 — 기말에서도 같은 제조법이 반복된다.</p>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">3-1. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following correctly compare BERT and GPT?</p>
-      <ol type="a">
-        <li>BERT is based on Transformer encoder; GPT is based on Transformer decoder.</li>
-        <li>BERT uses bidirectional attention; GPT uses unidirectional (causal) attention.</li>
-        <li>GPT is better suited for generation tasks like story writing.</li>
-        <li>GPT is pre-trained on next-token prediction, while BERT is trained with masked token prediction.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b), (c), (d) — 전부 정답!</span>
-        <ul>
-          <li>(a) Correct. BERT = encoder-only; GPT = decoder-only.</li>
-          <li>(b) Correct. BERT allows bidirectional context; GPT is strictly left-to-right.</li>
-          <li>(c) Correct. GPT is better suited for generation tasks; BERT is for classification/QA.</li>
-          <li>(d) Correct. BERT uses masked LM; GPT uses next-token prediction.</li>
-        </ul>
-        <p style="margin-top:8px;"><em>교훈: 4개 전부 정답인 문제도 출제된다. "하나는 틀렸겠지" 가정 금지.</em></p>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">3-2. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following are true about GPT-3's architecture and training?</p>
-      <ol type="a">
-        <li>GPT-3 is trained using masked language modeling.</li>
-        <li>GPT-3 introduces in-context learning (ICL) where no parameter updates are needed to learn from examples directly within the input prompt.</li>
-        <li>GPT-3 scales up the number of parameters to 110 million.</li>
-        <li>GPT-3 uses both encoder and decoder modules from the Transformer architecture.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b) — 단독 정답</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. GPT-3 uses next-token prediction, not masked LM. <span class="trap-tag">④ 방법 귀속 (BERT의 방식)</span></li>
-          <li>(b) Correct. In-context learning is a key feature of GPT-3.</li>
-          <li class="wrong">(c) Incorrect. The largest GPT-3 has 175B parameters. <span class="trap-tag">③ 수치 함정 (110M = BERT-base)</span></li>
-          <li class="wrong">(d) Incorrect. GPT-3 uses only the decoder portion of the Transformer. <span class="trap-tag">① 주체 바꿔치기</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">3-3. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the followings are correctly describe innovations in DeepSeek-V3?</p>
-      <ol type="a">
-        <li>Multi-Head Latent Attention (MLA) is proposed to reduce the computational cost such as KV cache.</li>
-        <li>Mixture-of-Experts (MoE) activates all experts during inference.</li>
-        <li>Fill-in-the-Middle (FIM) pre-training requires to modify the architecture as it relies on right-to-left modeling.</li>
-        <li>Multi-Token Prediction (MTP) requires additional training modules to predict multiple tokens at once.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (d)</span>
-        <ul>
-          <li>(a) Correct. MLA compresses Q/K/V to reduce memory cost.</li>
-          <li class="wrong">(b) Incorrect. MoE activates top-K experts, not all. <span class="trap-tag">② 절대어 ("all experts")</span></li>
-          <li class="wrong">(c) Incorrect. FIM does not modify the architecture; instead, it modifies the format of training data. <span class="trap-tag">⑥ 범주 혼동 (architecture↔data format)</span></li>
-          <li>(d) Correct. MTP requires additional training modules and they can be removed or recycled at inference time.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">3-4. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span></div>
-      <p>Which of the following correctly describe the contributions of the Chinchilla paper?</p>
-      <ol type="a">
-        <li>Chinchilla shows that model size should be prioritized over data size under fixed FLOPs.</li>
-        <li>Chinchilla proposes a revised scaling law showing that both model size and data are equally important.</li>
-        <li>Chinchilla achieved better performance than Gopher using the same compute budget.</li>
-        <li>The empirical result supports training smaller models with fewer tokens for optimal performance.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b), (c)</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. This is Kaplan's suggestion; Chinchilla shows both size and data matter equally. <span class="trap-tag">④ 방법 귀속 (Kaplan↔Chinchilla)</span></li>
-          <li>(b) Correct. Chinchilla revises Kaplan's law to emphasize balance.</li>
-          <li>(c) Correct. Chinchilla outperformed Gopher with the same training FLOPs.</li>
-          <li class="wrong">(d) Incorrect. Chinchilla actually promotes smaller models trained on <strong>more</strong> data for optimal scaling. <span class="trap-tag">반쪽 진실 (smaller ○ / fewer tokens ×)</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">3-5. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #7 (test-time reasoning과 연결)</span></div>
-      <p>Which of the following correctly describe Chain-of-Thought (CoT) prompting in LLMs?</p>
-      <ol type="a">
-        <li>CoT requires structured step-by-step reasoning examples during training.</li>
-        <li>CoT enables reasoning capabilities in large language models.</li>
-        <li>The benefit of CoT increases as model size increases.</li>
-        <li>CoT cannot be used in zero-shot settings.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b), (c)</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. While few-shot CoT uses examples, zero-shot CoT does not need them. <span class="trap-tag">②+⑥ ("requires" + training↔prompting)</span></li>
-          <li>(b) Correct. CoT makes LLMs better at reasoning-intensive tasks like math QA.</li>
-          <li>(c) Correct. The gain from CoT is more prominent in larger models.</li>
-          <li class="wrong">(d) Incorrect. Zero-shot CoT (e.g., with triggers like "Let's think step by step") is effective. <span class="trap-tag">② 절대어 ("cannot")</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="p4">
-  <h2><span class="num">5</span> Problem 4: Alignment of LLMs (20 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
-  <p class="en">"Answer the following questions about alignment of LLMs." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
-  <p><span class="badge badge-ch">기말 연관 높음</span> RLHF·DPO·평가 bias는 기말 범위 <strong>#8 AI Feedback</strong>(RLAIF·LLM-as-a-Judge·LC win rate)과 <strong>#12 RL with LLMs</strong>(PPO·GRPO·DPO 계열)의 직접적 선수 지식이다.</p>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">4-1. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-mid">중간 범위 (Instruction tuning)</span></div>
-      <p>Which of the following are true about instruction tuning in LLMs?</p>
-      <ol type="a">
-        <li>Instruction tuning trains models to follow natural language instructions across multiple tasks.</li>
-        <li>Instruction tuning is only effective for tasks with a single correct answer.</li>
-        <li>Instruction tuning enables zero-shot generalization to unseen tasks.</li>
-        <li>Instruction tuning typically involves supervised fine-tuning (SFT) on labeled instruction datasets.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
-        <ul>
-          <li>(a) Correct. Instruction tuning uses language-based instructions to guide models.</li>
-          <li class="wrong">(b) Incorrect. It is effective for both objective and subjective tasks. <span class="trap-tag">② 절대어 ("only")</span></li>
-          <li>(c) Correct. It improves zero-shot generalization to new tasks.</li>
-          <li>(d) Correct. SFT is commonly used during instruction tuning with instruction-output pairs.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">4-2. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #12 RL (RLHF 파이프라인)</span></div>
-      <p>Which of the following are part of the RLHF pipeline used in InstructGPT?</p>
-      <ol type="a">
-        <li>Supervised fine-tuning (SFT) on human demonstrations.</li>
-        <li>Training a reward model on human preference data.</li>
-        <li>Fine-tuning the language model using reinforcement learning such as PPO.</li>
-        <li>Directly optimizing language model using supervised loss on preference pairs.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b), (c)</span>
-        <ul>
-          <li>(a) Correct. First step of RLHF is conducting SFT on prompts and human-written completions.</li>
-          <li>(b) Correct. Reward model is trained using pairwise comparisons.</li>
-          <li>(c) Correct. Proximal Policy Optimization (PPO) is used for policy fine-tuning.</li>
-          <li class="wrong">(d) Incorrect. This is DPO's method, not RLHF. <span class="trap-tag">④ 방법 귀속 (DPO↔RLHF)</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">4-3. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #12 RL (DPO)</span></div>
-      <p>Which of the following are correct about DPO?</p>
-      <ol type="a">
-        <li>DPO is derived from the same objective as RLHF's PPO fine-tuning.</li>
-        <li>The Bradley-Terry model is used to relate preference and reward.</li>
-        <li>DPO updates language model to minimize the difference between chosen and rejected outputs.</li>
-        <li>DPO approximates reinforcement learning using multi-agent simulation.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b)</span>
-        <ul>
-          <li>(a) Correct. DPO reformulates RLHF's objective analytically.</li>
-          <li>(b) Correct. It uses the Bradley-Terry model to interpret preference scores.</li>
-          <li class="wrong">(c) Incorrect. DPO loss encourages preferred outputs by maximizing their relative log-likelihood and discourages dispreferred outputs. <span class="trap-tag">⑦ 방향 왜곡 (minimize↔maximize relative)</span></li>
-          <li class="wrong">(d) Incorrect. No simulation or multi-agent system is involved. <span class="trap-tag">허구 메커니즘</span></li>
-        </ul>
-        <p style="margin-top:8px;">참고 수식: \( \mathcal{L}_{\text{DPO}} = -\log\sigma\!\big(\beta\log\tfrac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta\log\tfrac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}\big) \) — chosen·rejected의 implicit reward <strong>차이를 키우는</strong>(상대 log-likelihood 최대화) 방향.</p>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">4-4. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #12 RL (DPO 한계 → SimPO/GRPO 동기)</span></div>
-      <p>Which of the following are limitations of DPO highlighted in recent studies?</p>
-      <ol type="a">
-        <li>DPO requires a separate reward model trained on human preferences.</li>
-        <li>DPO causes computational overhead due to the reference model.</li>
-        <li>DPO tends to generate shorter outputs regardless of quality.</li>
-        <li>DPO is inherently an online learning algorithm.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b) — 단독 정답</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. Unlike RLHF, DPO does not require a separate reward model. <span class="trap-tag">④ 방법 귀속 (RLHF의 특징)</span></li>
-          <li>(b) Correct. DPO still depends on a reference model, which adds compute cost.</li>
-          <li class="wrong">(c) Incorrect. Studies show DPO can induce <strong>longer</strong> outputs unintentionally. <span class="trap-tag">방향 반전 (shorter↔longer)</span></li>
-          <li class="wrong">(d) Incorrect. DPO is based on fixed preference datasets (offline), unlike online RLHF. <span class="trap-tag">⑥ 범주 혼동 (online↔offline)</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">4-5. Pick all that are correct · 4 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">기말 연관: #8 AI Feedback (evaluation bias·LC win rate) — 직결!</span></div>
-      <p>Which of the following are true about evaluation bias introduced by DPO?</p>
-      <ol type="a">
-        <li>Longer responses often receive higher preference scores from human evaluators.</li>
-        <li>The length-controlled (LC) win rate metric considers differences in instruction difficulty.</li>
-        <li>Ignoring length bias in evaluation can lead to misleading alignment conclusions.</li>
-        <li>LC win rate is a type of perplexity-based evaluation.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (b), (c)</span>
-        <ul>
-          <li class="wrong">(a) Incorrect. Bias toward longer outputs has been observed in <strong>LLM</strong> evaluations. <span class="trap-tag">① 주체 바꿔치기 (human↔LLM evaluator)</span></li>
-          <li>(b) Correct. LC win rate uses regression to capture length and difficulty effects.</li>
-          <li>(c) Correct. Evaluating without controlling for length may misrepresent performance.</li>
-          <li class="wrong">(d) Incorrect. LC win rate is preference-based, not perplexity-based. <span class="trap-tag">⑥ 범주 혼동</span></li>
-        </ul>
-        <p style="margin-top:8px;"><em>주의: (a)는 가장 까다로운 함정 — "길이 bias" 자체는 사실이지만 출제자는 "human evaluators"를 짚어 Incorrect 처리했다(강의에서는 LLM judge의 length bias로 다룸). 주체를 끝까지 읽어라.</em></p>
-      </div>
-    </details>
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="p5">
-  <h2><span class="num">6</span> Problem 5: Decoding (15 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
-  <p class="en">"Answer the following questions about alignment of LLMs." (← 원문의 오타: 실제 주제는 Decoding) — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
-  <p><span class="badge badge-ch">기말 연관 최고</span> Problem 5 전체가 기말 범위 <strong>#7 Decoding/Controllability</strong>와 직결 — 중간·기말에 걸친 챕터이므로 <strong>기말에서 변형 재출제 가능성이 가장 높은 5문항</strong>이다.</p>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">5-1. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">#7 Decoding</span></div>
-      <p>Which of the following are true about autoregressive decoding in LLMs?</p>
-      <ol type="a">
-        <li>Each token is generated by conditioning on all previous tokens.</li>
-        <li>The decoding process can be parallelized across all tokens during inference.</li>
-        <li>The process continues until an end-of-sequence (EOS) token is generated or upon reaching a pre-defined max length.</li>
-        <li>The next token is sampled from a fixed Gaussian distribution.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c)</span>
-        <ul>
-          <li>(a) Correct. Standard autoregressive decoding generates one token at a time, using all the previous tokens.</li>
-          <li class="wrong">(b) Incorrect. It is inherently sequential (not parallel). <span class="trap-tag">⑥ training(병렬)↔inference(순차) 혼동</span></li>
-          <li>(c) Correct. Generation typically stops when an EOS token is generated or predefined threshold is reached.</li>
-          <li class="wrong">(d) Incorrect. Tokens are sampled from the model's output probability distribution, not Gaussian. <span class="trap-tag">허구 메커니즘</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">5-2. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">#7 Decoding</span></div>
-      <p>Which of the following are true about temperature-controlled sampling?</p>
-      <ol type="a">
-        <li>Temperature controls the sharpness or smoothness of the output distribution.</li>
-        <li>Lower temperature values result in more deterministic outputs.</li>
-        <li>Temperature is irrelevant in top-k sampling.</li>
-        <li>Temperature is applied after the softmax operation.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b)</span>
-        <ul>
-          <li>(a) Correct. High temperature → more randomness, low temperature → peaky distribution.</li>
-          <li>(b) Correct. Lower temperatures lead to more confident predictions.</li>
-          <li class="wrong">(c) Incorrect. Temperature is still relevant and often used alongside top-k. <span class="trap-tag">② 절대어 ("irrelevant")</span></li>
-          <li class="wrong">(d) Incorrect. It rescales <strong>logits before</strong> applying softmax. <span class="trap-tag">⑤ 처리 순서 함정</span></li>
-        </ul>
-        <p style="margin-top:8px;">참고 수식: \( p_i = \dfrac{\exp(z_i / T)}{\sum_j \exp(z_j / T)} \) — temperature \(T\)는 softmax <strong>이전</strong> logits \(z\)를 나눈다.</p>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">5-3. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">#7 Decoding</span></div>
-      <p>Which of the following statements are correct about top-p (nucleus) sampling?</p>
-      <ol type="a">
-        <li>Top-p sampling adjusts the candidate set based on cumulative probability.</li>
-        <li>Top-p is a special case of beam search with p=1.</li>
-        <li>Top-p allows dynamic flexibility based on the distribution's shape.</li>
-        <li>It is designed to avoid unnatural or degenerate completions.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
-        <ul>
-          <li>(a) Correct. The candidate pool is chosen based on cumulative probability and predefined threshold.</li>
-          <li class="wrong">(b) Incorrect. Top-p is not related to beam search. <span class="trap-tag">④ 방법 귀속 (sampling↔search)</span></li>
-          <li>(c) Correct. It adapts the number of candidates per step.</li>
-          <li>(d) Correct. It was designed to mitigate degeneration in sampling.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">5-4. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">#7 Decoding (speculative decoding)</span></div>
-      <p>Which of the following describe speculative decoding?</p>
-      <ol type="a">
-        <li>It uses a small draft model to propose multiple tokens at once.</li>
-        <li>It verifies the drafts with a larger target model.</li>
-        <li>It eliminates the need for sequential generation.</li>
-        <li>It speeds up decoding by reducing the number of expensive large model inferences.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
-        <ul>
-          <li>(a) Correct. A lightweight model proposes token drafts.</li>
-          <li>(b) Correct. The large target model checks and filters the drafts.</li>
-          <li class="wrong">(c) Incorrect. The draft model still generates the tokens via autoregressive generation. <span class="trap-tag">② 절대어 ("eliminates")</span></li>
-          <li>(d) Correct. It reduces the number of calls to the large model.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">5-5. Pick all that are correct · 3 pts <span class="src src-real">2025 중간 기출</span> <span class="badge badge-ch">#7 Decoding (test-time compute)</span></div>
-      <p>Which of the following describe the concept of test-time compute scaling in LLMs?</p>
-      <ol type="a">
-        <li>It allows models to dynamically allocate more inference compute to harder queries.</li>
-        <li>It is a technique for fine-tuning large language models using reinforcement learning.</li>
-        <li>It enables more accurate reasoning by allowing "longer thinking" on complex tasks.</li>
-        <li>It improves model capacity by increasing the number of parameters at test time.</li>
-      </ol>
-    </div>
-    <details><summary>정답 & 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c)</span>
-        <ul>
-          <li>(a) Correct. Dynamic inference strategies help allocate more resources to harder problems.</li>
-          <li class="wrong">(b) Incorrect. Test-time compute scaling is not a fine-tuning method, but an inference strategy. <span class="trap-tag">⑥ 범주 혼동 (training↔inference)</span></li>
-          <li>(c) Correct. It enables the model to produce better results by spending more compute.</li>
-          <li class="wrong">(d) Incorrect. The number of parameters is fixed; it increases inference time, not model size. <span class="trap-tag">⑥ compute↔parameters 혼동</span></li>
-        </ul>
-      </div>
-    </details>
-  </div>
-</section>
-
-<!-- ============================================================ -->
 <section id="s7">
   <h2><span class="num">7</span> 기말 범위 챕터별 디테일 (#7~#14) <span class="badge badge-est">보조 — 청사진은 위 ⌖ 섹션 참고</span></h2>
   <div class="box-key"><div class="label">ℹ️ 읽는 순서</div>
     출제 <strong>구조</strong>는 위 "⌖ 기말 출제 청사진"(작년 실제 기출 기반)이 우선이다. 이 섹션은 그 청사진을 <strong>챕터별 세부 암기 포인트</strong>로 보강하는 보조 자료다.</div>
 
   <h3>7.1 예상 시험 구성 <span class="badge badge-conf">마지막 수업 공지 반영</span></h3>
-  <p>마지막 수업에서 교수가 직접 공지: <strong>객관식 Problem은 3~4개이고, 그중 1개는 #13 Jailbreak + #14 AI Text Detection 통합 문제</strong>(<em>"I will make three or four multiple choice question problems, and one of them will be about the jailbreaking and AI-generated detection, all in one part"</em>). 중간 패턴(T/F 30점 + Pick-all 4개 Problem)을 여기에 결합하면 아래 구성이 가장 유력하다.</p>
+  <p>마지막 수업에서 교수가 직접 공지: <strong>객관식 Problem은 3~4개이고, 그중 1개는 #13 Jailbreak + #14 AI Text Detection 통합 문제</strong>(<em>"I will make three or four multiple choice question problems, and one of them will be about the jailbreaking and AI-generated detection, all in one part"</em>). 작년 기말 구조(T/F 30점 + 서술 Problem 2개 + Pick-all Problem)를 여기에 결합하면 아래 구성이 가장 유력하다.</p>
   <table>
     <tr><th>예상 Problem</th><th>예상 주제 (묶음)</th><th>예상 배점</th><th>근거</th></tr>
-    <tr><td>Problem 1</td><td><strong>True/False 10문항</strong> — #7~#14 전 챕터에서 1~2개씩</td><td>30점</td><td><span class="badge badge-est">추정</span> 교수는 "객관식 3~4개"만 언급 — 중간 패턴상 T/F는 별도 Problem로 유지될 가능성 큼 (무응답 1점 규칙 포함)</td></tr>
+    <tr><td>Problem 1</td><td><strong>True/False 10문항</strong> — #7~#14 전 챕터에서 1~2개씩</td><td>30점</td><td><span class="badge badge-est">추정</span> 교수는 "객관식 3~4개"만 언급 — 작년 기말 패턴상 T/F는 별도 Problem로 유지될 가능성 큼 (무응답 1점 규칙 포함)</td></tr>
     <tr><td>객관식 ①</td><td><strong>#9 RAG</strong> — retriever 기초 + inference-level vs training-level</td><td>15~20점</td><td><span class="badge badge-est">추정</span> 강의 3회분으로 분량 최대 + 교수 recap에서 이분법(아래 7.2) 명시적 강조</td></tr>
     <tr><td>객관식 ②</td><td><strong>#10 Tool Use + #11 LLM Agents</strong></td><td>15~20점</td><td><span class="badge badge-est">추정</span> recap에서 "agents의 tool use는 이전 강의에서 다룸" — 연속 주제로 한 Problem 묶음이 자연스러움</td></tr>
-    <tr><td>객관식 ③</td><td><strong>#12 RL with LLMs</strong> (+#8 AI Feedback 연계)</td><td>15~20점</td><td><span class="badge badge-est">추정</span> 중간 Problem 4(Alignment)의 직계 후속 — recap에서 RLHF + PPO·GRPO 명시</td></tr>
+    <tr><td>객관식 ③</td><td><strong>#12 RL with LLMs</strong> (+#8 AI Feedback 연계)</td><td>15~20점</td><td><span class="badge badge-est">추정</span> 작년 기말 Problem 3(Training 수식: RLHF objective)의 연장선 — recap에서 RLHF + PPO·GRPO 명시</td></tr>
     <tr><td>객관식 ④</td><td><strong>#13 Jailbreak + #14 AI Text Detection 통합</strong> (한 Problem 안에 두 주제 혼합)</td><td>15점</td><td><span class="badge badge-conf">확정</span> 교수 직접 공지 — 두 특강(녹화 강의)을 "all in one part"로 출제. 객관식이 3개면 ①~③ 중 둘이 합쳐질 수 있음</td></tr>
   </table>
 
   <div class="box-warn"><div class="label">⚠️ 남은 불확실성</div>
     <ul>
       <li><strong>객관식이 3개일 경우</strong> — 특강 통합 1개는 고정이므로, 본 범위(#7~#12)가 2개 Problem로 압축된다(예: RAG+Tool Use / Agents+RL). 어느 쪽이든 특강 Problem은 확정.</li>
-      <li>#7 Decoding은 중간(Problem 5)에서 이미 출제됐고 <strong>교수의 마지막 recap에서도 별도 언급 없음</strong> — T/F로 축소되거나 다른 Problem에 흡수될 가능성이 높다. 단, 누적 범위라면 Problem 5 변형 재출제도 대비.</li>
+      <li>#7 Decoding은 작년 기말 Problem 2(Inference 계산: top-K·autoregressive)에서 손계산으로 출제됐고 <strong>교수의 마지막 recap에서도 별도 언급 없음</strong> — 올해도 계산 Problem이나 T/F로 소화될 가능성이 높다. Problem 2 손계산 풀이를 반드시 재현 연습.</li>
       <li>T/F Problem의 존재·배점은 추정 — 시험 당일 표지의 채점 규칙(무응답 1점 여부)을 반드시 먼저 확인.</li>
     </ul>
   </div>
@@ -1421,7 +848,7 @@
   <div class="box-key"><div class="label">⭐ 최종 우선순위 (시간 없을 때) — 마지막 수업 공지 반영</div>
     <ol>
       <li><strong>#13+#14 특강 통합 Problem</strong> <span class="badge badge-conf">출제 확정</span> — 유일하게 출제가 확정된 Problem. 공격/방어/탐지 귀속표(AutoDAN↔SafeDecoding·Gradient Cuff, DetectGPT 계보, watermarking 시점) + "AI 텍스트는 전 토큰 고확률, 인간 텍스트는 출렁임" 직관. 위 7.3 예상 문제 4개 풀기.</li>
-      <li><strong>#12 RL(RLHF + PPO vs GRPO) + #8(G-Eval·HHH·RLAIF, judge bias)</strong> — 중간 Problem 4의 직계 후속 + recap 호명.</li>
+      <li><strong>#12 RL(RLHF + PPO vs GRPO) + #8(G-Eval·HHH·RLAIF, judge bias)</strong> — 작년 기말 Problem 3(RLHF objective 수식)의 연장선 + recap 호명.</li>
       <li><strong>#9 RAG(inference-level REPLUG·IRCoT·RetRobust vs training-level Self-RAG·Search-R1)</strong> — recap에서 이분법 명시 + 분량 최대.</li>
       <li><strong>#10+#11(Toolformer self-supervised vs ToolLLM SFT, ReAct/Reflexion/ToT + MemGPT/A-Mem)</strong> — recap 호명 키워드.</li>
       <li><strong>기출 Problem 5 재독(#7)</strong> — recap 미언급으로 우선순위는 내려갔지만 T/F 1~2문항 대비.</li>

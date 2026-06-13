@@ -133,16 +133,16 @@
 <div class="hero">
   <div class="label">CAS4133 LLM · 기말 대비 · Chapter 7</div>
   <h1>Chapter 7. Decoding of LLMs <span style="font-weight:400;font-size:19px;">(Controllability · COLD Decoding)</span></h1>
-  <div class="subtitle">제어 가능성(Controllability)과 COLD Decoding — 제약을 에너지 함수로 정식화하고 Langevin dynamics로 로짓을 직접 업데이트하는 제약 생성 + 중간고사 디코딩 핵심 복습</div>
+  <div class="subtitle">제어 가능성(Controllability)과 COLD Decoding — 제약을 에너지 함수로 정식화하고 Langevin dynamics로 로짓을 직접 업데이트하는 제약 생성 + 디코딩 핵심 개념 정리</div>
   <div class="meta">
-    <span>📅 강의일: 2026-05-04</span><span>📊 예상 비중: 중 (COLD 신규 + 기출 Problem 5 재출제 대비)</span><span>⏱ 분량: 본문 7개 섹션 + 문제 20문항</span>
+    <span>📅 강의일: 2026-05-04</span><span>📊 예상 비중: 중 (COLD 신규 + 기말 Inference 계산 대비)</span><span>⏱ 분량: 본문 7개 섹션 + 문제</span>
   </div>
 </div>
 
 <div class="toc">
   <div class="label">📑 목차</div>
   <ol>
-    <li><a href="#s1">중간고사 복습 — 디코딩 기초 & 고급 디코딩 요점 (기출 Problem 5 출처)</a></li>
+    <li><a href="#s1">디코딩 기초 & 고급 디코딩 요점 (기말 Inference 계산 대비)</a></li>
     <li><a href="#s2">Controllability — 동기와 문제 설정</a></li>
     <li><a href="#s3">COLD Decoding — 정식화: 로짓 공간 \( \tilde{\boldsymbol{y}} \)와 제약 함수 \( f_i \)</a></li>
     <li><a href="#s4">에너지 기반 모델(EBM)과 에너지 함수 \( E(\boldsymbol{y}) \)</a></li>
@@ -153,11 +153,11 @@
   </ol>
 </div>
 
-<!-- ===================== 1. 중간고사 복습 ===================== -->
+<!-- ===================== 1. 디코딩 기초 ===================== -->
 <section id="s1">
-  <h2><span class="num">1</span> 중간고사 복습 — 디코딩 기초 & 고급 디코딩 <span class="en">(Decoding Basics Recap)</span></h2>
+  <h2><span class="num">1</span> 디코딩 기초 & 고급 디코딩 <span class="en">(Decoding Basics Recap)</span></h2>
 
-  <p>교수는 #7 디코딩 챕터에서 <strong>기초(basics) → 고급 알고리즘(speculative / diverse decoding) → test-time compute → 제어 가능성(controllability)</strong> 순서로 진행했고, 시간 제약으로 이번 강의에서는 controllability만 신규로 다뤘다. 앞의 세 파트는 중간고사 범위였고 <strong>2025 중간 기출 Problem 5 전체(15점)가 전부 여기서 출제</strong>되었으므로, 기말 재출제에 대비해 요점만 압축 복습한다.</p>
+  <p>교수는 #7 디코딩 챕터에서 <strong>기초(basics) → 고급 알고리즘(speculative / diverse decoding) → test-time compute → 제어 가능성(controllability)</strong> 순서로 진행했고, 시간 제약으로 이번 강의에서는 controllability만 신규로 다뤘다. 앞의 세 파트는 <strong>기말 Inference 계산 문제(Problem 2)에서 디코딩 알고리즘을 손으로 적용</strong>할 때 필요한 토대이므로, 요점만 압축 정리한다.</p>
 
   <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
     "우리는 강의의 마지막 부분으로 디코딩을 다뤘습니다. 먼저 디코딩의 기초를 배웠고, 이후 speculative decoding이나 diverse decoding 같은 고급 디코딩 알고리즘으로 넘어갔으며, 그다음 보상 모델을 사용하는 test-time compute를 다뤘습니다. 이제 시간 제약 때문에 controllability라는 한 부분만 다루겠습니다."
@@ -173,8 +173,8 @@
   </div>
   <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
     <ul>
-      <li>"The decoding process can be parallelized across all tokens during inference." → <strong>False</strong>. Autoregressive decoding is <strong>inherently sequential</strong> — token \(t\) requires tokens \(1,\dots,t-1\). (Training-time teacher forcing은 병렬 가능하지만, inference-time decoding은 불가 — 기출 Problem 5-1(b))</li>
-      <li>"The next token is sampled from a fixed Gaussian distribution." → <strong>False</strong>. Sampled from the model's output probability distribution (softmax over logits). (기출 Problem 5-1(d))</li>
+      <li>"The decoding process can be parallelized across all tokens during inference." → <strong>False</strong>. Autoregressive decoding is <strong>inherently sequential</strong> — token \(t\) requires tokens \(1,\dots,t-1\). (Training-time teacher forcing은 병렬 가능하지만, inference-time decoding은 불가)</li>
+      <li>"The next token is sampled from a fixed Gaussian distribution." → <strong>False</strong>. Sampled from the model's output probability distribution (softmax over logits).</li>
     </ul>
   </div>
 
@@ -183,7 +183,7 @@
     <tr><th>방법</th><th>핵심 아이디어</th><th>특징 / 함정</th></tr>
     <tr><td><strong>Greedy decoding</strong></td><td>매 스텝 argmax 토큰 선택</td><td>지역 최적(local optimum) — 전체 시퀀스 확률 최대를 보장하지 않음. 결정적(deterministic).</td></tr>
     <tr><td><strong>Beam search</strong></td><td>매 스텝 누적 확률 상위 \(k\)개 가설(beam)을 유지하며 탐색</td><td>greedy보다 높은 likelihood의 시퀀스 발견 가능. 그러나 빔들끼리 매우 유사해지는 다양성 부족 문제.</td></tr>
-    <tr><td><strong>Diverse Beam Search (DBS)</strong></td><td>빔을 그룹으로 나누고, 그룹 간 <strong>diversity term(페널티)</strong>을 목적함수에 추가</td><td>diversity 항 때문에 <strong>최종 선택 시퀀스가 perplexity 관점에서 최적이 아닐 수 있음</strong> — 기출 Problem 1(x)의 포인트.</td></tr>
+    <tr><td><strong>Diverse Beam Search (DBS)</strong></td><td>빔을 그룹으로 나누고, 그룹 간 <strong>diversity term(페널티)</strong>을 목적함수에 추가</td><td>diversity 항 때문에 <strong>최종 선택 시퀀스가 perplexity 관점에서 최적이 아닐 수 있음</strong>.</td></tr>
   </table>
 
   <h3>1.3 Sampling 계열: Temperature / Top-k / Top-p</h3>
@@ -200,8 +200,8 @@
   </table>
   <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
     <ul>
-      <li>"Top-p is a special case of beam search with p=1." → <strong>False</strong>. Top-p is a <strong>sampling</strong> method, unrelated to beam search (search-based). (기출 Problem 5-3(b))</li>
-      <li>"Temperature is applied after the softmax operation." → <strong>False</strong>. It rescales <strong>logits before softmax</strong>. (기출 Problem 5-2(d))</li>
+      <li>"Top-p is a special case of beam search with p=1." → <strong>False</strong>. Top-p is a <strong>sampling</strong> method, unrelated to beam search (search-based).</li>
+      <li>"Temperature is applied after the softmax operation." → <strong>False</strong>. It rescales <strong>logits before softmax</strong>.</li>
       <li>"Lower temperature increases randomness." → <strong>False</strong>. Lower \( \tau \) → peakier distribution → <strong>more deterministic</strong>.</li>
     </ul>
   </div>
@@ -214,7 +214,7 @@
   </ol>
   <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
     <ul>
-      <li>"It eliminates the need for sequential generation." → <strong>False</strong>. The <strong>draft model still generates tokens autoregressively</strong>; only verification is parallelized. (기출 Problem 5-4(c))</li>
+      <li>"It eliminates the need for sequential generation." → <strong>False</strong>. The <strong>draft model still generates tokens autoregressively</strong>; only verification is parallelized.</li>
       <li>"Speculation changes the output distribution of the large model." → <strong>False</strong>. Acceptance/rejection scheme은 target model의 분포를 보존하도록 설계됨.</li>
     </ul>
   </div>
@@ -225,13 +225,13 @@
   </div>
   <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
     <ul>
-      <li>"It is a technique for fine-tuning LLMs using RL." → <strong>False</strong>. It is an <strong>inference strategy</strong>, not a fine-tuning method. (기출 Problem 5-5(b))</li>
-      <li>"It improves model capacity by increasing the number of parameters at test time." → <strong>False</strong>. <strong>Parameters are fixed</strong>; only inference time/compute increases. (기출 Problem 5-5(d))</li>
+      <li>"It is a technique for fine-tuning LLMs using RL." → <strong>False</strong>. It is an <strong>inference strategy</strong>, not a fine-tuning method.</li>
+      <li>"It improves model capacity by increasing the number of parameters at test time." → <strong>False</strong>. <strong>Parameters are fixed</strong>; only inference time/compute increases.</li>
     </ul>
   </div>
 
   <div class="box-key"><div class="label">⭐ 시험 핵심</div>
-    기출 Problem 5의 4대 오답 패턴을 외울 것: ① autoregressive = sequential(병렬 불가), ② temperature = <em>before</em> softmax &amp; low τ = deterministic, ③ top-p = dynamic candidate set(beam search와 무관), ④ speculative = draft는 여전히 autoregressive / test-time compute = 파라미터 고정·inference 전략. DBS는 diversity 항 때문에 최저 perplexity 시퀀스를 보장하지 않음.
+    디코딩 4대 오답 패턴을 외울 것: ① autoregressive = sequential(병렬 불가), ② temperature = <em>before</em> softmax &amp; low τ = deterministic, ③ top-p = dynamic candidate set(beam search와 무관), ④ speculative = draft는 여전히 autoregressive / test-time compute = 파라미터 고정·inference 전략. DBS는 diversity 항 때문에 최저 perplexity 시퀀스를 보장하지 않음.
   </div>
 </section>
 
@@ -535,127 +535,6 @@
     </details>
   </div>
 
-  <h3>Q-A. 2025 중간 기출 — 원문 그대로 (재출제 대비)</h3>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A1. Problem 1 (x) (True/False, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Diverse Beam Search (DBS) always chooses the most probable sequence (i.e., the lowest perplexity) from all beams.</p>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">False.</span> As the diversity term is introduced, the selected sequence can be not optimal in the perspective of perplexity. <span class="en">(diversity 페널티가 목적함수에 추가되므로, 선택된 시퀀스가 perplexity 기준 최적이 아닐 수 있음)</span></div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A2. Problem 5-1 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Which of the following are true about autoregressive decoding in LLMs?</p>
-      <ol type="a">
-        <li>Each token is generated by conditioning on all previous tokens.</li>
-        <li>The decoding process can be parallelized across all tokens during inference.</li>
-        <li>The process continues until an end-of-sequence (EOS) token is generated or upon reaching a pre-defined max length.</li>
-        <li>The next token is sampled from a fixed Gaussian distribution.</li>
-      </ol>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c)</span>
-        <ul>
-          <li>(a) Correct. Standard autoregressive decoding generates one token at a time, using all the previous tokens.</li>
-          <li class="wrong">(b) Incorrect. It is inherently sequential (not parallel).</li>
-          <li>(c) Correct. Generation typically stops when an EOS token is generated or predefined threshold is reached.</li>
-          <li class="wrong">(d) Incorrect. Tokens are sampled from the model's output probability distribution, not Gaussian.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A3. Problem 5-2 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Which of the following are true about temperature-controlled sampling?</p>
-      <ol type="a">
-        <li>Temperature controls the sharpness or smoothness of the output distribution.</li>
-        <li>Lower temperature values result in more deterministic outputs.</li>
-        <li>Temperature is irrelevant in top-k sampling.</li>
-        <li>Temperature is applied after the softmax operation.</li>
-      </ol>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b)</span>
-        <ul>
-          <li>(a) Correct. High temperature → more randomness, low temperature → peaky distribution.</li>
-          <li>(b) Correct. Lower temperatures lead to more confident predictions.</li>
-          <li class="wrong">(c) Incorrect. Temperature is still relevant and often used alongside top-k.</li>
-          <li class="wrong">(d) Incorrect. It rescales logits before applying softmax.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A4. Problem 5-3 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Which of the following statements are correct about top-p (nucleus) sampling?</p>
-      <ol type="a">
-        <li>Top-p sampling adjusts the candidate set based on cumulative probability.</li>
-        <li>Top-p is a special case of beam search with p=1.</li>
-        <li>Top-p allows dynamic flexibility based on the distribution's shape.</li>
-        <li>It is designed to avoid unnatural or degenerate completions.</li>
-      </ol>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
-        <ul>
-          <li>(a) Correct. The candidate pool is chosen based on cumulative probability and predefined threshold.</li>
-          <li class="wrong">(b) Incorrect. Top-p is not related to beam search.</li>
-          <li>(c) Correct. It adapts the number of candidates per step.</li>
-          <li>(d) Correct. It was designed to mitigate degeneration in sampling.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A5. Problem 5-4 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Which of the following describe speculative decoding?</p>
-      <ol type="a">
-        <li>It uses a small draft model to propose multiple tokens at once.</li>
-        <li>It verifies the drafts with a larger target model.</li>
-        <li>It eliminates the need for sequential generation.</li>
-        <li>It speeds up decoding by reducing the number of expensive large model inferences.</li>
-      </ol>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
-        <ul>
-          <li>(a) Correct. A lightweight model proposes token drafts.</li>
-          <li>(b) Correct. The large target model checks and filters the drafts.</li>
-          <li class="wrong">(c) Incorrect. The draft model still generates the tokens via autoregressive generation.</li>
-          <li>(d) Correct. It reduces the number of calls to the large model.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
-  <div class="quiz">
-    <div class="q"><div class="qhead">A6. Problem 5-5 (Pick all that are correct; any wrong answer will lead to 0 points, 3 pts) <span class="src src-real">2025 중간 기출 원문</span></div>
-      <p>Which of the following describe the concept of test-time compute scaling in LLMs?</p>
-      <ol type="a">
-        <li>It allows models to dynamically allocate more inference compute to harder queries.</li>
-        <li>It is a technique for fine-tuning large language models using reinforcement learning.</li>
-        <li>It enables more accurate reasoning by allowing "longer thinking" on complex tasks.</li>
-        <li>It improves model capacity by increasing the number of parameters at test time.</li>
-      </ol>
-    </div>
-    <details><summary>정답 &amp; 해설 보기</summary>
-      <div class="ans"><span class="correct">정답: (a), (c)</span>
-        <ul>
-          <li>(a) Correct. Dynamic inference strategies help allocate more resources to harder problems.</li>
-          <li class="wrong">(b) Incorrect. Test-time compute scaling is not a fine-tuning method, but an inference strategy.</li>
-          <li>(c) Correct. It enables the model to produce better results by spending more compute.</li>
-          <li class="wrong">(d) Incorrect. The number of parameters is fixed; it increases inference time, not model size.</li>
-        </ul>
-      </div>
-    </details>
-  </div>
-
   <h3>Q-B. 예상문제 — True/False (COLD / Controllability 중심)</h3>
 
   <div class="quiz">
@@ -878,7 +757,7 @@
     <tr><td><strong>알고리즘 4단계</strong></td><td>likelihood 초기화 → 에너지 정식화 → N회 Langevin 업데이트 → 이산화(discretization)</td></tr>
     <tr><td><strong>Lexical constraint \(E_1\)</strong></td><td>forward fluency + reverse fluency + 입력측 우도 + n-gram match — fluency 항들이 키워드 무작위 삽입(reward hacking)을 방지; ~95% coverage, NeuroLogic보다 유창</td></tr>
     <tr><td><strong>현대적 위상</strong></td><td>instruction following이 강해져 최근엔 덜 쓰이나, 출력 공간 최적화라는 모델링 기법으로서 가치</td></tr>
-    <tr><td><strong>중간 복습 4종</strong></td><td>AR = sequential·EOS까지 / temperature = before softmax·low τ = deterministic / top-p = 누적확률 동적 후보 / speculative = draft도 autoregressive·test-time compute = 파라미터 고정</td></tr>
+    <tr><td><strong>디코딩 기초 4종</strong></td><td>AR = sequential·EOS까지 / temperature = before softmax·low τ = deterministic / top-p = 누적확률 동적 후보 / speculative = draft도 autoregressive·test-time compute = 파라미터 고정</td></tr>
   </table>
 </section>
 
