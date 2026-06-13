@@ -465,6 +465,76 @@
 <section id="quiz">
   <h2><span class="num">Q</span> 기출 &amp; 예상문제</h2>
 
+  <h3>🎯 작년 기말 출제: Inference 계산 문제 (Problem 2, 20점)</h3>
+
+  <div class="box-warn"><div class="label">⚠️ 기말 유형 경고 — 손계산 필수</div>
+    <p style="margin-bottom:6px;">기말 Problem 2는 <strong>객관식이 아니라 손계산(hand-calculation)</strong>이다. <strong>행렬곱 · word embedding concat · 해밍거리 · top-K/temperature · greedy/beam</strong>을 직접 계산하는 연습이 필수. 작년에는 ① 입력 시퀀스 → embedding 행렬 → ② 행렬곱 \( \tilde{\boldsymbol{x}} \circ M \) → ③ 해밍거리로 output logit → ④ top-K(K=1) 샘플링 → ⑤ autoregressive로 다음 토큰까지, 다섯 단계를 모두 손으로 풀게 했다.</p>
+    <p style="margin:0;"><strong>대비 포인트:</strong> 디코딩 알고리즘(greedy / top-k / top-p / temperature / beam)을 손으로 적용하는 유형을 반드시 연습할 것. logit 벡터가 주어지면 (i) greedy=argmax, (ii) top-k=상위 k개만 남기고 정규화 후 샘플, (iii) top-p=누적확률 임계, (iv) temperature=\( z/\tau \) 후 softmax — 각각을 직접 계산해보는 것이 핵심.</p>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">P2. Problem 2: Inference with LLM (총 20점, 4문항 × 5점) <span class="src src-real">2025 기말 기출 원문</span></div>
+      <p>아주 단순한 LLM \(M\)이 단 하나의 행렬로만 구성된다고 하자:</p>
+      $$ M = \begin{bmatrix} 1 & 1 & 0 \\ -1 & 0 & 1 \\ 1 & 1 & 1 \end{bmatrix} $$
+      <p>\(M\)은 벡터 시퀀스 \( \tilde{\boldsymbol{x}} \in \mathbb{R}^{L\times 3} \)를 단순 행렬곱 \(\circ\)로 매핑한다 (<strong>주의: 곱 순서는 아래와 동일해야 함</strong>):</p>
+      $$ M : \tilde{\boldsymbol{x}} \;\longrightarrow\; \tilde{\boldsymbol{x}} \circ M $$
+      <p>또한 \(M\)은 다음 word embedding을 갖는다 (CAS 4133 Final 어휘):</p>
+      <table>
+        <tr><th>#</th><th>단어</th><th>embedding</th><th>#</th><th>단어</th><th>embedding</th></tr>
+        <tr><td>1</td><td>한</td><td>[1, 0, 0]</td><td>8</td><td>고맙습니다</td><td>[3, 0, 1]</td></tr>
+        <tr><td>2</td><td>학기</td><td>[1, 1, 0]</td><td>9</td><td>했습니다</td><td>[0, 2, 3]</td></tr>
+        <tr><td>3</td><td>동안</td><td>[0, 1, 1]</td><td>10</td><td>많았습니다</td><td>[1, 2, 3]</td></tr>
+        <tr><td>4</td><td>매우</td><td>[-1, 1, 0]</td><td>11</td><td>감사합니다</td><td>[3, 1, 2]</td></tr>
+        <tr><td>5</td><td>수고</td><td>[0, 1, 2]</td><td>12</td><td>하셨습니다</td><td>[0, 2, 2]</td></tr>
+        <tr><td>6</td><td>고생</td><td>[1, 1, 2]</td><td>13</td><td>많았어요</td><td>[1, 2, 2]</td></tr>
+        <tr><td>7</td><td>정말</td><td>[0, 0, 2]</td><td></td><td></td><td></td></tr>
+      </table>
+      <ol type="1">
+        <li><strong>(5점)</strong> 입력 시퀀스 \( x = \) "한 학기 동안"을 받았다고 하자. row-axis로 embedding을 concat하여 단어 시퀀스를 하나의 행렬로 변환하라 (공백 무시).</li>
+        <li><strong>(5점)</strong> next word prediction을 위한 output logit \(o\)를 계산하라. inner product 대신 해밍거리 \(H(\cdot,\cdot)\)를 사용한다: \( H(u,v)=\sum_{i=1}^{d} \mathbb{1}[u_i = v_i] \).</li>
+        <li><strong>(5점)</strong> 위에서 얻은 \(o\)에 <strong>top-K (K=1) random sampling</strong>을 적용하면 next word \(y_1\)은?</li>
+        <li><strong>(5점)</strong> 같은 디코딩 알고리즘으로 autoregressive하게 한 토큰 더 생성하면 \(y_2\)는?</li>
+      </ol>
+    </div>
+    <details><summary>정답 &amp; 단계별 풀이 (KaTeX) 보기</summary>
+      <div class="ans">
+        <p><strong>① embedding 행렬 concat (5점)</strong> — "한"=[1,0,0], "학기"=[1,1,0], "동안"=[0,1,1]을 row로 쌓는다:</p>
+        $$ \tilde{\boldsymbol{x}} = \begin{bmatrix} 1 & 0 & 0 \\ 1 & 1 & 0 \\ 0 & 1 & 1 \end{bmatrix} $$
+
+        <p><strong>② 행렬곱 후 해밍거리로 logit \(o\) (5점)</strong></p>
+        <p>먼저 \( \tilde{\boldsymbol{x}} \circ M \)을 계산한다 (각 row가 \(M\)과 곱해짐):</p>
+        $$ \tilde{\boldsymbol{x}} \circ M = \begin{bmatrix} 1 & 0 & 0 \\ 1 & 1 & 0 \\ 0 & 1 & 1 \end{bmatrix}\!\begin{bmatrix} 1 & 1 & 0 \\ -1 & 0 & 1 \\ 1 & 1 & 1 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 \\ 0 & 1 & 1 \\ 0 & 1 & 2 \end{bmatrix} $$
+        <p>next word prediction이므로 <strong>마지막 row</strong> \( q = [0, 1, 2] \)를 query로 사용한다. 각 vocabulary embedding \(v\)에 대해 해밍거리 \( H(q,v)=\sum_i \mathbb{1}[q_i=v_i] \) (성분이 <strong>같으면 +1</strong>):</p>
+        <p style="font-size:14px;">예: "한"=[1,0,0] → \(0{=}1?\)아니오, \(1{=}0?\)아니오, \(2{=}0?\)아니오 → \(0\). &nbsp; "수고"=[0,1,2] → 세 성분 모두 일치 → \(3\).</p>
+        $$ o = [\,0,\ 1,\ 2,\ 1,\ \mathbf{3},\ 2,\ 2,\ 0,\ 1,\ 0,\ 2,\ 2,\ 1\,] $$
+        <p style="font-size:14px;">(순서: 한, 학기, 동안, 매우, <strong>수고</strong>, 고생, 정말, 고맙습니다, 했습니다, 많았습니다, 감사합니다, 하셨습니다, 많았어요)</p>
+
+        <p><strong>③ top-K (K=1) → \(y_1\) (5점)</strong> — K=1이면 logit이 최대인 토큰 하나만 후보로 남으므로 random sampling이라도 결국 argmax와 동일:</p>
+        $$ y_1 = \arg\max_v o_v = o_5 = 3 \;\Rightarrow\; \boxed{y_1 = \text{“수고”}} $$
+
+        <p><strong>④ autoregressive로 \(y_2\) (5점)</strong> — "수고"=[0,1,2]를 시퀀스에 append하여 다시 행렬곱:</p>
+        $$ \tilde{\boldsymbol{x}}' = \begin{bmatrix} 1 & 0 & 0 \\ 1 & 1 & 0 \\ 0 & 1 & 1 \\ 0 & 1 & 2 \end{bmatrix},\quad \tilde{\boldsymbol{x}}' \circ M = \begin{bmatrix} 1 & 1 & 0 \\ 0 & 1 & 1 \\ 0 & 1 & 2 \\ 1 & 2 & 3 \end{bmatrix} $$
+        <p>새 마지막 row \( q' = [1, 2, 3] \)로 해밍거리 logit:</p>
+        $$ o' = [\,1,\ 1,\ 0,\ 0,\ 0,\ 1,\ 0,\ 0,\ 2,\ \mathbf{3},\ 0,\ 1,\ 2\,] $$
+        <p style="font-size:14px;">"많았습니다"=[1,2,3] → 세 성분 모두 \(q'\)와 일치 → \(3\) (최대).</p>
+        $$ y_2 = \arg\max_v o'_v = o'_{10} = 3 \;\Rightarrow\; \boxed{y_2 = \text{“많았습니다”}} $$
+        <p class="correct">∴ 정답: \(y_1=\)“수고”, \(y_2=\)“많았습니다” (생성 시퀀스: "한 학기 동안 <strong>수고 많았습니다</strong>")</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">P1-viii. Problem 1 (viii): DoLa (True/False, 3점)
+      <span class="src src-real">2025 기말 기출 원문</span>
+      <span class="badge">작년 출제·올해 범위 밖 (참고용)</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">※ DoLa는 <strong>올해 슬라이드에는 없는</strong> 항목이다. 작년 기말 True/False에 나왔던 문항이라 참고용으로만 수록한다 (직접 출제 가능성은 낮음).</p>
+      <p>DoLa selects the intermediate layer that achieves the <strong>minimum</strong> JSD compared to the output probability at the last layer, and then applies contrastive decoding.</p>
+    </div>
+    <details><summary>정답 &amp; 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Choose the layer that <strong>maximizes</strong> JSD (not minimizes). <span class="en">(DoLa = Decoding by Contrasting Layers: 마지막 층 출력 분포와의 JSD가 가장 큰 — 즉 가장 다른 — 중간 층을 골라 대조 디코딩을 수행한다. "minimum JSD"라고 한 점이 오답 포인트.)</span></div>
+    </details>
+  </div>
+
   <h3>Q-A. 2025 중간 기출 — 원문 그대로 (재출제 대비)</h3>
 
   <div class="quiz">

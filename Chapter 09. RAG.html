@@ -148,9 +148,11 @@
     <li><a href="#s4">REPLUG — 블랙박스 LM + 학습 가능한 검색기 (Ensemble, LSR)</a></li>
     <li><a href="#s5">IRCoT — CoT와 검색의 교차 반복 (Multi-hop QA, EM/F1/Recall@K)</a></li>
     <li><a href="#s6">RetRobust — 노이즈-강건 RAG (NLI 필터링 & 소규모 학습)</a></li>
+    <li><a href="#s6b">SuRe — 답 후보별 조건부 검색 요약 (교수 논문, ICLR 2024)</a></li>
     <li><a href="#s7">Self-RAG — Reflection 토큰으로 적응적 RAG 학습 (SFT)</a></li>
     <li><a href="#s8">Search-R1 — RL로 검색을 배우는 LLM (+ 3대 방법 총비교)</a></li>
     <li><a href="#quiz">예상문제 (T/F 10 + Pick-all 7)</a></li>
+    <li><a href="#real-exam">🎯 작년 기말 출제: RAG (Problem 4, Problem 1)</a></li>
   </ol>
 </div>
 
@@ -193,7 +195,7 @@
 
   <h3>1.4 RAG의 두 가지 활용 방식</h3>
   <ol class="steps">
-    <li><strong>추론 기반 (Inference-based)</strong> — 검색된 정보를 추가 입력으로 <strong>덧붙이기(appending/prepending)</strong>만 함. 사전 학습된 검색기 + 사전 학습된 LLM을 학습 없이 결합(프롬프트 최적화 정도만 가능). 가장 쉽고 상업적으로 흔한 방식 → <strong>REPLUG, IRCoT</strong>가 이 계열.</li>
+    <li><strong>추론 기반 (Inference-based)</strong> — 검색된 정보를 추가 입력으로 <strong>덧붙이기(appending/prepending)</strong>만 함. 사전 학습된 검색기 + 사전 학습된 LLM을 학습 없이 결합(프롬프트 최적화 정도만 가능). 가장 쉽고 상업적으로 흔한 방식 → <strong>REPLUG, IRCoT, SuRe</strong>가 이 계열.</li>
     <li><strong>학습 기반 (Training-based)</strong> — 검색 정보를 활용하도록 LLM을 <strong>학습</strong>. 추론 기반은 LLM이 검색 문서 활용을 학습한 적이 없어 최적이 아닐 수 있으므로 등장한 최근 패러다임 → <strong>RetRobust(일부), Self-RAG(SFT), Search-R1(RL)</strong>이 이 계열.</li>
   </ol>
 
@@ -490,6 +492,49 @@
       <li>"RetRobust's small-training method uses GPT-4 to annotate relevant and irrelevant passages." → <strong>False</strong>. No LLM annotation: relevant = top-1 from the retriever; irrelevant = bottom-K for the query or top-K for <em>other</em> queries. (GPT-4 annotation은 Self-RAG의 이야기.)</li>
       <li>"RetRobust fully fine-tunes LLaMA2-13B on millions of examples." → <strong>False</strong>. It uses QLoRA with only 1k (NQ) / 500 (others) training examples.</li>
       <li>"The NLI-based filtering can be too strict and may discard relevant passages too." → <strong>True</strong>. This is exactly the motivation for the additional small-training method.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 6.5 SuRe ============ -->
+<section id="s6b">
+  <h2><span class="num">6½</span> SuRe — 답 후보별 조건부 검색 요약 <span class="en">(Summarizing Retrievals using Answer Candidates, Kim et al., ICLR 2024)</span></h2>
+  <p style="font-size:13px;color:var(--muted);">⭐ <strong>교수 본인 논문</strong> (Kim et al., ICLR 2024). 2026 슬라이드(260506)에 검색기 비교 실험 근거로 등장 — 추론 기반(inference-based) RAG의 대표 사례로 출제 가능성 높음.</p>
+
+  <h3>6½.1 동기와 개요</h3>
+  <p>open-domain QA에서 LLM에 top-K 검색 구절을 그대로 prepend하면 ① 구절이 길고 노이즈가 많아 컨텍스트를 낭비하고, ② 여러 구절이 <strong>서로 다른 답</strong>을 지지할 때 LLM이 무엇을 골라야 할지 흔들린다. <strong>SuRe</strong>는 별도 학습 없이(=inference-based, 블랙박스 LLM 사용) <strong>프롬프팅만으로</strong> 이 문제를 푼다.</p>
+  <div class="definition"><div class="label">📖 정의</div>
+    <strong>SuRe (Summarizing Retrievals)</strong>: 먼저 LLM으로 <strong>답 후보(answer candidates)를 여러 개 생성</strong>한 뒤, 각 후보마다 검색된 구절들을 <strong>그 후보를 지지하는 방향으로 조건부 요약(conditional summarization)</strong>하고, 이 후보별 요약들을 근거로 <strong>가장 그럴듯한 답을 선택·검증</strong>하는 추론 기반 RAG. 검색기·LLM 모두 <strong>학습하지 않으며(frozen)</strong> 프롬프팅만 사용.
+  </div>
+
+  <h3>6½.2 절차 (4단계 파이프라인)</h3>
+  <ol class="steps">
+    <li><strong>답 후보 생성</strong>: 질의 + top-K 검색 구절을 LLM에 주고, 가능한 답 후보 \( \{c_1, \ldots, c_N\} \)를 <strong>여러 개</strong> 생성하게 한다 (예: N=2).</li>
+    <li><strong>조건부 요약 (conditional summarization)</strong>: 각 후보 \( c_i \)에 대해, 검색 구절들을 "<em>이 후보 \(c_i\)가 답이라면 그 근거는 무엇인가</em>"라는 조건으로 <strong>후보별 요약</strong> \( S_i \)를 생성. → 후보마다 자기 지지 증거를 정리한 짧은 요약이 만들어진다.</li>
+    <li><strong>검증·점수화 (validation)</strong>: 각 요약 \( S_i \)가 (i) 질의에 대해 얼마나 <strong>타당(validity)</strong>한지, (ii) 다른 후보 요약들과 비교해 얼마나 <strong>상대적으로 우월(ranking)</strong>한지를 LLM이 판단.</li>
+    <li><strong>최종 답 선택</strong>: 점수가 가장 높은 후보를 최종 답으로 출력. 선택된 요약은 <strong>근거(rationale)</strong>로도 활용 가능.</li>
+  </ol>
+  <div class="prof-quote"><div class="label">🎙 교수 강조 (강의 발언)</div>
+    "검색 문서를 그대로 넣지 말고, <strong>'답이 무엇일 수 있는가'를 먼저 가정한 다음</strong> 그 가정에 맞춰 문서를 요약하게 하면 — 같은 검색 결과에서도 훨씬 깨끗한 근거가 나온다. 학습 한 줄 없이 프롬프팅만으로, 어떤 블랙박스 LLM·어떤 검색기에든 붙는다는 게 핵심이다."
+  </div>
+
+  <h3>6½.3 REPLUG와의 비교 (둘 다 inference-based)</h3>
+  <table>
+    <tr><th>구분</th><th>REPLUG</th><th>SuRe</th></tr>
+    <tr><td><strong>검색 활용 방식</strong></td><td>각 문서 개별 prepend → <strong>출력 확률 앙상블</strong></td><td>답 후보별 <strong>조건부 요약</strong> → 후보 선택</td></tr>
+    <tr><td><strong>LLM 접근</strong></td><td>블랙박스(단, 출력 확률 필요)</td><td>블랙박스 (프롬프팅·텍스트 출력만)</td></tr>
+    <tr><td><strong>학습</strong></td><td>검색기 fine-tune (LSR)</td><td><strong>학습 전혀 없음</strong></td></tr>
+    <tr><td><strong>핵심 장치</strong></td><td>확률 앙상블 + 검색기 정렬</td><td>answer candidate → conditional summarization</td></tr>
+  </table>
+
+  <div class="box-key"><div class="label">⭐ 시험 핵심</div>
+    SuRe의 순서를 정확히: <strong>① 답 후보 생성 → ② 후보별 조건부 요약 → ③ 검증/선택</strong>. "먼저 요약하고 나서 답을 생성한다"는 순서가 <strong>뒤바뀌면 오답</strong>(2025 기말 P4-2 (b) 출제). 학습이 전혀 없는 순수 inference-based 방법이라는 점도 함께.
+  </div>
+  <div class="box-warn"><div class="label">⚠️ 함정 포인트 (T/F 대비)</div>
+    <ul>
+      <li>"SuRe summarizes the retrieved passages first and then generates a single answer from the summary." → <strong>False</strong>. 순서가 반대 — <strong>답 후보를 먼저 생성</strong>한 뒤, <em>각 후보별로</em> 조건부 요약한다.</li>
+      <li>"SuRe fine-tunes the LLM (or retriever) to produce better summaries." → <strong>False</strong>. SuRe는 <strong>학습이 전혀 없는</strong> 프롬프팅 기반 inference-based 방법이다.</li>
+      <li>"SuRe produces one summary over all retrieved passages jointly." → <strong>False</strong>. 요약은 <strong>답 후보마다 조건부로(per-candidate)</strong> 따로 생성된다.</li>
     </ul>
   </div>
 </section>
@@ -915,6 +960,117 @@
     <tr><td><strong>Search-R1</strong></td><td>RL(outcome reward만)로 &lt;think&gt;/&lt;search&gt;/&lt;information&gt;/&lt;answer&gt; 학습; retrieved token masking; interleaved 검색이 자동 창발; 길이 감소→증가 2단계</td></tr>
     <tr><td><strong>평가지표</strong></td><td>EM(완전 일치 0/1) / F1(단어 수준) / Recall@K(K개 중 정답 문서 비율 — 검색기 지표)</td></tr>
   </table>
+</section>
+
+<!-- ============ R. 작년 기말 출제 ============ -->
+<section id="real-exam">
+  <h2><span class="num">🎯</span> 작년 기말 출제: RAG <span class="en">(2025 Final — Problem 4, Problem 1)</span></h2>
+  <p style="font-size:14px;color:var(--muted);">2025.06.17 기말 원문 그대로 + 정답·해설. <span class="src src-real">기출</span> = 실제 출제. Pick-all은 "any wrong answer → 0 points". 일부 항목은 <strong style="color:#c2185b;">올해(2026) 슬라이드에 없어 범위 밖(참고용)</strong>으로 표시했다.</p>
+
+  <div class="box-warn"><div class="label">⚠️ 작년 기말 핵심 — inference-based vs training-based 구분</div>
+    Problem 4가 이 축으로 3문항(general / inference / training) 연속 출제. 반드시 외울 분류:
+    <ul>
+      <li><strong>Inference-based</strong> (학습 없이 prepend/프롬프팅): <strong>REPLUG</strong>(black-box LM, 검색기만 LSR로 fine-tune — LM 파라미터 접근 X), <strong>SuRe</strong>(답 후보 먼저 → 후보별 조건부 요약), <strong>IRCoT</strong>(CoT ↔ 검색 interleave), <strong>RetRobust의 NLI 필터</strong>.</li>
+      <li><strong>Training-based</strong> (LLM/검색기를 학습): <strong>REALM</strong>(retriever+reader <em>joint</em> 학습), <strong>Self-RAG</strong>(<em>SFT</em> — RL 아님!), <strong>Search-R1</strong>(<em>RL</em>로 학습하되 <strong>외부 retriever는 frozen</strong>).</li>
+    </ul>
+    함정 단골: ① "REPLUG가 LM을 full access로 학습" → False(black-box). ② "Self-RAG가 RL로 학습" → False(SFT). ③ "Search-R1의 retriever도 supervised로 fine-tune" → False(frozen). ④ "SuRe가 요약 먼저 → 답 생성" → False(답 후보 먼저).
+  </div>
+
+  <h3>Problem 4-1. RAG (general) <span class="src src-real">기출</span></h3>
+  <div class="quiz">
+    <div class="q"><div class="qhead">Which of the statements about RAG are correct? (Pick all; any wrong answer → 0 points) (3 pts)</div>
+      <ol type="a">
+        <li>Dense retrieval methods often rely on contrastive loss during training.</li>
+        <li>Fine-tuning LLMs with new knowledge is a scalable and safe solution.</li>
+        <li>Retrieval-based input augmentation can help LLMs access more up-to-date information.</li>
+        <li>Knowledge cutoff in pretraining dataset can cause trained LLMs to miss recent events.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Contrastive learning is the standard training paradigm in dense retrieval (DPR, Contriever).</li>
+          <li class="wrong">(b) Incorrect. Fine-tuning with new knowledge can degrade accuracy and has scalability/safety issues — this is a core motivation for RAG.</li>
+          <li>(c) Correct. Retrieval augments the input with up-to-date external documents.</li>
+          <li>(d) Correct. LLMs are trained on fixed datasets and lack recent info due to knowledge cutoff.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <h3>Problem 4-2. Inference-based RAG <span class="src src-real">기출</span></h3>
+  <div class="quiz">
+    <div class="q"><div class="qhead">Which correctly describe the inference-based RAG methods? (Pick all; any wrong → 0 points) (3 pts)</div>
+      <ol type="a">
+        <li>REPLUG assumes a full access to LLM parameters for end-to-end training.</li>
+        <li>SuRe first generates answer candidates and then summarizes retrievals conditionally.</li>
+        <li>IRCoT simultaneously conduct retrieval and reasoning using Chain-of-Thought prompting.</li>
+        <li>RetRobust improves RAG by using natural language inference (NLI) models for filtering.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. REPLUG assumes <strong>black-box</strong> access — LM parameters are NOT updated (only the retriever is fine-tuned via LSR).</li>
+          <li>(b) Correct. <strong>SuRe</strong>: 답 후보를 먼저 생성한 뒤, 각 후보별로 검색을 조건부 요약. (순서가 핵심 — 위 §6½ 참조, 교수 논문.)</li>
+          <li>(c) Correct. IRCoT interleaves retrieval and reasoning using CoT steps. (원문 "simultaneously" 표현이지만 정답 처리됨.)</li>
+          <li>(d) Correct. RetRobust uses an existing NLI model to assess whether a retrieved passage supports the QA pair.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <h3>Problem 4-3. Training-based RAG <span class="src src-real">기출</span></h3>
+  <div class="quiz">
+    <div class="q"><div class="qhead">Which correctly describe the training-based RAG methods? (Pick all; any wrong → 0 points) (3 pts)
+      <span class="src" style="background:#fff3e0;color:#e65100;">REALM은 올해 범위 밖(참고용)</span></div>
+      <ol type="a">
+        <li>REALM jointly trains both the retriever and the reader components. <span style="font-size:12px;color:#e65100;">(REALM = 작년 출제·2026 슬라이드 없음)</span></li>
+        <li>Self-RAG trains LLM to critique and refine its own generations via RL training.</li>
+        <li>Training-based RAG can learn to ignore irrelevant documents through supervision.</li>
+        <li>The retriever, target LLM, and query generator in Search-R1 are all fine-tuned using standard supervised learning.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. REALM trains retriever and reader <strong>jointly (end-to-end)</strong>. <strong style="color:#e65100;">단, REALM은 2026 슬라이드에 없음 — 작년 출제 개념이니 정의(joint training)만 기억.</strong></li>
+          <li class="wrong">(b) Incorrect. Self-RAG uses <strong>supervised fine-tuning</strong> with GPT-4-generated reflection data, <em>not RL</em>. (RL은 Search-R1.)</li>
+          <li>(c) Correct. With supervision, training-based RAG can downweight/ignore unhelpful documents.</li>
+          <li class="wrong">(d) Incorrect. The external retriever in Search-R1 is <strong>frozen (not fine-tuned)</strong>; only the policy LLM is trained via RL.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <h3>Problem 1 — True/False (RAG 관련 항목) <span class="src src-real">기출</span></h3>
+  <p style="font-size:13px;color:var(--muted);">T/F: 정답 3점 / 오답 0점 / 무응답 1점.</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(ii) BM25 is supervised dense retrieval method. <span class="src src-real">기출</span></div></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> BM25 is an <strong>unsupervised sparse</strong> retrieval method (단어 겹침 + TF·IDF, 학습 없음). "supervised dense"가 두 군데 다 틀림 — sparse·unsupervised가 정답.</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(iii) HyDE synthesizes the query-relevant document by prompting LLM, and then use this to retrieve document using contriever. <span class="src src-real">기출</span> <span class="src" style="background:#fff3e0;color:#e65100;">올해 범위 밖(참고용)</span></div></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> HyDE(Hypothetical Document Embeddings): LLM이 질의에 대한 <strong>가상의 답 문서를 생성</strong>한 뒤, 그 합성 문서를 임베딩해 Contriever로 실제 문서를 검색. <strong style="color:#e65100;">HyDE는 2026 슬라이드에 없음 — 작년 출제 개념(참고용).</strong></div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(iv) ATLAS uses FiD (Fusion-in-Decoder) to mitigate context length limitations. <span class="src src-real">기출</span> <span class="src" style="background:#fff3e0;color:#e65100;">올해 범위 밖(참고용)</span></div></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> <strong>FiD</strong>는 각 문서를 인코더에서 <strong>개별 인코딩</strong>한 뒤 디코더에서 <strong>융합(fuse)</strong> → 긴 컨텍스트를 분할 처리해 길이 한계를 완화. ATLAS가 이를 사용. <strong style="color:#e65100;">ATLAS/FiD는 2026 슬라이드에 없음(참고용).</strong></div>
+    </details>
+  </div>
+
+  <div class="box-key"><div class="label">⭐ 정리 — 올해 범위 표시</div>
+    <strong>범위 O (2026 슬라이드 있음)</strong>: SuRe · REPLUG · IRCoT · RetRobust · Self-RAG · Search-R1.<br>
+    <strong style="color:#c2185b;">범위 밖·참고용 (2026 슬라이드 없음, 작년만)</strong>: REALM · HyDE · ATLAS/FiD. — 정의 한 줄씩만 기억하면 충분.
+  </div>
 </section>
 
 <div class="nav-top" style="margin-top:24px;">

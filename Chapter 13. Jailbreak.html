@@ -156,6 +156,7 @@
     <li><a href="#s6">방어 ①: SafeDecoding (Safety-Aware Contrastive Decoding)</a></li>
     <li><a href="#s7">방어 ②: Gradient Cuff (Refusal Loss Landscape)</a></li>
     <li><a href="#quiz">예상문제 (T/F 8 + Pick-all 6)</a></li>
+    <li><a href="#exam2025">★ 작년 기말 출제: Jailbreak (Problem 5)</a></li>
   </ol>
 </div>
 
@@ -742,6 +743,73 @@
           <li>(d) Correct. SafeDecoding has high FPR (undesirable) but also high TPR — there is a trade-off, so no definitive conclusion about which is better.</li>
         </ul>
       </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 작년 기말 기출 ============ -->
+<section id="exam2025">
+  <h2><span class="num">★</span> 작년 기말 출제: Jailbreak <span class="en">(Final Exam 2025, Problem 5)</span></h2>
+  <p>아래 문항들은 <strong>2025년 기말고사 Problem 5 (LLM Safety)</strong>와 <strong>Problem 1 True/False</strong>에서 실제 출제된 jailbreak 관련 문제다. 위 본문 개념이 그대로 multiple-choice로 출제되었으니 보기별 ○× 판정 연습용으로 활용하라.</p>
+
+  <div class="box-warn"><div class="label">⚠️ 작년 기출 함정 (반드시 암기)</div>
+    <ul>
+      <li><strong>AutoDAN은 proxy label("Absolutely, here's" / "Sure, here is...")의 likelihood를 MAXIMIZE</strong>한다 — minimize라고 하면 오답(생성 momentum을 leverage하기 위함). 탐색은 genetic algorithm.</li>
+      <li><strong>SafeDecoding은 expert model을 위한 fine-tuning이 필요</strong>하다 — adversarial prompt(GPT-4 라벨)로 fine-tune한 expert model 없이는 contrastive decoding이 안 된다. 또한 unsafe output을 <strong>token-by-token</strong>으로 차단.</li>
+      <li>Jailbreaking은 <strong>malicious data로 fine-tune했기 때문이 아니다</strong> — fine-tune 안 해도 competing objective / mismatched generalization 때문에 발생.</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 5-1. (Pick all that are correct, 4 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Which of the following are true about <strong>Jailbroken</strong>? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>Jailbroken identifies two different reasons — competing objective and mismatched generalization — why jailbreaking is possible even after RLHF.</li>
+        <li>Prefix injection is a jailbreaking method that utilizes competing objective.</li>
+        <li>Refusal suppression is based on competing between instruction tuning and RLHF.</li>
+        <li>Jailbreaking with Base64 encoding is an example of mismatched generalization.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d) — 전부 정답</span>
+        <ul>
+          <li>(a) Correct. Jailbroken 논문이 제시한 두 failure mode가 정확히 competing objective와 mismatched generalization.</li>
+          <li>(b) Correct. Prefix injection("Absolutely! Here's...")은 next token prediction vs. safety training의 competing objective를 이용.</li>
+          <li>(c) Correct. Refusal suppression은 instruction following(instruction tuning) vs. safety training(RLHF)의 충돌을 이용한다.</li>
+          <li>(d) Correct. Base64 encoding은 pre-training은 학습했지만 safety training이 다루지 못한 mismatched generalization의 대표 예시.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 5-2. (Pick all that are correct, 4 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Which of the following are true about <strong>AutoDAN and SafeDecoding</strong>? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>AutoDAN searches prompt candidates that <em>minimize</em> the likelihood of proxy label (e.g., "Absolutely, here's") via genetic algorithm.</li>
+        <li>SafeDecoding modifies the decoding process to block unsafe outputs token-by-token.</li>
+        <li>AutoDAN requires human feedback to evaluate the jailbreak success.</li>
+        <li>SafeDecoding requires fine-tuning of the target LLM with adversarial prompts.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect (함정). AutoDAN은 proxy label의 likelihood를 <em>MAXIMIZE</em>한다 — 생성의 momentum을 leverage하기 위함. "minimize"라고 한 부분이 틀렸다(genetic algorithm 부분은 맞음).</li>
+          <li>(b) Correct. SafeDecoding은 contrastive decoding으로 생성 확률을 보정해 unsafe completion을 token-by-token으로 차단한다.</li>
+          <li class="wrong">(c) Incorrect. 평가는 human feedback이 아니라 keyword 검출 또는 LLM-as-judge로 자동 수행된다.</li>
+          <li>(d) Correct. Contrastive decoding의 expert model을 얻기 위해, GPT-4로 라벨링한 adversarial prompt로 target LLM을 fine-tuning해야 한다.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 1-(vi). (True/False, 3 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Jailbreaking mainly occurs because LLMs are fine-tuned with malicious data.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> 설령 LLM이 malicious data로 fine-tune되지 않았더라도, <em>competing objective</em>와 <em>mismatched generalization</em> 때문에 jailbreaking이 발생할 수 있다. 따라서 "주로 malicious data fine-tuning 때문"이라는 진술은 거짓.</div>
     </details>
   </div>
 </section>

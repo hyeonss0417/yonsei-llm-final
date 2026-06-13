@@ -150,6 +150,7 @@
     <li><a href="#s6">ToolLLM — RapidAPI · Instruction 생성 · DFSDT</a></li>
     <li><a href="#s7">ToolLLM — Retriever · ToolLLaMA · 평가 + 비교표</a></li>
     <li><a href="#quiz">예상문제 (T/F + Pick-all)</a></li>
+    <li><a href="#realexam">🎯 작년 기말 출제: Tool Use (Problem 4)</a></li>
   </ol>
 </div>
 
@@ -719,6 +720,74 @@
           <li>(d) Correct. The lecture explicitly drew this RAG analogy for ToolLLM's two-stage inference.</li>
         </ul>
       </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 작년 기말 기출 ===== -->
+<section id="realexam">
+  <h2><span class="num">🎯</span> 작년 기말 출제: Tool Use <span class="en">(Spring 2025 Final, Problem 4 · Problem 1)</span></h2>
+  <p style="font-size:14px;color:var(--muted)">2025 기말 Problem 4(RAG and Tool-use, 15점) 중 tool-use 직결 문항 + Problem 1(True/False) 중 Toolformer 문항. <span class="src src-real">실제 기출</span> 표시. Pick-all은 "any wrong answer will lead to 0 points".</p>
+
+  <div class="box-warn"><div class="label">⚠️ 귀속(attribution) 함정 — 이 두 가지가 핵심</div>
+    <ul>
+      <li><strong>ToolLLM은 human annotation이 아니다.</strong> solution path는 <strong>ChatGPT가 자동 annotation</strong>한다. retriever는 <strong>BERT 기반 dense retriever</strong>이고, instruction은 <strong>single-tool + multi-tool 둘 다</strong> 다룬다. ("human annotators", "single-tool only", "Ada/BM25 retriever"는 전형적 오답.)</li>
+      <li><strong>Toolformer의 filtering 기준 = next-token prediction 개선 여부.</strong> API 호출을 포함했을 때 next-token 예측이 좋아지면(loss 감소) 유지 — 사실성(factuality)이나 human label이 기준이 아니다.</li>
+      <li>Prompting-based tool use에서 함수 실행은 <strong>외부에서 자동 실행</strong>된다. "user가 직접(manually) 실행"은 오답.</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 4-4. (Pick all that are correct) <span class="src src-real">2025 기말</span></div>
+      <p>Which of the following steps are included in the <strong>prompting-based tool-use</strong> approach? (Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)</p>
+      <ol type="a">
+        <li>LLM is given tool APIs via system message and responds with API call.</li>
+        <li>LLM directly calls the API and gets results from external execution.</li>
+        <li>The user manually executes the function based on LLM response.</li>
+        <li>LLM incorporates the returned function result in its final answer.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. LLM receives tool descriptions via the <strong>system message</strong> ("You have access to the following tools" + 이름·설명).</li>
+          <li>(b) Correct. The function call is <strong>decided by the LLM</strong> and executed <strong>externally</strong>, then the result is supplied back to the model.</li>
+          <li class="wrong">(c) Incorrect. This is <strong>automated</strong>, not user-operated. "user manually executes"는 함정.</li>
+          <li>(d) Correct. The returned result is passed back to the LLM to form the final response (incorporate).</li>
+        </ul>
+        <p style="font-size:13px;margin-top:6px;color:var(--muted)">정리: system message로 API 제공 → LLM이 API call 결정 → 외부 실행 → 결과를 최종답에 통합. 4단계 모두 prompting-based 흐름이고 (c)만 빠진다.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 4-5. (Pick all that are correct) <span class="src src-real">2025 기말</span></div>
+      <p>Which of the following are true about the <strong>ToolLLM</strong> framework? (Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)</p>
+      <ol type="a">
+        <li>ToolLLM collects APIs from RapidAPI and uses ChatGPT to generate tool-use instructions.</li>
+        <li>ToolLLM uses human annotators to label solution paths for each instruction.</li>
+        <li>ToolLLM trains a dense retriever based on BERT to retrieve relevant APIs for a given instruction.</li>
+        <li>ToolLLM only consider single-tool usage scenario in both instruction generation and solution annotation.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. <strong>3,451 tools / 16,000+ APIs</strong>를 RapidAPI에서 수집하고, <strong>ChatGPT로 instruction을 생성</strong>한다.</li>
+          <li class="wrong">(b) Incorrect. <strong>human annotation이 아니라 ChatGPT가 자동으로 solution path를 annotation</strong>한다. ("human annotators"는 함정.)</li>
+          <li>(c) Correct. <strong>BERT 기반 dense retriever</strong>를 학습해 instruction에 관련된 API를 검색한다 (BM25·Ada 능가).</li>
+          <li class="wrong">(d) Incorrect. instruction set에 <strong>single-tool과 multi-tool 사용 예시를 모두 포함</strong>한다. ("single-tool only"는 함정.)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 1 (v). (True/False) <span class="src src-real">2025 기말</span></div>
+      <p>Toolformer filters API calls based on whether their inclusion improves <strong>next-token prediction</strong>.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> Toolformer의 filtering 기준은 정확히 이것이다 — API 호출(과 그 결과)을 포함했을 때 next-token prediction이 개선되면(즉 \( L_i^- - L_i^+ \geq \tau \) 로 loss가 줄면) 유효한 호출로 보고 학습 데이터에 유지한다. 사실성(factuality) 검사나 human label이 아니라 <strong>next-token prediction 개선 여부</strong>가 기준이다.</div>
     </details>
   </div>
 </section>

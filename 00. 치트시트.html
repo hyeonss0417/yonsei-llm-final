@@ -122,6 +122,12 @@
     특강 recap은 <em>Jailbroken·AutoDAN·SafeDecoding·Gradient Cuff / DetectGPT 계열·watermarking</em> 중심(GCG·COLD-Attack은 recap 미언급).
     성적: 기말 <strong>30%</strong>+프로젝트 20%가 남은 절반 · 절대평가 · A+만 엄격.
   </div>
+  <div style="margin-top:10px;background:#fdeef0;border:2px solid #ef5b6f;border-radius:10px;padding:10px 14px;font-size:13.5px;">
+    🚨 <b style="color:#c0392b;">작년 기말 실제 구조 (TF30·Inference20·Training15·RAG+Tool15·Safety20)</b> — <strong>Problem 2·3은 객관식이 아니라 손으로 푸는 문제(합 35점!)</strong>:
+    <b>P2 Inference</b>=행렬곱·embedding concat·<em>hamming/inner product logit</em>·top-K/greedy 손계산(→#7) ·
+    <b>P3 Training</b>=수식 직접 쓰기 — CE loss \(\sum-\log p_i(x_{i+1})\), instruction tuning(<em>response 토큰만, \(i{=}L{+}1\)~</em>), RLHF \(\max\mathbb{E}[r_\phi-\beta\,\mathrm{KL}(p\|p')]\)(→#12).
+    T/F·객관식만 보면 35점 날린다. <b>범위 밖(작년만)</b>: HyDE·ATLAS/FiD·REALM·DoLa·ITI.
+  </div>
 </section>
 
 <!-- ════════ 2. 챕터별 핵심 카드 ════════ -->
@@ -179,6 +185,7 @@
       <li><strong>PageRank</strong>: \(1-d\)=random jump 확률; 의미 정보 안 씀 / <strong>BM25</strong>: sparse, 무학습, IDF는 corpus 전체 기준</li>
       <li><strong>DPR</strong>: 인코더 2개+dot product+contrastive loss(labeled \(p^+\)+in-batch negatives), OOD 약함 / <strong>Contriever</strong>: 같은 문서 crop=positive(자기지도), loss는 DPR과 동일, OOD 강건</li>
       <li><strong>REPLUG</strong>: LM frozen(black-box), 문서별 독립 prepend→확률 가중 앙상블; <strong>LSR</strong>=retrieval↔LM likelihood <strong>KL 최소화</strong>로 검색기만 학습</li>
+      <li><strong>SuRe</strong>(Kim et al., ICLR 2024·교수 논문): 답 <strong>후보 먼저 생성</strong>→후보별 retrieval <strong>조건부 요약</strong>→검증·선택 (inference-based)</li>
       <li><strong>IRCoT</strong>: CoT 1스텝↔검색 교차; <strong>마지막 스텝만 질의</strong>, 구절은 누적; multi-hop QA</li>
       <li><strong>RetRobust</strong>: NLI 필터(passage=<strong>premise</strong>, Q+A=<strong>hypothesis</strong>; not-entailed→direct answering) + 소량 학습</li>
       <li><strong>Self-RAG</strong>(ICLR 2024 Oral): <strong>SFT</strong>로 4 reflection 토큰(Retrieve/IsREL/IsSUP/IsUSE); GPT-4→critic(90% agree)→generator; 검색 청크 loss 제외</li>

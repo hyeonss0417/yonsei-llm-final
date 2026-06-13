@@ -157,6 +157,7 @@
     <li><a href="#s7">Watermarking — Hard Red List, One Proportion z-Test, Soft Method</a></li>
     <li><a href="#s8">탐지 패러다임 총비교 — Zero-shot vs Trained vs Watermarking</a></li>
     <li><a href="#quiz">예상문제 (T/F 8 + Pick-all 6)</a></li>
+    <li><a href="#exam2025">★ 작년 기말 출제: Detection (Problem 5)</a></li>
   </ol>
 </div>
 
@@ -721,6 +722,98 @@
           <li class="wrong">(d) Incorrect. Watermark detection only needs the green/red partition rule (hash) and a <strong>z-test on green token counts</strong> — no access to model log-probabilities is required, unlike DetectGPT's not-black-box assumption.</li>
         </ul>
       </div>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 작년 기말 기출 ================= -->
+<section id="exam2025">
+  <h2><span class="num">★</span> 작년 기말 출제: Detection <span class="en">(Final Exam 2025, Problem 5)</span></h2>
+  <p>아래는 <strong>2025년 기말고사 Problem 5 (LLM Safety)</strong>와 <strong>Problem 1 True/False</strong>에서 실제 출제된 AI text detection 관련 문제다. 보기별 ○× 판정 연습용으로 활용하라.</p>
+
+  <div class="box-warn"><div class="label">⚠️ 작년 기출 함정 (반드시 암기)</div>
+    <ul>
+      <li><strong>DetectGPT는 NEGATIVE curvature</strong> 가정 — "positive curvature"라고 하면 오답.</li>
+      <li><strong>Watermarking은 paraphrasing/span replacement 공격에 취약</strong> — "fully robust to paraphrasing"이라고 하면 오답.</li>
+      <li><strong>Fast-DetectGPT도 여전히 log-probability가 필요</strong>하다 — conditional probability로 비용은 크게 줄지만 curvature 계산을 위해 log-prob은 그대로 필요(removes the need라고 하면 오답).</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 5-3. (Pick all that are correct, 4 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Which of the following statements are correct about <strong>DetectGPT</strong>? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>DetectGPT assumes that LLM-generated texts reside in regions of high <em>positive</em> curvature in log-likelihood space.</li>
+        <li>DetectGPT requires the ability to evaluate the log probability from the source model.</li>
+        <li>DetectGPT uses a fine-tuned supervised classifier trained on AI-generated and human-written text.</li>
+        <li>DetectGPT involves generating and evaluating a large number of perturbations for each input.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect (함정). DetectGPT는 <em>negative</em> curvature(local maxima 근처)를 가정한다 — "positive"가 틀렸다.</li>
+          <li>(b) Correct. log p<sub>θ</sub>를 평가할 수 있어야 한다(not black-box, white-box 가정).</li>
+          <li class="wrong">(c) Incorrect. DetectGPT는 <em>zero-shot</em>이며 labeled dataset으로 학습한 supervised classifier가 아니다.</li>
+          <li>(d) Correct. 각 입력마다 다수의 perturbation(논문 기준 ~100개)을 생성·평가한다.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 5-4. (Pick all that are correct, 4 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Which of the following correctly describes the idea of <strong>watermarking</strong> LLM outputs? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>It inserts <em>visible</em> markers into output texts to note the origin.</li>
+        <li>Watermarked texts can be detected using a one-proportion z-test.</li>
+        <li>Soft watermarking alters logits to subtly bias generation toward green-list tokens.</li>
+        <li>Watermarking is fully robust to paraphrasing attacks.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (b), (c)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect (함정). Watermark는 사람 눈에 <em>imperceptible(invisible)</em>하다 — "visible"이 틀렸다.</li>
+          <li>(b) Correct. green token 비율의 통계 검정(one-proportion z-test)으로 탐지한다.</li>
+          <li>(c) Correct. Soft watermarking은 green-list 토큰의 logit에 δ를 더해 그 확률을 키운다(logit bias).</li>
+          <li class="wrong">(d) Incorrect (함정). Watermarking은 <em>paraphrasing/span replacement 공격에 취약</em>하다 — "fully robust"가 틀렸다.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 5-5. (Pick all that are correct, 4 pts) <span class="src src-real">기출(2025 기말)</span> <span class="badge" style="background:#fde2e4;color:#c0392b;">올해 범위 밖(참고용)</span></div>
+      <p>Which of the following statements relevant to <strong>LLM hallucination</strong> and the related works (ITI) are true? (Pick all that are correct; any wrong answer will lead to 0 points.)</p>
+      <ol type="a">
+        <li>Hallucination occurs when an LLM generates text that is factually incorrect but presented fluently.</li>
+        <li>Hallucination only happens in low-resource or out-of-domain settings.</li>
+        <li>Inference-Time Intervention (ITI) uses trained probes to identify latent directions associated with factuality.</li>
+        <li>ITI modifies LLM activations during inference by shifting them in truthful directions.</li>
+      </ol>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Hallucination = factually 틀렸지만 유창하고 자신감 있게 제시되는 응답.</li>
+          <li class="wrong">(b) Incorrect. 어려운 세팅에서 더 흔하긴 하나 hallucination은 <em>어떤 맥락에서도</em> 발생할 수 있다.</li>
+          <li>(c) Correct. ITI는 attention head별로 trained probe를 써서 truthfulness와 연관된 latent direction을 찾는다.</li>
+          <li>(d) Correct. ITI는 inference 중 activation을 truthful direction으로 shift시킨다.</li>
+        </ul>
+        <div class="box-warn" style="margin-top:12px;"><div class="label">📌 범위 안내</div>
+          <strong>ITI(Inference-Time Intervention)는 올해 2026 슬라이드에 포함되지 않은, 작년 출제·올해 범위 밖 내용</strong>이므로 참고용으로만 보라. 다만 <strong>hallucination 일반 개념(factually 틀렸지만 유창한 생성)</strong>은 올해도 RAG의 동기로 언급되므로 (a),(b) 판정은 알아둘 것.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">Problem 1-(vii). (True/False, 3 pts) <span class="src src-real">기출(2025 기말)</span></div>
+      <p>Fast-DetectGPT removes the need to compute log-probabilities from the source model unlike DetectGPT.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Conditional probability를 써서 비용은 크게 줄었지만, <em>curvature 계산을 위해 log-probability는 여전히 필요</em>하다. 따라서 "log-prob 계산 필요성을 제거한다"는 진술은 거짓.</div>
     </details>
   </div>
 </section>

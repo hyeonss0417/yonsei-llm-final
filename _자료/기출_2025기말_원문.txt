@@ -1,0 +1,422 @@
+CAS 4133: Large Language Models
+Final Exam, Spring 2025
+Instructor: Jaehyung Kim
+Tuesday, June 17th, 2025, 4:10 PM - 5:50 PM
+
+Instructions
+1. Please fill in your personal information here:
+Name:
+
+Student ID:
+
+E-mail:
+
+2. You have 1 hour and 40 minutes.
+3. Directly writing the answers to this print, and submit it.
+4. You can leave the room after 50 minutes (5:00 PM)
+5. Please sign for the following honor pledge by hand:
+As a member of the Yonsei University community, I promise to uphold honor with
+my words and actions. I will not lie, cheat, or steal. I accept responsibility for my
+own actions and for what other members of the community may do in my presence.
+I understand the need for honor and pledge to defend it.
+Your sign:
+6. Good luck!
+
+Score Sheet
+Problem #
+1
+2
+3
+4
+5
+Total
+
+Topic
+Score Your score
+True / False
+30
+Inference with LLM
+20
+Training with LLM
+15
+RAG and Tool-use
+15
+LLM Safety
+20
+100
+
+1
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+Problem 1: True / False (30 Points)
+Identify whether the following statements are True or False. You will get 3 points for
+each correct answer, 0 points for each wrong answer, and 1 point for each unanswered
+question.
+(i) RLHF provides an interpretable rule set defining what “good behavior” is.
+Answer: False. RLHF defines “goodness” implicitly via large human preference
+datasets, not interpretable rule sets.
+(ii) BM25 is supervised dense retrieval method.
+Answer: False. BM25 is unsupervised sparse retrieval method.
+(iii) HyDE synthesizes the query-relevant document by prompting LLM, and then use
+this to retrieve document using contriever.
+Answer: True.
+(iv) ATLAS uses FiD (Fusion-in-Decoder) to mitigate context length limitations.
+Answer: True. FiD encodes documents separately and fuses them in the decoder.
+(v) Toolformer filters API calls based on whether their inclusion improves next-token
+prediction.
+Answer: True.
+(vi) Jailbreaking mainly occurs because LLMs are fine-tuned with malicious data.
+Answer: False. Even LLMs are not fine-tuned with malicious data, it can occur
+due to competing objective and mismatched generalization.
+(vii) Fast-DetectGPT removes the need to compute log-probabilities from the source
+model unlike DetectGPT
+Answer: False. While the cost is significantly reduced by using conditional probability, log-probabilities are still needed for curvature computation.
+(viii) DoLa selects the intermediate layer that achieves the minimum JSD compared to
+output probabilty at last layer, and then apply contrastive decoding.
+Answer: False. Choose the layer that maximizes JSD.
+(ix) The motivation of PPO is to take biggest possible improvement step on policy using,
+without stepping so far from current policy to prevent collapse.
+Answer: True.
+(x) GRPO estimates advantage function by generating multiple responses per query
+and calculating the statistics of their rewards.
+Answer: True.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+Problem 2: Inference with LLM (20 Points)
+Let’s assume that we have a very simple large language model (LLM) M, which is only
+composed of a single matrix as below:
+
+
+1 1 0
+M = −1 0 1.
+1 1 1
+M can map a given sequence of vectors x̃ ∈ RL×3 with a simple matrix multiplication ◦
+(Caution. The order of multiplication should be the same as below):
+M : x̃ −→ x̃ ◦ M.
+Also, let’s assume that M has following word embeddings:
+1. “한”: [1, 0, 0], 2. “학기”: [1, 1, 0], 3. “동안”: [0, 1, 1]
+4. “매우”: [-1, 1, 0], 5. “수고”: [0, 1, 2], 6. “고생”: [1, 1, 2] , 7. “정말”: [0, 0, 2]
+8. “고맙습니다”: [3, 0, 1], 9. “했습니다”: [0, 2, 3], 10. “많았습니다”: [1, 2, 3],
+11. “감사합니다”: [3, 1, 2], 12. “하셨습니다”: [0, 2, 2], 13. “많았어요”: [1, 2, 2]
+Word Embeddings for Vocabulary of CAS 4133 Final
+
+Bases on these LLM M and word embeddings, answer to the following questions:
+1. (5 points) Let’s assume that we receive the input sequence x =“한 학기 동안”.
+Then, convert it to the sequence of word embeddings by concatenating embeddings
+through row-axis (ignore black space for simplicity). The result should be presented
+by a single matrix.
+Answer:
+
+
+1 0 0
+x̃ = 1 1 0
+0 1 1
+2. (5 points) Calculate an output logit o for a next word prediction. Instead of inner
+product, let’s use hamming distance H(·, ·):
+H(u, v) =
+
+d
+X
+
+1[ui = vi ]
+
+i=1
+
+Answer:
+o = [0, 1, 2, 1, 3, 2, 2, 0, 1, 0, 2, 2, 1]
+
+3. (5 points) What would be the next word y1 if we apply random sampling with
+top-K (K = 1) as decoding algorithm to previously obtained output logit o?
+Answer: “수고”
+4. (5 points) Let’s assume that we’ll auto-regressively generate one more next token
+y2 with the same decoding algorithm used above. What would be y2 ?
+Answer: “많았습니다”
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+Problem 3: Training of LLM (15 Points)
+In this problem, our goal is to train LLM M from scratch. M takes a sequence of tokens
+x = [x1 , ..., xL ] as input (i.e., xi is an integer and 1 ≤ xi ≤ |V|) and then output
+P|V|
+probabilities p = [p1 , ..., pL ] ∈ RL×|V| where V is a vocabulary of M and k=1 pi (k) =
+1, pi (k) ≥ 0. Bases on these assumptions, answer to the following questions:
+1. (5 points) You first need to train M be able to predict next token. To this end,
+you download well-curated text corpus Dnext = {x(i) }N
+i=1 . Then, write (1) a name
+of loss function Lnext to achieve this goal, and (2) its mathematical equation in a
+following form:
+min E [f ],
+x∼Dnext
+
+where f is a function of x and p (i.e., write f ). Here, assume that the length of x
+is always L.
+P
+Answer: (1) Cross-entropy loss and (2) Lnext := L−1
+i=1 − log pi (xi+1 )
+2. (5 points) Unfortunately, you observe that the trained LLM Mnext does not work
+well in practice; it suffer to understand your instruction in input query. To improve
+′
+this, you additionally download another dataset Dinst = {(x̃(i) , ỹ(i) )}N
+i=1 . Then,
+write (1) a name of loss function Linst to achieve this goal, and (2) its mathematical
+equation in a following form:
+min
+
+[g].
+
+E
+
+(x̃,ỹ)∼Dinst
+
+Here, let’s assume that (1) the length of x̃ and ỹ are always L and M , respectively,
+and (2) x̃ and ỹ are concatenated as x (i.e., x := x̃ ⊕ ỹ). Then, g will be a function
+of x and p again.
+P
+−1
+Answer: (1) Cross-entropy loss and (2) Linst := L+M
+i=L+1 − log pi (xi+1 )
+3. (5 points) While the trained LLM Minst now can understand your instruction,
+you found that it sometimes output very dangerous and harmful responses. To
+improve the safety of LLM, you decide to further finetune Minst using RLHF. To
+′′
+this end, you again download dataset DRLHF = {x̂i }N
+i=1 and reward model rϕ which
+takes the concatenation of input prompt x̂ and the corresponding response ŷ and
+outputs reward between 0 and 1 (i.e., rϕ : x → [0, 1], x := x̂ ⊕ ŷ). Then, write a
+mathematical equation of the objective function in a following form:
+max
+
+E
+
+[h − βh′ ],
+
+Mθ x̂∼DRLHF ,ŷ∼Mθ (x̂)
+
+where h is a function of x and rϕ , and h′ is a function of x, p, and p′ (p′ is output
+probabilities of Minst ). β is a hyperparameter for a regularization with h′ and Mθ
+is our training LLM. Again, assume that the length of x̂ and ŷ are always L and
+M , respectively.
+PL+M −1
+P
+−1
+pi
+′
+′
+Answer: (1) h = rϕ (x) and (2) h′ = L+M
+i=L+1 KL(pi ||pi ))
+i=L+1 pi log p′ (or h =
+i
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+Problem 4: RAG and Tool-use (15 Points)
+Answer the following questions about LLM applications (RAG and Tool-use).
+1. Which of the statements about RAG are correct? (Pick all that are correct; any
+wrong answer will lead to 0 points.) (3 pts)
+(a) Dense retrieval methods often rely on contrastive loss during training.
+(b) Fine-tuning LLMs with new knowledge is a scalable and safe solution.
+(c) Retrieval-based input augmentation can help LLMs access more up-to-date
+information.
+(d) Knowledge cutoff in pretraining dataset can cause trained LLMs to miss recent
+events.
+Answer: (a), (c), (d)
+Explanation:
+(a) Correct. Contrastive learning is the standard training paradigm in dense retrieval systems like DPR and Contriever.
+(b) Incorrect. Fine-tuning with new knowledge can degrade accuracy and has scalability/safety issues.
+(c) Correct. Retrieval helps by augmenting the input with up-to-date external
+documents.
+(d) Correct. LLMs are trained with fixed datasets and often lack recent information
+due to knowledge cutoff.
+2. Which of the following statements correctly describe the inference-based RAG methods? (Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) REPLUG assumes a full access to LLM parameters for end-to-end training.
+(b) SuRe first generates answer candidates and then summarizes retrievals conditionally.
+(c) IRCoT simultaneously conduct retrieval and reasoning using Chain-of-Thought
+prompting.
+(d) RetRobust improves RAG by using natural language inference (NLI) models
+for filtering.
+Answer: (b), (d)
+Explanation:
+(a) Incorrect. REPLUG assumes black-box access to the LLM, so no parameter
+updates are allowed.
+(b) Correct. SuRe first generates candidate answers, then summarizes retrievals
+for each one.
+(c) Incorrect. IRCoT interleaves retrieval and reasoning using Chain-of-Thought
+(CoT) steps.
+(d) Correct. RetRobust leverages existing NLI models to assess whether a retrieved
+passage supports the QA pair.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+3. Which of the following statements correctly describe the training-based RAG methods? (Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) REALM jointly trains both the retriever and the reader components.
+(b) Self-RAG trains LLM to critique and refine its own generations via RL training.
+(c) Training-based RAG can learn to ignore irrelevant documents through supervision.
+(d) The retriever, target LLM, and query generator in Search-R1 are all fine-tuned
+using standard supervised learning.
+Answer: (a), (c)
+Explanation:
+(a) Correct. The retriever and reader are trained jointly in an end-to-end fashion.
+(b) Incorrect. Self-RAG uses supervised fine-tuning with GPT-4-generated reflection data.
+(c) Correct. With supervision, training-based RAG can learn to downweight or
+ignore unhelpful documents.
+(d) Incorrect. The external retriever which is frozen (not fine-tuned) is used in
+Search-R1.
+4. Which of the following steps are included in the prompting-based tool-use approach?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) LLM is given tool APIs via system message and responds with API call.
+(b) LLM directly calls the API and gets results from external execution.
+(c) The user manually executes the function based on LLM response.
+(d) LLM incorporates the returned function result in its final answer.
+Answer: (a), (b), (d)
+Explanation:
+(a) Correct. LLM receives tool descriptions via system messages.
+(b) Correct. Function calls are decided by LLM and executed externally.
+(c) Incorrect. This is automated, not user-operated.
+(d) Correct. The result is passed back to the LLM to form the final response.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+5. Which of the following are true about the ToolLLM framework? (Pick all that are
+correct; any wrong answer will lead to 0 points.) (3 pts)
+(a) ToolLLM collects APIs from RapidAPI and uses ChatGPT to generate tooluse instructions.
+(b) ToolLLM uses human annotators to label solution paths for each instruction.
+(c) ToolLLM trains a dense retriever based on BERT to retrieve relevant APIs for
+a given instruction.
+(d) ToolLLM only consider single-tool usage scenario in both instruction generation and solution annotation.
+Answer: (a), (c)
+Explanation:
+(a) Correct. ToolLLM gathers 3,451 tools and over 16,000 APIs from RapidAPI
+and uses ChatGPT to generate instructions.
+(b) Incorrect. ToolLLM does not use human annotation; ChatGPT is used to
+automatically annotate solution paths.
+(c) Correct. A dense retriever trained with BERT retrieves APIs relevant to given
+instructions.
+(d) Incorrect. ToolLLM includes examples of both single-tool and multi-tool usage
+in its instruction set.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+Problem 5: AI Safety (20 Points)
+Answer the following questions about LLM safety.
+1. Which of the following are true about Jailbroken? (Pick all that are correct; any
+wrong answer will lead to 0 points.) (4 pts)
+(a) Jailbroken identifies two different reasons - competing objective and mismatched
+generalization - why jailbreaking is possible even after RLHF.
+(b) Prefix injection is jailbreaking method that utilize competing objective.
+(c) Refusal suppression is based on competing between instruction tuning and
+RLHF.
+(d) Jailbreaking with Base64 encoding is an example of mismatched generalization.
+Answer: (a), (b), (c), (d)
+Explanation:
+(a) Correct.
+(b) Correct.
+(c) Correct.
+(d) Correct.
+2. Which of the following are true about AutoDAN and SafeDecoding? (Pick all that
+are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) AutoDAN search prompt candidates that minimize the likelihood of proxy
+label (e.g., “Absolutely, here’s”) via genetic algorithm.
+(b) SafeDecoding modifies the decoding process to block unsafe outputs token-bytoken.
+(c) AutoDAN requires human feedback to evaluate the jailbreak success.
+(d) SafeDecoding requires fine-tuning of the target LLM with adversarial prompts.
+Answer: (b), (d)
+Explanation:
+(a) Incorrect. Maximize the likelihood to leverage the momentum of generation.
+(b) Correct. SafeDecoding adjusts generation probabilities to prevent unsafe completions via contrastive decoding.
+(c) Incorrect. Evaluation is automatic using key-word or LLM-as-judge, not dependent on human labels.
+(d) Correct. To obtain the expert model in contrastive decoding framework, SafeDecoding requires fine-tuning on adversarial prompts labeled with GPT-4.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+3. Which of the following statements are correct about DetectGPT (Pick all that are
+correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) DetectGPT assumes that LLM-generated texts reside in regions of high positive curvature in log-likelihood space.
+(b) DetectGPT requires the ability to evaluate the log probability from the source
+model.
+(c) DetectGPT uses a fine-tuned supervised classifier trained on AI-generated and
+human-written text.
+(d) DetectGPT involves generating and evaluating a large number of perturbations
+for each input.
+Answer: (b), (d)
+Explanation:
+(a) Incorrect. DetectGPT assumes negative curvature in log-probability space.
+(b) Correct. DetectGPT assumes access to log-likelihood scores from the LLM.
+(c) Incorrect. DetectGPT is zero-shot and not trained on labeled datasets.
+(d) Correct. DetectGPT involves generating and evaluating a large number of
+perturbations for each input.
+4. Which of the following correctly describes the idea of watermarking LLM outputs?
+(Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)
+(a) It inserts visible markers into output texts to note the origin.
+(b) Watermarked texts can be detected using a one-proportion z-test.
+(c) Soft watermarking alters logits to subtly bias generation toward green-list
+tokens.
+(d) Watermarking is fully robust to paraphrasing attacks.
+Answer: (b), (c)
+Explanation:
+(a) Incorrect. Watermarks are imperceptible to humans.
+(b) Correct. Detection of watermarking uses a statistical test to check violations
+of token patterns.
+(c) Correct. Soft watermarking modifies logits during decoding to increase token
+selection probability.
+(d) Incorrect. Watermarking can be broken by paraphrasing or span replacement
+attacks.
+
+CAS 4133
+
+Final Exam
+
+June 17, 2025
+
+5. Which of the following statements relevant to LLM hallucination and the related
+works are true? (Pick all that are correct; any wrong answer will lead to 0 points.)
+(4 pts)
+(a) Hallucination occurs when an LLM generates text that is factually incorrect
+but presented fluently.
+(b) Hallucination only happens in low-resource or out-of-domain settings.
+(c) Inference-Time Intervention (ITI) uses trained probes to identify latent directions associated with factuality.
+(d) ITI modifies LLM activations during inference by shifting them in truthful
+directions.
+Answer: (a), (c), (d)
+Explanation:
+(a) Correct. Hallucinations are false or misleading responses that appear fluent
+and confident.
+(b) Incorrect. While more common in difficult settings, hallucinations can happen
+in any context.
+(c) Correct. Probes are trained per attention head to discriminate truthfulness.
+(d) Correct. Activations are shifted along truthful directions inferred from the
+probe.
+

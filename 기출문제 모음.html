@@ -134,9 +134,9 @@
 <div class="hero">
   <div class="label">CAS4133 LLM · 기말 대비 · 기출 &amp; 출제 예측</div>
   <h1>기출문제 모음 &amp; 기말 출제 예측</h1>
-  <div class="subtitle">유일한 기출인 2025 봄 중간고사 전체 원문(30문항) + 시험 형식·전략 분석 + 기말 범위(#7~#14) 출제 예측 — 마지막 수업 공지(객관식 3~4개·특강 통합 Problem 확정) 반영</div>
+  <div class="subtitle"><strong>2025 봄 기말고사 전체 원문(Problem 1~5)</strong> 신규 수록 — Problem 2(계산)·Problem 3(수식) 단계별 풀이 포함 + 2025 중간 기출(참고용) + 작년 기말 실제 구조 기반 출제 청사진</div>
   <div class="meta">
-    <span>📅 기출: 2025-04-22 중간고사 (Jaehyung Kim)</span><span>📊 100점 / 100분</span><span>⏱ T/F 10 + Pick-all 20 = 30문항</span>
+    <span>⭐ 작년 기말: 2025-06-17 (Jaehyung Kim)</span><span>📊 100점 / 100분</span><span>⏱ TF30 · Inference계산20 · Training수식15 · RAG15 · Safety20</span>
   </div>
 </div>
 
@@ -144,12 +144,9 @@
   <div class="label">📑 목차</div>
   <ol>
     <li><a href="#s1">시험 형식 분석 & 풀이 전략 (함정 패턴 유형화)</a></li>
-    <li><a href="#p1">2025 중간 Problem 1: True / False (30점)</a></li>
-    <li><a href="#p2">2025 중간 Problem 2: N-gram, RNN, Transformer (15점)</a></li>
-    <li><a href="#p3">2025 중간 Problem 3: Large Language Models (20점)</a></li>
-    <li><a href="#p4">2025 중간 Problem 4: Alignment of LLMs (20점)</a></li>
-    <li><a href="#p5">2025 중간 Problem 5: Decoding (15점)</a></li>
-    <li><a href="#s7">기말 범위 출제 예측 (#7~#14 챕터별)</a></li>
+    <li><a href="#sf"><strong>⭐ 2025 봄 기말고사 (작년 실제 기출 — 가장 중요)</strong></a></li>
+    <li><a href="#sP">기말 출제 청사진 — 작년 기말 실제 구조 기반</a></li>
+    <li><a href="#p1">2025 중간 Problem 1~5 (중간 — 참고용, 기말 범위 아님)</a></li>
   </ol>
 </div>
 
@@ -217,8 +214,465 @@
 </section>
 
 <!-- ============================================================ -->
+<!-- ===================  2025 봄 기말고사 (작년 실제 기출)  =================== -->
+<section id="sf" style="border:2px solid var(--accent);">
+  <h2><span class="num" style="background:var(--accent);">★</span> 2025 봄 기말고사 (작년 실제 기출 — 가장 중요)</h2>
+  <p>아래는 <strong>2025년 6월 17일에 실제로 출제된 기말고사 전체 원문</strong>(Problem 1~5)이다. 올해 기말도 <strong>동일 청사진</strong>(아래 표)으로 출제될 가능성이 매우 높다. <span class="src src-real">작년 실제 기출</span> 뱃지가 붙은 문항은 전부 원문 그대로다.</p>
+
+  <h3>작년 기말 청사진</h3>
+  <table>
+    <tr><th>Problem</th><th>주제</th><th>형식</th><th>배점</th><th>주의</th></tr>
+    <tr><td><strong>Problem 1</strong></td><td>True / False</td><td>T/F 10문항</td><td>30점</td><td>정답 3점 / 오답 0점 / <strong>무응답 1점</strong></td></tr>
+    <tr><td><strong>Problem 2</strong></td><td>Inference with LLM</td><td><strong>계산 문제 (서술)</strong></td><td>20점</td><td class="trap-tag" style="display:table-cell;">행렬 곱·hamming·top-K 손계산 — 객관식 아님!</td></tr>
+    <tr><td><strong>Problem 3</strong></td><td>Training of LLM</td><td><strong>수식 작성 (서술)</strong></td><td>15점</td><td class="trap-tag" style="display:table-cell;">CE / instruction / RLHF 목적함수 직접 작성</td></tr>
+    <tr><td><strong>Problem 4</strong></td><td>RAG and Tool-use</td><td>Pick-all 5문항</td><td>15점</td><td>any wrong → 0점</td></tr>
+    <tr><td><strong>Problem 5</strong></td><td>LLM Safety</td><td>Pick-all 5문항</td><td>20점</td><td>any wrong → 0점</td></tr>
+    <tr><td colspan="3"><strong>합계</strong></td><td><strong>100점</strong></td><td>100분 (4:10~5:50 PM)</td></tr>
+  </table>
+
+  <div class="box-warn"><div class="label">⚠️ 절대 놓치면 안 되는 점 — Problem 2·3은 손계산/수식 (합 35점)</div>
+    <strong>Problem 2(20점)·Problem 3(15점)은 객관식이 아니라 손으로 푸는 계산·수식 문제다.</strong> T/F·Pick-all만 공부하면 <strong>35점(=전체의 35%)을 통째로 날린다.</strong> 행렬 곱셈, hamming distance, top-K 샘플링, autoregressive 생성, 그리고 cross-entropy·instruction tuning·RLHF 목적함수 수식을 <strong>직접 쓸 수 있을 때까지</strong> 연습하라.
+  </div>
+
+  <div class="box-warn"><div class="label">⚠️ 올해(2026) 범위 밖 토픽 — 참고만, 출제 가능성 낮음</div>
+    아래는 작년 기말엔 나왔으나 <strong>올해 2026 슬라이드엔 없는</strong> 토픽이다. 이름만 참고하고 깊이 파지 말 것.
+    <ul>
+      <li><strong>HyDE</strong> (P1-iii) — 가설 문서 생성 후 contriever로 검색하는 RAG 기법.</li>
+      <li><strong>ATLAS / FiD (Fusion-in-Decoder)</strong> (P1-iv) — 문서를 따로 인코딩 후 디코더에서 융합.</li>
+      <li><strong>REALM</strong> (P4-3a) — retriever와 reader를 end-to-end 공동 학습.</li>
+      <li><strong>DoLa</strong> (P1-viii) — 레이어 간 contrastive decoding(JSD 최대 레이어 선택).</li>
+      <li><strong>Inference-Time Intervention (ITI)</strong> (P5-5) — truthful 방향으로 activation을 이동.</li>
+    </ul>
+    <em>단, <strong>SuRe(P4-2b)는 올해 범위에 포함</strong>되므로 정상적으로 공부할 것.</em>
+  </div>
+
+  <h3 id="sf1">Problem 1: True / False (30 Points) <span class="src src-real">작년 실제 기출</span></h3>
+  <p class="en">"You will get 3 points for each correct answer, 0 points for each wrong answer, and 1 point for each unanswered question."</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(i) True/False <span class="src src-real">작년 기말</span></div>
+      <p>RLHF provides an interpretable rule set defining what "good behavior" is.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> RLHF defines "goodness" implicitly via large human preference datasets, not interpretable rule sets.</div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(ii) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#9 RAG</span></div>
+      <p>BM25 is supervised dense retrieval method.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> BM25 is unsupervised sparse retrieval method.</div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(iii) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-conf">올해 범위 밖</span></div>
+      <p>HyDE synthesizes the query-relevant document by prompting LLM, and then use this to retrieve document using contriever.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> <em>(HyDE는 올해 2026 슬라이드엔 없음 — 참고만.)</em></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(iv) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-conf">올해 범위 밖</span></div>
+      <p>ATLAS uses FiD (Fusion-in-Decoder) to mitigate context length limitations.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> FiD encodes documents separately and fuses them in the decoder. <em>(ATLAS/FiD는 올해 범위 밖.)</em></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(v) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#10 Tool Use</span></div>
+      <p>Toolformer filters API calls based on whether their inclusion improves next-token prediction.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(vi) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#13 Jailbreak</span></div>
+      <p>Jailbreaking mainly occurs because LLMs are fine-tuned with malicious data.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Even LLMs are not fine-tuned with malicious data, it can occur due to competing objective and mismatched generalization.</div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(vii) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#14 AI Text Detection</span></div>
+      <p>Fast-DetectGPT removes the need to compute log-probabilities from the source model unlike DetectGPT.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> While the cost is significantly reduced by using conditional probability, log-probabilities are still needed for curvature computation.</div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(viii) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-conf">올해 범위 밖</span></div>
+      <p>DoLa selects the intermediate layer that achieves the minimum JSD compared to output probability at last layer, and then apply contrastive decoding.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> Choose the layer that <strong>maximizes</strong> JSD. <em>(DoLa는 올해 범위 밖.)</em></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(ix) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#12 RL (PPO)</span></div>
+      <p>The motivation of PPO is to take biggest possible improvement step on policy, without stepping so far from current policy to prevent collapse.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">(x) True/False <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#12 RL (GRPO)</span></div>
+      <p>GRPO estimates advantage function by generating multiple responses per query and calculating the statistics of their rewards.</p></div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span></div></details>
+  </div>
+
+  <h3 id="sf2">Problem 2: Inference with LLM (20 Points) <span class="src src-real">작년 실제 기출</span> <span class="trap-tag">계산 문제</span></h3>
+  <p>단일 행렬로만 구성된 아주 단순한 LLM <strong>M</strong>이 주어진다. M은 입력 시퀀스 \( \tilde{x}\in\mathbb{R}^{L\times 3} \)를 \( \tilde{x}\mapsto \tilde{x}\circ M \)로 매핑한다 (곱 순서 주의):</p>
+  <div class="formula">
+    $$ M = \begin{bmatrix} 1 & 1 & 0 \\ -1 & 0 & 1 \\ 1 & 1 & 1 \end{bmatrix} $$
+  </div>
+  <p>Word embeddings (vocabulary):</p>
+  <table>
+    <tr><th>#</th><th>단어</th><th>embedding</th><th>#</th><th>단어</th><th>embedding</th></tr>
+    <tr><td>1</td><td>한</td><td>[1, 0, 0]</td><td>8</td><td>고맙습니다</td><td>[3, 0, 1]</td></tr>
+    <tr><td>2</td><td>학기</td><td>[1, 1, 0]</td><td>9</td><td>했습니다</td><td>[0, 2, 3]</td></tr>
+    <tr><td>3</td><td>동안</td><td>[0, 1, 1]</td><td>10</td><td>많았습니다</td><td>[1, 2, 3]</td></tr>
+    <tr><td>4</td><td>매우</td><td>[-1, 1, 0]</td><td>11</td><td>감사합니다</td><td>[3, 1, 2]</td></tr>
+    <tr><td>5</td><td>수고</td><td>[0, 1, 2]</td><td>12</td><td>하셨습니다</td><td>[0, 2, 2]</td></tr>
+    <tr><td>6</td><td>고생</td><td>[1, 1, 2]</td><td>13</td><td>많았어요</td><td>[1, 2, 2]</td></tr>
+    <tr><td>7</td><td>정말</td><td>[0, 0, 2]</td><td></td><td></td><td></td></tr>
+  </table>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">2-1 (5 pts) <span class="src src-real">작년 기말</span></div>
+      <p>입력 시퀀스 x = "한 학기 동안"을 임베딩을 행 방향으로 concat하여 단일 행렬로 표현하라.</p></div>
+    <details><summary>정답 & 단계별 풀이</summary>
+      <div class="ans"><span class="correct">정답:</span>
+        <div class="formula">$$ \tilde{x} = \begin{bmatrix} 1 & 0 & 0 \\ 1 & 1 & 0 \\ 0 & 1 & 1 \end{bmatrix} $$</div>
+        각 단어("한"=[1,0,0], "학기"=[1,1,0], "동안"=[0,1,1])의 임베딩을 위에서 아래로 쌓은 것.
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">2-2 (5 pts) <span class="src src-real">작년 기말</span></div>
+      <p>next-word prediction을 위한 output logit <strong>o</strong>를 구하라. 단, 내적 대신 hamming distance \( H(u,v)=\sum_{i=1}^{d}\mathbf{1}[u_i=v_i] \) 를 사용한다.</p></div>
+    <details><summary>정답 & 단계별 풀이</summary>
+      <div class="ans"><span class="correct">정답:</span> \( o = [0, 1, 2, 1, 3, 2, 2, 0, 1, 0, 2, 2, 1] \)
+        <p style="margin-top:8px;"><strong>단계별 풀이.</strong> 먼저 마지막 위치의 hidden state를 구한다. \( \tilde{x}\circ M \)의 <strong>마지막 행</strong>이 다음 단어 예측에 쓰인다. \( \tilde{x} \)의 마지막 행은 "동안"=[0,1,1]:</p>
+        <div class="formula">$$ h = [0,1,1]\circ M = \Big[\,0\cdot1+1\cdot(-1)+1\cdot1,\;\; 0\cdot1+1\cdot0+1\cdot1,\;\; 0\cdot0+1\cdot1+1\cdot1\,\Big] = [0,\,1,\,2] $$</div>
+        <p>이제 각 vocabulary 임베딩 \( v \)와 \( h=[0,1,2] \) 사이 hamming distance(= 같은 자리 성분 개수)를 센다:</p>
+        <ul>
+          <li>한[1,0,0]: (0≠1,1≠0,2≠0) → <strong>0</strong></li>
+          <li>학기[1,1,0]: (0≠1,1=1,2≠0) → <strong>1</strong></li>
+          <li>동안[0,1,1]: (0=0,1=1,2≠1) → <strong>2</strong></li>
+          <li>매우[-1,1,0]: (0≠-1,1=1,2≠0) → <strong>1</strong></li>
+          <li>수고[0,1,2]: (0=0,1=1,2=2) → <strong>3</strong></li>
+          <li>고생[1,1,2]: (0≠1,1=1,2=2) → <strong>2</strong></li>
+          <li>정말[0,0,2]: (0=0,1≠0,2=2) → <strong>2</strong></li>
+          <li>고맙습니다[3,0,1]: (모두 불일치) → <strong>0</strong></li>
+          <li>했습니다[0,2,3]: (0=0,1≠2,2≠3) → <strong>1</strong></li>
+          <li>많았습니다[1,2,3]: (모두 불일치) → <strong>0</strong></li>
+          <li>감사합니다[3,1,2]: (0≠3,1=1,2=2) → <strong>2</strong></li>
+          <li>하셨습니다[0,2,2]: (0=0,1≠2,2=2) → <strong>2</strong></li>
+          <li>많았어요[1,2,2]: (0≠1,1≠2,2=2) → <strong>1</strong></li>
+        </ul>
+        ⇒ \( o=[0,1,2,1,3,2,2,0,1,0,2,2,1] \).
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">2-3 (5 pts) <span class="src src-real">작년 기말</span></div>
+      <p>위 logit o에 top-K (K=1) random sampling을 적용하면 다음 단어 \( y_1 \)은?</p></div>
+    <details><summary>정답 & 단계별 풀이</summary>
+      <div class="ans"><span class="correct">정답: "수고"</span>
+        <p>top-K with K=1은 logit이 가장 큰 단어 하나만 남기므로 사실상 greedy(argmax). \( o \)의 최댓값은 5번째 성분 <strong>3</strong> = "수고". 따라서 \( y_1 = \) "수고".</p>
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">2-4 (5 pts) <span class="src src-real">작년 기말</span></div>
+      <p>같은 디코딩으로 한 토큰 더 autoregressive하게 생성하면 \( y_2 \)는?</p></div>
+    <details><summary>정답 & 단계별 풀이</summary>
+      <div class="ans"><span class="correct">정답: "많았습니다"</span>
+        <p><strong>단계별 풀이.</strong> 생성된 \( y_1=\)"수고"=[0,1,2]를 시퀀스에 붙이고, 새 마지막 토큰 "수고"의 hidden state를 구한다:</p>
+        <div class="formula">$$ h_2 = [0,1,2]\circ M = \big[\,0-1+2,\;\;0+0+2,\;\;0+1+2\,\big] = [1,\,2,\,3] $$</div>
+        <p>각 vocab 임베딩과 \( h_2=[1,2,3] \)의 hamming distance를 센다. 정확히 일치하는 임베딩은 <strong>"많았습니다"[1,2,3]</strong>로 hamming=3(최댓값). top-K(K=1) argmax ⇒ \( y_2=\)"많았습니다".</p>
+      </div></details>
+  </div>
+
+  <h3 id="sf3">Problem 3: Training of LLM (15 Points) <span class="src src-real">작년 실제 기출</span> <span class="trap-tag">수식 작성</span></h3>
+  <p>LLM M을 from scratch로 학습한다. M은 토큰열 \( x=[x_1,...,x_L] \) (각 \(1\le x_i\le|V|\))을 받아 확률 \( p=[p_1,...,p_L]\in\mathbb{R}^{L\times|V|} \) (\(\sum_{k=1}^{|V|}p_i(k)=1,\ p_i(k)\ge0\))를 출력한다.</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">3-1 (5 pts) — next-token prediction loss <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#사전학습</span></div>
+      <p>well-curated corpus \( D_{\text{next}}=\{x^{(i)}\}_{i=1}^{N} \)로 next token을 예측하도록 학습. (1) loss 이름과 (2) \( \min_{x\sim D_{\text{next}}}\mathbb{E}[f] \) 형태의 수식(f를 작성)을 쓰라. (x 길이는 항상 L)</p></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (1) Cross-entropy loss</span>
+        <div class="formula"><div class="fname">(2) Next-token CE loss</div>$$ \mathcal{L}_{\text{next}} := \sum_{i=1}^{L-1} -\log p_i(x_{i+1}) $$</div>
+        각 위치 \(i\)에서 모델이 출력한 분포 \(p_i\)가 <strong>실제 다음 토큰 \(x_{i+1}\)</strong>에 부여한 확률의 negative log를 더한 것. 이것이 표준 언어모델 사전학습 목적함수다.
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">3-2 (5 pts) — instruction tuning loss <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#instruction tuning</span></div>
+      <p>지시를 잘 따르도록 \( D_{\text{inst}}=\{(\tilde{x}^{(i)},\tilde{y}^{(i)})\}_{i=1}^{N'} \)로 추가 학습. \(\tilde{x}\)(길이 L)와 \(\tilde{y}\)(길이 M)가 \( x:=\tilde{x}\oplus\tilde{y} \)로 concat될 때, (1) loss 이름과 (2) \( \min_{(\tilde{x},\tilde{y})\sim D_{\text{inst}}}\mathbb{E}[g] \) 형태 수식(g)을 쓰라.</p></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (1) Cross-entropy loss</span>
+        <div class="formula"><div class="fname">(2) Instruction tuning loss (응답 부분만 학습)</div>$$ \mathcal{L}_{\text{inst}} := \sum_{i=L+1}^{L+M-1} -\log p_i(x_{i+1}) $$</div>
+        next-token CE와 형태는 같지만 <strong>합 범위가 \(i=L+1\)부터</strong>다 — 즉 입력 instruction \(\tilde{x}\) 부분은 loss에서 빼고 <strong>응답 \(\tilde{y}\) 토큰에 대해서만</strong> 다음 토큰 예측 loss를 건다. (prompt masking)
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">3-3 (5 pts) — RLHF objective <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#12 RL (RLHF)</span></div>
+      <p>안전성을 위해 RLHF로 추가 finetune. reward model \( r_\phi:x\to[0,1] \) (\(x:=\hat{x}\oplus\hat{y}\))가 주어질 때, \( \max_{M_\theta}\ \mathbb{E}_{\hat{x}\sim D_{\text{RLHF}},\,\hat{y}\sim M_\theta(\hat{x})}[h-\beta h'] \) 형태로 목적함수를 쓰라. (h는 x,\(r_\phi\)의 함수, h'는 x,p,p'의 함수이며 p'는 \(M_{\text{inst}}\)의 출력확률)</p></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답:</span>
+        <div class="formula"><div class="fname">RLHF objective = reward − β·KL</div>$$ h = r_\phi(x), \qquad h' = \sum_{i=L+1}^{L+M-1} p_i\log\frac{p_i}{p'_i}\;\;\Big(= \sum_{i=L+1}^{L+M-1}\mathrm{KL}(p_i\,\|\,p'_i)\Big) $$</div>
+        목적함수 전체: \( \max_{M_\theta}\ \mathbb{E}[\,r_\phi(x) - \beta\,\mathrm{KL}(p\,\|\,p')\,] \). 즉 <strong>reward를 최대화</strong>하되, 현재 정책 \(p\)가 instruction-tuned 기준모델 \(p'\)에서 너무 멀어지지 않도록 <strong>KL penalty(\(\beta\) 가중)</strong>로 규제한다. PPO 류 RLHF의 핵심 형태.
+      </div></details>
+  </div>
+
+  <h3 id="sf4">Problem 4: RAG and Tool-use (15 Points) <span class="src src-real">작년 실제 기출</span></h3>
+  <p class="en">All sub-questions: Pick all that are correct; any wrong answer will lead to 0 points.</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">4-1 (3 pts) <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#9 RAG</span></div>
+      <p>Which of the statements about RAG are correct?</p>
+      <ol type="a">
+        <li>Dense retrieval methods often rely on contrastive loss during training.</li>
+        <li>Fine-tuning LLMs with new knowledge is a scalable and safe solution.</li>
+        <li>Retrieval-based input augmentation can help LLMs access more up-to-date information.</li>
+        <li>Knowledge cutoff in pretraining dataset can cause trained LLMs to miss recent events.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Contrastive learning is standard in dense retrieval (DPR, Contriever).</li>
+          <li class="wrong">(b) Incorrect. Fine-tuning with new knowledge degrades accuracy and has scalability/safety issues.</li>
+          <li>(c) Correct. Retrieval augments input with up-to-date external documents.</li>
+          <li>(d) Correct. Fixed training data → knowledge cutoff → missing recent info.</li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">4-2 (3 pts) <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#9 RAG (inference-level)</span></div>
+      <p>Which correctly describe the inference-based RAG methods?</p>
+      <ol type="a">
+        <li>REPLUG assumes a full access to LLM parameters for end-to-end training.</li>
+        <li>SuRe first generates answer candidates and then summarizes retrievals conditionally.</li>
+        <li>IRCoT simultaneously conduct retrieval and reasoning using Chain-of-Thought prompting.</li>
+        <li>RetRobust improves RAG by using natural language inference (NLI) models for filtering.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. REPLUG assumes black-box access; no parameter updates. <span class="trap-tag">④ 귀속</span></li>
+          <li>(b) Correct. SuRe generates candidate answers, then summarizes retrievals for each. <span class="badge badge-conf">올해 범위 O</span></li>
+          <li class="wrong">(c) Incorrect. IRCoT <em>interleaves</em> retrieval and reasoning (not simultaneous). <span class="trap-tag">⑤ 순서</span></li>
+          <li>(d) Correct. RetRobust uses NLI models to check passage support.</li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">4-3 (3 pts) <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#9 RAG (training-level)</span></div>
+      <p>Which correctly describe the training-based RAG methods?</p>
+      <ol type="a">
+        <li>REALM jointly trains both the retriever and the reader components.</li>
+        <li>Self-RAG trains LLM to critique and refine its own generations via RL training.</li>
+        <li>Training-based RAG can learn to ignore irrelevant documents through supervision.</li>
+        <li>The retriever, target LLM, and query generator in Search-R1 are all fine-tuned using standard supervised learning.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. REALM trains retriever and reader jointly end-to-end. <span class="badge badge-conf">올해 범위 밖(참고)</span></li>
+          <li class="wrong">(b) Incorrect. Self-RAG uses SFT with GPT-4-generated reflection data, not RL. <span class="trap-tag">④/⑥</span></li>
+          <li>(c) Correct. With supervision it learns to downweight unhelpful documents.</li>
+          <li class="wrong">(d) Incorrect. Search-R1 uses a <strong>frozen</strong> external retriever (not fine-tuned). <span class="trap-tag">② 절대어(all)</span></li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">4-4 (3 pts) <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#10 Tool Use</span></div>
+      <p>Which steps are included in the prompting-based tool-use approach?</p>
+      <ol type="a">
+        <li>LLM is given tool APIs via system message and responds with API call.</li>
+        <li>LLM directly calls the API and gets results from external execution.</li>
+        <li>The user manually executes the function based on LLM response.</li>
+        <li>LLM incorporates the returned function result in its final answer.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (d)</span>
+        <ul>
+          <li>(a) Correct. LLM receives tool descriptions via system messages.</li>
+          <li>(b) Correct. Function calls are decided by LLM and executed externally.</li>
+          <li class="wrong">(c) Incorrect. This is automated, not user-operated. <span class="trap-tag">① 주체</span></li>
+          <li>(d) Correct. The result is passed back to form the final response.</li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">4-5 (3 pts) <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#10 Tool Use (ToolLLM)</span></div>
+      <p>Which are true about the ToolLLM framework?</p>
+      <ol type="a">
+        <li>ToolLLM collects APIs from RapidAPI and uses ChatGPT to generate tool-use instructions.</li>
+        <li>ToolLLM uses human annotators to label solution paths for each instruction.</li>
+        <li>ToolLLM trains a dense retriever based on BERT to retrieve relevant APIs for a given instruction.</li>
+        <li>ToolLLM only consider single-tool usage scenario in both instruction generation and solution annotation.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (c)</span>
+        <ul>
+          <li>(a) Correct. 3,451 tools / 16,000+ APIs from RapidAPI; ChatGPT generates instructions.</li>
+          <li class="wrong">(b) Incorrect. ChatGPT auto-annotates solution paths (no human). <span class="trap-tag">① 주체</span></li>
+          <li>(c) Correct. A BERT-based dense retriever retrieves relevant APIs.</li>
+          <li class="wrong">(d) Incorrect. It includes both single-tool and multi-tool usage. <span class="trap-tag">② 절대어(only)</span></li>
+        </ul></div></details>
+  </div>
+
+  <h3 id="sf5">Problem 5: LLM Safety (20 Points) <span class="src src-real">작년 실제 기출</span></h3>
+  <p class="en">All sub-questions: Pick all that are correct; any wrong answer will lead to 0 points (4 pts each).</p>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">5-1 (4 pts) — Jailbroken <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#13 Jailbreak</span></div>
+      <p>Which are true about Jailbroken?</p>
+      <ol type="a">
+        <li>Jailbroken identifies two reasons — competing objective and mismatched generalization — why jailbreaking is possible even after RLHF.</li>
+        <li>Prefix injection is jailbreaking method that utilize competing objective.</li>
+        <li>Refusal suppression is based on competing between instruction tuning and RLHF.</li>
+        <li>Jailbreaking with Base64 encoding is an example of mismatched generalization.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (b), (c), (d) — 전부 정답!</span>
+        <ul><li>(a)~(d) 모두 Correct. Jailbroken의 두 실패 모드(competing objective / mismatched generalization)와 각 공격 예시가 정확히 매칭.</li></ul>
+        <p><em>교훈: 작년 기말에도 4개 전부 정답인 Pick-all이 나왔다.</em></p>
+      </div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">5-2 (4 pts) — AutoDAN & SafeDecoding <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#13 Jailbreak</span></div>
+      <p>Which are true about AutoDAN and SafeDecoding?</p>
+      <ol type="a">
+        <li>AutoDAN search prompt candidates that minimize the likelihood of proxy label (e.g., "Absolutely, here's") via genetic algorithm.</li>
+        <li>SafeDecoding modifies the decoding process to block unsafe outputs token-by-token.</li>
+        <li>AutoDAN requires human feedback to evaluate the jailbreak success.</li>
+        <li>SafeDecoding requires fine-tuning of the target LLM with adversarial prompts.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. <strong>Maximize</strong> the likelihood to leverage generation momentum. <span class="trap-tag">⑦ 방향</span></li>
+          <li>(b) Correct. SafeDecoding adjusts generation probs via contrastive decoding.</li>
+          <li class="wrong">(c) Incorrect. Evaluation is automatic (keyword or LLM-as-judge). <span class="trap-tag">① 주체</span></li>
+          <li>(d) Correct. To get the expert model in contrastive decoding, SafeDecoding fine-tunes on adversarial prompts (GPT-4 labeled).</li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">5-3 (4 pts) — DetectGPT <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#14 AI Text Detection</span></div>
+      <p>Which statements are correct about DetectGPT?</p>
+      <ol type="a">
+        <li>DetectGPT assumes LLM-generated texts reside in regions of high positive curvature in log-likelihood space.</li>
+        <li>DetectGPT requires the ability to evaluate the log probability from the source model.</li>
+        <li>DetectGPT uses a fine-tuned supervised classifier trained on AI-generated and human-written text.</li>
+        <li>DetectGPT involves generating and evaluating a large number of perturbations for each input.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (b), (d)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. DetectGPT assumes <strong>negative</strong> curvature. <span class="trap-tag">⑦ 방향</span></li>
+          <li>(b) Correct. It needs log-likelihood scores from the source LLM.</li>
+          <li class="wrong">(c) Incorrect. DetectGPT is zero-shot, no trained classifier. <span class="trap-tag">④ 귀속</span></li>
+          <li>(d) Correct. It generates/evaluates many perturbations per input.</li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">5-4 (4 pts) — Watermarking <span class="src src-real">작년 기말</span> <span class="badge badge-ch">#14 AI Text Detection</span></div>
+      <p>Which correctly describes watermarking LLM outputs?</p>
+      <ol type="a">
+        <li>It inserts visible markers into output texts to note the origin.</li>
+        <li>Watermarked texts can be detected using a one-proportion z-test.</li>
+        <li>Soft watermarking alters logits to subtly bias generation toward green-list tokens.</li>
+        <li>Watermarking is fully robust to paraphrasing attacks.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (b), (c)</span>
+        <ul>
+          <li class="wrong">(a) Incorrect. Watermarks are imperceptible to humans. <span class="trap-tag">정의 왜곡</span></li>
+          <li>(b) Correct. Detection uses a one-proportion z-test on token patterns.</li>
+          <li>(c) Correct. Soft watermarking modifies logits to bias toward green-list tokens.</li>
+          <li class="wrong">(d) Incorrect. Can be broken by paraphrasing/span replacement. <span class="trap-tag">② 절대어(fully)</span></li>
+        </ul></div></details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">5-5 (4 pts) — Hallucination & ITI <span class="src src-real">작년 기말</span> <span class="badge badge-conf">ITI는 올해 범위 밖</span></div>
+      <p>Which statements relevant to LLM hallucination are true?</p>
+      <ol type="a">
+        <li>Hallucination occurs when an LLM generates text that is factually incorrect but presented fluently.</li>
+        <li>Hallucination only happens in low-resource or out-of-domain settings.</li>
+        <li>Inference-Time Intervention (ITI) uses trained probes to identify latent directions associated with factuality.</li>
+        <li>ITI modifies LLM activations during inference by shifting them in truthful directions.</li>
+      </ol></div>
+    <details><summary>정답 & 해설</summary>
+      <div class="ans"><span class="correct">정답: (a), (c), (d)</span>
+        <ul>
+          <li>(a) Correct. Hallucinations are fluent-but-false responses.</li>
+          <li class="wrong">(b) Incorrect. They can happen in any context, not only difficult settings. <span class="trap-tag">② 절대어(only)</span></li>
+          <li>(c) Correct. ITI trains per-head probes for truthfulness directions. <span class="badge badge-conf">올해 범위 밖</span></li>
+          <li>(d) Correct. ITI shifts activations along truthful directions at inference.</li>
+        </ul>
+        <p><em>(ITI 자체는 올해 2026 슬라이드엔 없음 — 메커니즘만 참고.)</em></p>
+      </div></details>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ===================  기말 출제 청사진 (재작성)  =================== -->
+<section id="sP">
+  <h2><span class="num">⌖</span> 기말 출제 청사진 — 작년 기말 실제 구조 기반</h2>
+  <p>이 섹션은 추측이 아니다. <strong>작년 기말(2025-06-17)이 실제로 어떻게 나왔는지</strong>를 기준으로, 올해도 같은 틀로 나온다는 전제하에 작성한 청사진이다.</p>
+
+  <div class="box-key"><div class="label">📌 작년 기말 = 거의 확정된 올해 청사진</div>
+    <table style="margin-top:6px;">
+      <tr><th>Problem</th><th>주제</th><th>형식</th><th>배점</th></tr>
+      <tr><td>1</td><td>True / False</td><td>T/F 10문항 (무응답 1점)</td><td>30점</td></tr>
+      <tr><td>2</td><td>Inference with LLM</td><td><strong>계산 (서술)</strong></td><td>20점</td></tr>
+      <tr><td>3</td><td>Training of LLM</td><td><strong>수식 작성 (서술)</strong></td><td>15점</td></tr>
+      <tr><td>4</td><td>RAG and Tool-use</td><td>Pick-all 5문항</td><td>15점</td></tr>
+      <tr><td>5</td><td>LLM Safety</td><td>Pick-all 5문항</td><td>20점</td></tr>
+    </table>
+    여기에 <strong>마지막 수업 공지</strong>(객관식 Problem 3~4개 중 1개가 #13 Jailbreak + #14 Detection 특강 통합)를 결합하면 — 작년 Problem 5(Safety)가 그 통합 Problem에 대응한다. 구조는 사실상 고정으로 봐도 된다.
+  </div>
+
+  <div class="box-warn"><div class="label">🚨 가장 중요한 경고 — Problem 2·3(합 35점)은 손계산·수식이다</div>
+    작년 기말에서 <strong>Problem 2(Inference, 20점)와 Problem 3(Training, 15점), 합 35점은 객관식이 아니라 손으로 푸는 계산·수식 문제였다.</strong> T/F와 Pick-all(객관식)만 공부하면 <strong>전체의 35%를 통째로 날린다.</strong>
+    <ul>
+      <li><strong>Problem 2</strong>: 행렬 곱(\(\tilde{x}\circ M\)), word embedding concat, hamming distance logit, top-K(K=1) 샘플링, autoregressive 2-step 생성 — 직접 계산해서 답을 써야 한다.</li>
+      <li><strong>Problem 3</strong>: next-token CE loss, instruction tuning loss(prompt masking), RLHF objective(reward − β·KL) — 수식을 직접 작성해야 한다.</li>
+      <li>위 sf2·sf3의 단계별 풀이를 <strong>보지 않고 재현</strong>할 수 있을 때까지 연습할 것.</li>
+    </ul>
+  </div>
+
+  <h3>챕터별 예상 매핑</h3>
+  <table>
+    <tr><th>작년 Problem</th><th>올해 예상 챕터 매핑</th><th>핵심 키워드</th></tr>
+    <tr><td><strong>P2 Inference (계산)</strong></td><td>#7 Decoding (+ 기본 디코딩)</td><td>greedy/top-K/top-p, temperature, autoregressive, 행렬 연산</td></tr>
+    <tr><td><strong>P3 Training (수식)</strong></td><td>#8 AI Feedback / #12 RL</td><td>CE loss, instruction tuning, RLHF objective(reward−β·KL), DPO</td></tr>
+    <tr><td><strong>P4 RAG+Tool</strong></td><td>#9 RAG / #10 Tool Use</td><td>BM25·DPR, REPLUG·IRCoT·RetRobust·SuRe(inference) vs Self-RAG·Search-R1(training), Toolformer·ToolLLM</td></tr>
+    <tr><td><strong>P5 Safety</strong></td><td>#13 Jailbreak / #14 AI Text Detection</td><td>Jailbroken, AutoDAN·SafeDecoding·Gradient Cuff, DetectGPT·Fast-DetectGPT·watermarking</td></tr>
+    <tr><td><strong>P1 True/False</strong></td><td>#7~#14 전 챕터</td><td>챕터마다 1~2문항씩 골고루</td></tr>
+  </table>
+  <p><span class="badge badge-est">참고</span> <strong>#8 AI Feedback 단독 비중은 작년 기말 기준 낮았다</strong> — Training 수식 Problem(P3) 안에 RLHF objective 형태로 일부 흡수됐을 뿐, AI Feedback만의 단독 Problem은 없었다. G-Eval·judge bias 등은 T/F 수준으로 대비.</p>
+
+  <div class="box-key"><div class="label">⭐ 우선순위 (작년 기말 기준)</div>
+    <ol>
+      <li><strong>Problem 2·3 계산·수식(35점)</strong> — 손으로 푸는 연습. 여기서 갈린다.</li>
+      <li><strong>Problem 5 Safety(20점)</strong> — 공격/방어/탐지 귀속(Jailbroken·AutoDAN·SafeDecoding / DetectGPT·watermarking).</li>
+      <li><strong>Problem 4 RAG+Tool(15점)</strong> — inference-level vs training-level 이분법, Toolformer vs ToolLLM.</li>
+      <li><strong>Problem 1 T/F(30점)</strong> — 전 챕터 골고루, 무응답 1점 규칙 활용.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================ -->
 <section id="p1">
-  <h2><span class="num">2</span> Problem 1: True / False (30 Points) <span class="src src-real">2025 중간 기출 원문</span></h2>
+  <h2><span class="num">2</span> Problem 1: True / False (30 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
   <p class="en">"Identify whether the following statements are True or False. You will get 3 points for each correct answer, 0 points for each wrong answer, and 1 point for each unanswered question."</p>
 
   <div class="quiz">
@@ -318,7 +772,7 @@
 
 <!-- ============================================================ -->
 <section id="p2">
-  <h2><span class="num">3</span> Problem 2: N-gram, RNN, Transformer (15 Points) <span class="src src-real">2025 중간 기출 원문</span></h2>
+  <h2><span class="num">3</span> Problem 2: N-gram, RNN, Transformer (15 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
   <p class="en">"Answer the following questions about N-gram, RNN, Transformer." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
   <p><span class="badge badge-mid">중간 범위</span> 기말에 직접 재출제될 가능성은 낮지만, <strong>Pick-all 문항 설계 방식(보기 4개 = 독립 T/F 4개)</strong>의 표본으로 정독할 가치가 있다.</p>
 
@@ -435,7 +889,7 @@
 
 <!-- ============================================================ -->
 <section id="p3">
-  <h2><span class="num">4</span> Problem 3: Large Language Models (20 Points) <span class="src src-real">2025 중간 기출 원문</span></h2>
+  <h2><span class="num">4</span> Problem 3: Large Language Models (20 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
   <p class="en">"Answer the following questions about LMs, LLMs, scaling laws, and emergent abilities." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
   <p><span class="badge badge-mid">중간 범위</span> 단, 수치 함정(GPT-3 175B)·방법 귀속 함정(Kaplan↔Chinchilla)의 교과서적 표본 — 기말에서도 같은 제조법이 반복된다.</p>
 
@@ -553,7 +1007,7 @@
 
 <!-- ============================================================ -->
 <section id="p4">
-  <h2><span class="num">5</span> Problem 4: Alignment of LLMs (20 Points) <span class="src src-real">2025 중간 기출 원문</span></h2>
+  <h2><span class="num">5</span> Problem 4: Alignment of LLMs (20 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
   <p class="en">"Answer the following questions about alignment of LLMs." — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
   <p><span class="badge badge-ch">기말 연관 높음</span> RLHF·DPO·평가 bias는 기말 범위 <strong>#8 AI Feedback</strong>(RLAIF·LLM-as-a-Judge·LC win rate)과 <strong>#12 RL with LLMs</strong>(PPO·GRPO·DPO 계열)의 직접적 선수 지식이다.</p>
 
@@ -672,7 +1126,7 @@
 
 <!-- ============================================================ -->
 <section id="p5">
-  <h2><span class="num">6</span> Problem 5: Decoding (15 Points) <span class="src src-real">2025 중간 기출 원문</span></h2>
+  <h2><span class="num">6</span> Problem 5: Decoding (15 Points) <span class="src src-real">2025 중간 기출 원문</span> <span class="badge badge-mid">중간 — 참고용, 기말 범위 아님</span></h2>
   <p class="en">"Answer the following questions about alignment of LLMs." (← 원문의 오타: 실제 주제는 Decoding) — 모든 문항: Pick all that are correct; any wrong answer will lead to 0 points.</p>
   <p><span class="badge badge-ch">기말 연관 최고</span> Problem 5 전체가 기말 범위 <strong>#7 Decoding/Controllability</strong>와 직결 — 중간·기말에 걸친 챕터이므로 <strong>기말에서 변형 재출제 가능성이 가장 높은 5문항</strong>이다.</p>
 
@@ -790,7 +1244,9 @@
 
 <!-- ============================================================ -->
 <section id="s7">
-  <h2><span class="num">7</span> 기말 범위 출제 예측 (#7~#14)</h2>
+  <h2><span class="num">7</span> 기말 범위 챕터별 디테일 (#7~#14) <span class="badge badge-est">보조 — 청사진은 위 ⌖ 섹션 참고</span></h2>
+  <div class="box-key"><div class="label">ℹ️ 읽는 순서</div>
+    출제 <strong>구조</strong>는 위 "⌖ 기말 출제 청사진"(작년 실제 기출 기반)이 우선이다. 이 섹션은 그 청사진을 <strong>챕터별 세부 암기 포인트</strong>로 보강하는 보조 자료다.</div>
 
   <h3>7.1 예상 시험 구성 <span class="badge badge-conf">마지막 수업 공지 반영</span></h3>
   <p>마지막 수업에서 교수가 직접 공지: <strong>객관식 Problem은 3~4개이고, 그중 1개는 #13 Jailbreak + #14 AI Text Detection 통합 문제</strong>(<em>"I will make three or four multiple choice question problems, and one of them will be about the jailbreaking and AI-generated detection, all in one part"</em>). 중간 패턴(T/F 30점 + Pick-all 4개 Problem)을 여기에 결합하면 아래 구성이 가장 유력하다.</p>

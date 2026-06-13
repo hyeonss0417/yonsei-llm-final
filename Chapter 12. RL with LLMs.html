@@ -151,7 +151,8 @@
     <li><a href="#s7">GRPO — Group Relative Policy Optimization</a></li>
     <li><a href="#s8">2026년 LLM Post-training — GLM-5, On-policy Distillation</a></li>
     <li><a href="#compare">총정리 비교표: REINFORCE vs PPO vs GRPO</a></li>
-    <li><a href="#quiz">예상문제 (T/F 9 + Pick-all 8)</a></li>
+    <li><a href="#p3">🎯 작년 기말 출제: Training 수식 작성 (Problem 3, 15점)</a></li>
+    <li><a href="#quiz">예상문제 (T/F 9 + Pick-all 8) + 작년 기출 T/F 3</a></li>
   </ol>
 </div>
 
@@ -648,12 +649,102 @@
   </table>
 </section>
 
+<!-- ============ P3: 작년 기말 Training 수식 ============ -->
+<section id="p3">
+  <h2><span class="num">🎯</span> 작년 기말 출제: Training 수식 작성 <span class="en">(Problem 3 — Training of LLM, 15점)</span></h2>
+
+  <p>2025 기말 <strong>Problem 3 (Training of LLM, 15점)</strong>은 LLM <strong>M</strong>을 <strong>scratch부터 학습</strong>하는 3단계를 <strong>손으로 수식을 직접 쓰는</strong> 문제였다. 입력 토큰 \( x = [x_1, \dots, x_L] \) (각 \( x_i \)는 정수, \( 1 \le x_i \le |\mathcal V| \))에 대해 모델은 확률 \( p = [p_1, \dots, p_L] \in \mathbb{R}^{L\times|\mathcal V|} \) 를 출력하고, \( \sum_{k=1}^{|\mathcal V|} p_i(k) = 1,\ p_i(k)\ge 0 \). 세 단계는 <strong>① next-token (pretraining) → ② instruction tuning → ③ RLHF</strong> 순서.</p>
+
+  <div class="box-warn"><div class="label">⚠️ 출제 형식 경고 (가장 큰 갭)</div>
+    <ul>
+      <li>기말 Problem 3은 <strong>객관식이 아니라 수식을 직접 손으로 쓰는 문제</strong>(15점, 각 5점). ① <strong>CE loss</strong> · ② <strong>instruction tuning loss(response 토큰만)</strong> · ③ <strong>RLHF objective(reward − β·KL)</strong> 세 수식을 외워서 쓸 수 있어야 한다.</li>
+      <li>함정 1 — <strong>인덱스 범위</strong>: instruction tuning loss는 \( i = L+1 \)부터 시작 (prompt \( \tilde x \) 부분이 아니라 <strong>response \( \tilde y \) 토큰만</strong> loss에 들어감). pretraining은 \( i=1 \)부터.</li>
+      <li>함정 2 — <strong>KL 방향·대상</strong>: RLHF의 KL penalty는 <strong>학습 중인 \( p_i \)(=\( M_\theta \))를 reference \( p'_i \)(=\( M_{inst} \))와 비교</strong>하는 \( \mathrm{KL}(p_i \| p'_i) \). reference는 <strong>instruction-tuned 모델</strong>이지 pretraining 모델이 아니다.</li>
+      <li>함정 3 — <strong>부호</strong>: pretraining/instruction은 \( \min \mathbb{E}[\cdot] \) (손실 최소화, 각 항 앞 \( -\log \)), RLHF는 \( \max_\theta \mathbb{E}[\,r - \beta\,\mathrm{KL}\,] \) (보상 최대화, KL은 빼는 penalty).</li>
+    </ul>
+  </div>
+
+  <h3>① Next-token (pretraining) loss <span class="src src-real" style="display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 10px;margin-left:8px;vertical-align:middle;background:#ffe9f1;color:#c2185b;">작년 기출</span></h3>
+  <p style="font-size:14px;margin:6px 0;"><strong>문제:</strong> well-curated corpus \( D_{next} = \{x^{(i)}\}_{i=1}^N \)로 next-token 예측을 학습. 손실 함수 이름과 \( \min_\theta \mathbb{E}_{x\sim D_{next}}[f] \) 형태의 수식(\( f \)는 \( x, p \)의 함수)을 써라. (\( x \)의 길이는 항상 \( L \))</p>
+  <div class="formula"><div class="fname">정답 — (1) 이름: Cross-entropy loss · (2) 수식</div>
+    $$ L_{next} := \sum_{i=1}^{L-1} -\log p_i(x_{i+1}) $$
+    <p style="font-size:14px;margin:6px 0 0;">위치 \( i \)의 출력 분포 \( p_i \)에서 <strong>실제 다음 토큰</strong> \( x_{i+1} \)의 확률에 \( -\log \)를 씌운 negative log-likelihood = cross-entropy. 마지막 위치 \( i=L \)은 다음 토큰이 없으므로 합은 \( i=1 \)부터 \( L-1 \)까지.</p>
+  </div>
+  <details><summary>왜 이 형태인가 (인덱스 해설)</summary>
+    <div style="padding:4px 4px 4px;font-size:14px;">CE = \( -\sum_k y_k \log \hat y_k \)에서 정답이 one-hot(\( y = \) 다음 토큰)이므로 \( -\log p_i(x_{i+1}) \) 한 항만 남는다. <strong>모든 토큰</strong>이 다음 토큰 예측의 정답으로 쓰이므로 \( i=1 \dots L-1 \) 전체에 loss가 걸린다 — 이것이 instruction tuning과의 결정적 차이.</div>
+  </details>
+
+  <h3>② Instruction tuning loss (response 토큰만) <span class="src src-real" style="display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 10px;margin-left:8px;vertical-align:middle;background:#ffe9f1;color:#c2185b;">작년 기출</span></h3>
+  <p style="font-size:14px;margin:6px 0;"><strong>문제:</strong> \( M_{next} \)가 instruction을 잘 못 따라서 \( D_{inst} = \{(\tilde x^{(i)}, \tilde y^{(i)})\}_{i=1}^{N'} \)로 추가 학습. \( |\tilde x| = L,\ |\tilde y| = M \)이고 \( x := \tilde x \oplus \tilde y \) (concat). 손실 이름과 \( \min_\theta \mathbb{E}_{(\tilde x,\tilde y)\sim D_{inst}}[g] \) 형태의 수식(\( g \)는 \( x, p \)의 함수)을 써라.</p>
+  <div class="formula"><div class="fname">정답 — (1) 이름: Cross-entropy loss · (2) 수식</div>
+    $$ L_{inst} := \sum_{i=L+1}^{L+M-1} -\log p_i(x_{i+1}) $$
+    <p style="font-size:14px;margin:6px 0 0;">CE 형태는 ①과 동일하지만 <strong>합의 범위가 \( i=L+1 \)부터</strong>. prompt \( \tilde x \)(위치 \( 1 \dots L \)) 부분은 loss에 넣지 않고 <strong>response \( \tilde y \)(위치 \( L+1 \dots L+M \)) 토큰만</strong> 학습한다.</p>
+  </div>
+  <details><summary>왜 \( i=L+1 \)부터인가 (response 토큰만)</summary>
+    <div style="padding:4px 4px 4px;font-size:14px;">Instruction tuning은 모델이 <strong>주어진 prompt에 대해 올바른 response를 생성</strong>하도록 가르치는 것이지, prompt 자체를 재현하도록 가르치는 게 아니다. 따라서 loss mask가 prompt 토큰을 가리고 <strong>response 부분(\( \tilde y \))만</strong> 남긴다 → 합이 \( i=L+1 \)에서 시작. 끝은 \( L+M-1 \) (마지막 토큰 \( L+M \)은 다음 토큰이 없으므로). 시험에서 \( i=1 \)부터 쓰면 <strong>오답</strong> — 이 인덱스가 채점 포인트.</div>
+  </details>
+
+  <h3>③ RLHF objective (reward − β·KL) <span class="src src-real" style="display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 10px;margin-left:8px;vertical-align:middle;background:#ffe9f1;color:#c2185b;">작년 기출</span></h3>
+  <p style="font-size:14px;margin:6px 0;"><strong>문제:</strong> \( M_{inst} \)가 위험·유해 응답을 내서 RLHF로 추가 fine-tune. \( D_{RLHF} = \{\hat x^{(i)}\}_{i=1}^{N''} \)와 reward model \( r_\phi : x \to [0,1] \) (\( x := \hat x \oplus \hat y \), \( |\hat x|=L,\ |\hat y|=M \)). \( p' \)는 \( M_{inst} \)의 출력 확률. \( \max_{M_\theta}\ \mathbb{E}_{\hat x\sim D_{RLHF},\,\hat y\sim M_\theta(\hat x)}[\,h - \beta h'\,] \) 형태로 써라 (\( h \)는 \( x, r_\phi \)의 함수, \( h' \)는 \( x, p, p' \)의 함수).</p>
+  <div class="formula"><div class="fname">정답 — (1) \( h = r_\phi(x) \) · (2) \( h' = \) KL penalty</div>
+    $$ \max_{\theta}\ \mathbb{E}_{\hat x\sim D_{RLHF},\,\hat y\sim M_\theta(\hat x)}\!\left[\, r_\phi(x) \;-\; \beta \sum_{i=L+1}^{L+M-1} \mathrm{KL}\big(p_i \,\|\, p'_i\big) \,\right] $$
+    <p style="font-size:14px;margin:6px 0 0;">\( h = r_\phi(x) \) (응답 품질 보상, 한 번 부여) — \( \beta \cdot h' \) (정규화 penalty). KL 항을 풀어 쓰면 \( h' = \sum_{i=L+1}^{L+M-1} \sum_k p_i(k)\log\frac{p_i(k)}{p'_i(k)} = \sum_{i=L+1}^{L+M-1}\mathrm{KL}(p_i\|p'_i) \).</p>
+  </div>
+  <details><summary>왜 max·왜 KL이 reference \( M_{inst} \)와인가</summary>
+    <div style="padding:4px 4px 4px;font-size:14px;">
+      <ul style="margin:0;padding-left:18px;">
+        <li><strong>\( \max \)·부호</strong>: RLHF는 reward를 <strong>최대화</strong>하는 objective (pretraining/instruction의 \( \min \) loss와 반대). \( -\beta h' \)는 reward 해킹을 막는 penalty이므로 빼준다.</li>
+        <li><strong>KL 대상 = \( M_{inst} \)(= \( p' \))</strong>: reference policy는 <strong>방금 instruction tuning을 마친 모델</strong>. RLHF로 갱신되는 \( M_\theta \)(=\( p \))가 reference에서 너무 멀어지면 언어 능력을 망각(forgetting)하므로 \( \mathrm{KL}(p \| p') \)로 묶어둔다. pretraining 모델이 아니라 <strong>\( M_{inst} \)</strong>가 reference인 것이 함정.</li>
+        <li><strong>KL 방향</strong>: \( \mathrm{KL}(p_i \| p'_i) \) — 학습 중 분포 \( p \)가 앞, reference \( p' \)가 뒤. (본 장 본문 PPO/GRPO의 \( \mathbb{D}_{KL}[\pi_\theta\|\pi_{ref}] \)와 동일한 방향.)</li>
+        <li><strong>범위 \( i=L+1 \dots L+M-1 \)</strong>: ②와 동일하게 <strong>response 토큰</strong>에 대해서만 KL을 건다 (prompt는 고정 입력).</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="box-warn"><div class="label">📌 한 장 암기 — 세 수식 나란히</div>
+    <ul>
+      <li>① Pretraining (CE): \( L_{next} = \sum_{i=1}^{L-1} -\log p_i(x_{i+1}) \) — <strong>모든 토큰</strong>, \( \min \).</li>
+      <li>② Instruction (CE, response만): \( L_{inst} = \sum_{i=L+1}^{L+M-1} -\log p_i(x_{i+1}) \) — \( i=L+1 \)부터, \( \min \).</li>
+      <li>③ RLHF: \( \max_\theta \mathbb{E}\big[\, r_\phi(x) - \beta \sum_{i=L+1}^{L+M-1} \mathrm{KL}(p_i\|p'_i) \,\big] \) — reward − β·KL(vs \( M_{inst} \)), \( \max \).</li>
+    </ul>
+  </div>
+</section>
+
 <!-- ============ QUIZ ============ -->
 <section id="quiz">
   <h2><span class="num">Q</span> 예상문제 <span class="en">(직접 기출 없음 — 중간고사 이후 범위)</span></h2>
   <p>2025 중간 기출 형식 그대로: T/F (정답 3점·오답 0점·<strong>무응답 1점</strong>) + "Pick all that are correct; any wrong answer will lead to 0 points".</p>
 
-  <h3>Part A. True/False</h3>
+  <h3>Part A-0. 작년 기말 Problem 1 직접 기출 (RL 관련 T/F)</h3>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">P1-(i). (True/False) <span class="src src-real">작년 기출</span></div>
+      <p>RLHF provides an interpretable rule set defining what "good behavior" is.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">False.</span> RLHF defines "goodness" <strong>implicitly</strong> via large human preference datasets, <strong>not</strong> an interpretable rule set. (규칙을 명시하는 게 아니라 사람 선호 데이터로 암묵적으로 정의.)</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">P1-(ix). (True/False) <span class="src src-real">작년 기출</span></div>
+      <p>The motivation of PPO is to take biggest possible improvement step on policy, without stepping so far from current policy to prevent collapse.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> PPO의 동기 그대로 — "현재 정책에서 너무 멀리 벗어나 붕괴(collapse)하지 않으면서 가능한 가장 큰 개선 step". (단, clip만으로는 보장되지 않음 → LLM에선 KL penalty 병용.)</div>
+    </details>
+  </div>
+
+  <div class="quiz">
+    <div class="q"><div class="qhead">P1-(x). (True/False) <span class="src src-real">작년 기출</span></div>
+      <p>GRPO estimates advantage function by generating multiple responses per query and calculating the statistics of their rewards.</p>
+    </div>
+    <details><summary>정답 & 해설 보기</summary>
+      <div class="ans"><span class="correct">True.</span> GRPO는 query당 여러 응답(group)을 생성하고 그 보상들의 통계(그룹 평균·표준편차)로 advantage \( \hat{A}_{i,t} = \frac{r_i - \text{mean}}{\text{std}} \)를 추정 — value model 없이.</div>
+    </details>
+  </div>
+
+  <h3>Part A. True/False <span class="en">(예상문제)</span></h3>
 
   <div class="quiz">
     <div class="q"><div class="qhead">Q1. (True/False) <span class="src src-pred">예상문제</span></div>
