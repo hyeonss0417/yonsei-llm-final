@@ -496,12 +496,12 @@
 
 <!-- ===== 문제 ===== -->
 <section id="quiz">
-  <h2><span class="num">Q</span> 예상문제</h2>
+  <h2><span class="num">Q</span> 기출 &amp; 예상문제</h2>
 
-  <h3>예상문제 — Pick all that are correct</h3>
+  <h3>기출 &amp; 예상문제 — Pick all that are correct</h3>
 
   <div class="quiz">
-    <div class="q"><div class="qhead">Q1. (Pick all that are correct) <span class="src src-pred">예상문제</span></div>
+    <div class="q"><div class="qhead">Q1. (Pick all that are correct) <span class="src src-real">2025 중간 기출 (이번 범위)</span></div>
       <p>Which of the following are true about evaluation bias introduced by DPO? (Pick all that are correct; any wrong answer will lead to 0 points.) (4 pts)</p>
       <ol type="a">
         <li>Longer responses often receive higher preference scores from human evaluators.</li>
@@ -513,12 +513,12 @@
     <details><summary>정답 &amp; 해설 보기</summary>
       <div class="ans"><span class="correct">Answer: (b), (c)</span>
         <ul>
-          <li class="wrong">(a) Incorrect. Bias toward longer outputs has been observed in LLM evaluations. <span class="en">(출제 의도는 "human evaluators"로 한정한 진술이 부정확하다는 것. length bias의 핵심 무대는 LLM judge의 verbosity bias이다.)</span></li>
+          <li class="wrong">(a) Incorrect. Bias toward longer outputs has been observed in LLM evaluations. <span class="en">(원문 해설: human evaluators로 한정한 진술이 부정확. length bias의 핵심 무대는 LLM judge의 verbosity bias이다.)</span></li>
           <li>(b) Correct. LC win rate uses regression to capture length and difficulty effects.</li>
           <li>(c) Correct. Evaluating without controlling for length may misrepresent performance.</li>
           <li class="wrong">(d) Incorrect. LC win rate is preference-based, not perplexity-based.</li>
         </ul>
-        <p style="margin-top:8px;">💡 이 챕터 연결: (b)·(d)는 §4의 LC win rate(regression으로 length+difficulty 효과 제거, GPT-4 judge의 <strong>preference 비교</strong> 기반) 정의에서 바로 나온다. DPO가 길이를 늘리는 경향과 verbosity bias가 만나면 평가가 왜곡된다는 것이 (c)의 맥락.</p>
+        <p style="margin-top:8px;">💡 이 챕터 연결: (b)·(d)는 §4의 LC win rate(regression으로 length+difficulty 효과 제거, GPT-4 judge의 <strong>preference 비교</strong> 기반) 정의에서 바로 나온다. DPO가 길이를 늘리는 경향과 verbosity bias가 만나면 평가가 왜곡된다는 것이 (c)의 맥락. <span class="en">(2025 중간 기출 Problem 5 = 이 챕터 §4 직결 범위)</span></p>
       </div>
     </details>
   </div>
